@@ -166,3 +166,49 @@ function validarRegistro(tipo, datos, lote, registros, fecha) {
     regs.some(r => r && r.loteId === lote.id && r.tipo === tipo && r.fecha === fecha);
   return dup ? { ok: true, duplicado: true } : { ok: true };
 }
+
+/* ---------------------- Estado sanitario del lote ----------------------
+   estadoSanitario(lote, registros, vacunasPlan, fecha) -> 'verde' | 'ambar' | 'rojo'
+   Rojo: vacuna vencida sin aplicar, retiro de medicamento activo o mortalidad de hoy > 2× la esperada.
+   Ámbar: vacuna para hoy o mañana, mortalidad de hoy > 1,5× la esperada, o lote activo con más de
+   3 días desde la llegada y sin registros hoy, ayer ni anteayer. Un lote cerrado no exige vacunas ni registros. */
+function _masDias(fecha, n) {
+  const d = fechaADate(fecha);
+  d.setDate(d.getDate() + n);
+  return hoyLocal(d);
+}
+
+function estadoSanitario(lote, registros, vacunasPlan, fecha) {
+  const regs = (registros || []).filter(r => r && r.loteId === lote.id);
+  const vacs = (vacunasPlan || []).filter(v => v && v.loteId === lote.id && !v.fechaAplicada && v.fechaPrevista);
+  const activo = lote.estado === 'activo', manana = _masDias(fecha, 1);
+  let ambar = false;
+
+  if (activo) {
+    if (vacs.some(v => v.fechaPrevista < fecha)) return 'rojo';
+    if (vacs.some(v => v.fechaPrevista === fecha || v.fechaPrevista === manana)) ambar = true;
+  }
+  for (const r of regs) {
+    const dias = Number(r.datos && r.datos.retiroDias) || 0;
+    if (r.tipo === 'sanidad' && dias > 0 && r.fecha <= fecha && fecha <= _masDias(r.fecha, dias)) return 'rojo';
+  }
+
+  const g = _genDe(lote);
+  const muertes = _suma(regs.filter(r => r.tipo === 'mortalidad' && r.fecha === fecha), 'cantidad');
+  if (g && muertes > 0 && typeof lote.fechaLlegada === 'string') {
+    const base = avesVivas(lote, regs, fecha) + muertes; // aves al empezar el día
+    const esp = base > 0 ? estandarDia(lote, fecha).mortEsperada : 0;
+    if (esp > 0) {
+      const pct = 100 * muertes / base;
+      if (pct > 2 * esp) return 'rojo';
+      if (pct > 1.5 * esp) ambar = true;
+    }
+  }
+
+  if (activo && typeof lote.fechaLlegada === 'string' && fechaValida(lote.fechaLlegada)) {
+    const desde = edadDias({ fechaLlegada: lote.fechaLlegada, edadLlegadaDias: 0 }, fecha);
+    const inicio = _masDias(fecha, -2);
+    if (desde > 3 && !regs.some(r => r.fecha >= inicio && r.fecha <= fecha)) ambar = true;
+  }
+  return ambar ? 'ambar' : 'verde';
+}
