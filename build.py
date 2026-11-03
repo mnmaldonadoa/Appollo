@@ -24,7 +24,7 @@ def leer(nombre):
 
 def cuerpo():
     css, body = leer("styles.css"), leer("body.html")
-    scripts = "\n".join(f"<script>\n{leer(n)}\n</script>" for n in ("data.js", "model.js", "app.js"))
+    scripts = "\n".join(f"<script>\n{leer(n)}\n</script>" for n in ("data.js", "model.js", "calc.js", "alertas.js", "db.js", "app.js"))
     return css, body, scripts
 
 

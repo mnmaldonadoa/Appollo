@@ -1136,6 +1136,416 @@ if (typeof module !== 'undefined') module.exports = { hdStd, ewStd, consumoPostu
 </script>
 <script>
 /* =========================================================================
+   APPOLLO · Cálculos puros de lote (sin DOM, sin almacenamiento)
+   Fechas: cadenas locales 'YYYY-MM-DD'. Nunca se usa toISOString().
+   ========================================================================= */
+
+function fechaADate(s) {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function hoyLocal(d = new Date()) {
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+
+/* Edad en días = edad al llegar + días enteros transcurridos desde la llegada. */
+function edadDias(lote, fecha) {
+  const a = fechaADate(lote.fechaLlegada), b = fechaADate(fecha);
+  // UTC solo para contar días enteros sin que el cambio de hora afecte el resultado
+  const dias = Math.round((Date.UTC(b.getFullYear(), b.getMonth(), b.getDate()) -
+    Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())) / 86400000);
+  return lote.edadLlegadaDias + dias;
+}
+
+const _genDe = lote => GENETICAS.find(g => g.id === lote.genetica);
+const _esCarne = g => modoDe(g) === 'carne';
+const _delLote = (lote, registros, tipo) =>
+  registros.filter(r => r.loteId === lote.id && r.tipo === tipo);
+const _suma = (rs, campo) => rs.reduce((s, r) => s + (Number(r.datos && r.datos[campo]) || 0), 0);
+
+function mortalidadTotal(lote, registros, fecha) {
+  return _suma(_delLote(lote, registros, 'mortalidad').filter(r => r.fecha <= fecha), 'cantidad');
+}
+
+function avesVivas(lote, registros, fecha) {
+  return lote.avesInicio - mortalidadTotal(lote, registros, fecha);
+}
+
+function mortalidadPct(lote, registros, fecha) {
+  if (!(lote.avesInicio > 0)) return null;
+  return 100 * mortalidadTotal(lote, registros, fecha) / lote.avesInicio;
+}
+
+function viabilidad(lote, registros, fecha) {
+  const m = mortalidadPct(lote, registros, fecha);
+  return m === null ? null : 100 - m;
+}
+
+/* Valores de referencia del día para `aves` aves (por defecto avesInicio).
+   `altitud` se acepta por compatibilidad de firma; el estándar de guía no la usa. */
+function estandarDia(lote, fecha, altitud, aves) {
+  const g = _genDe(lote), d = edadDias(lote, fecha);
+  const n = aves == null ? lote.avesInicio : aves;
+  if (_esCarne(g)) {
+    const c = g.carne;
+    return {
+      alimentoKg: n * consumoCarne(c, d) / 1000,
+      huevos: 0, hdPct: null,
+      pesoG: pesoStd(c, d),
+      mortEsperada: c.mortBase / c.ciclo // % diario
+    };
+  }
+  const p = g.postura, w = d / 7;
+  const hd = hdStd(p, w);
+  return {
+    alimentoKg: n * consumoPostura(g, w) / 1000,
+    huevos: n * hd / 100,
+    hdPct: hd,
+    pesoG: ewStd(p, w), // peso del huevo (g)
+    mortEsperada: p.m / 7 * 100 // % diario
+  };
+}
+
+function pctPostura(lote, registros, fecha) {
+  const vivas = avesVivas(lote, registros, fecha);
+  if (!(vivas > 0)) return null;
+  const hs = _delLote(lote, registros, 'huevos').filter(r => r.fecha === fecha);
+  if (!hs.length) return null;
+  return 100 * _suma(hs, 'cantidad') / vivas;
+}
+
+/* Postura: kg de alimento del día / kg de huevo del día (peso de huevo de guía).
+   Carne: alimento acumulado / kg vivos (último peso registrado × aves vivas). */
+function conversion(lote, registros, fecha) {
+  const vivas = avesVivas(lote, registros, fecha);
+  if (!(vivas > 0)) return null;
+  const g = _genDe(lote);
+  if (_esCarne(g)) {
+    const alim = _suma(_delLote(lote, registros, 'alimento').filter(r => r.fecha <= fecha), 'kg');
+    const ps = _delLote(lote, registros, 'peso').filter(r => r.fecha <= fecha).sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+    if (!ps.length || !alim) return null;
+    const kgVivo = vivas * (Number(ps[ps.length - 1].datos.gramos) || 0) / 1000;
+    return kgVivo > 0 ? alim / kgVivo : null;
+  }
+  const alim = _suma(_delLote(lote, registros, 'alimento').filter(r => r.fecha === fecha), 'kg');
+  const huevos = _suma(_delLote(lote, registros, 'huevos').filter(r => r.fecha === fecha), 'cantidad');
+  const kgHuevo = huevos * ewStd(g.postura, edadDias(lote, fecha) / 7) / 1000;
+  return alim > 0 && kgHuevo > 0 ? alim / kgHuevo : null;
+}
+
+/* Real ÷ estándar × 100. Postura: % postura vs HD estándar. Carne: último peso vs peso estándar. */
+function rendimiento(lote, registros, fecha) {
+  const g = _genDe(lote), e = estandarDia(lote, fecha);
+  if (_esCarne(g)) {
+    const ps = _delLote(lote, registros, 'peso').filter(r => r.fecha <= fecha).sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+    if (!ps.length || !(e.pesoG > 0)) return null;
+    return 100 * (Number(ps[ps.length - 1].datos.gramos) || 0) / e.pesoG;
+  }
+  const real = pctPostura(lote, registros, fecha);
+  return real === null || !(e.hdPct > 0) ? null : 100 * real / e.hdPct;
+}
+
+</script>
+<script>
+/* =========================================================================
+   APPOLLO · Reglas de alerta (puras: sin DOM, sin almacenamiento)
+   Cada regla devuelve Alerta[]; generarAlertas las compone y ordena.
+   Alerta{id, tipo, gravedad:'rojo'|'ambar'|'info', loteId?, texto, accion:{etiqueta, ruta}}
+   ========================================================================= */
+
+function _sumaDias(fecha, n) {
+  const d = fechaADate(fecha);
+  d.setDate(d.getDate() + n);
+  return hoyLocal(d);
+}
+const _rutaLote = l => '#/lote/' + l.id;
+const _activos = lotes => lotes.filter(l => l.estado === 'activo');
+
+function alertaVacunas(datos, hoy) {
+  const out = [], manana = _sumaDias(hoy, 1);
+  const activos = new Map(_activos(datos.lotes).map(l => [l.id, l]));
+  for (const v of datos.vacunasPlan || []) {
+    const l = activos.get(v.loteId);
+    if (!l || v.fechaAplicada) continue;
+    let gravedad = null, cuando = '';
+    if (v.fechaPrevista < hoy) { gravedad = 'rojo'; cuando = 'vencida (' + v.fechaPrevista + ')'; }
+    else if (v.fechaPrevista === hoy) { gravedad = 'ambar'; cuando = 'es hoy'; }
+    else if (v.fechaPrevista === manana) { gravedad = 'ambar'; cuando = 'es mañana'; }
+    if (!gravedad) continue;
+    out.push({ id: 'vacuna-' + v.id, tipo: 'vacuna', gravedad, loteId: l.id,
+      texto: 'Vacuna ' + v.nombre + ' · ' + l.nombre + ': ' + cuando,
+      accion: { etiqueta: 'Ver lote', ruta: _rutaLote(l) } });
+  }
+  return out;
+}
+
+function alertaMortalidad(datos, hoy) {
+  const out = [];
+  for (const l of _activos(datos.lotes)) {
+    const muertes = datos.registros.filter(r => r.loteId === l.id && r.tipo === 'mortalidad' && r.fecha === hoy)
+      .reduce((s, r) => s + (Number(r.datos && r.datos.cantidad) || 0), 0);
+    if (!muertes) continue;
+    const base = avesVivas(l, datos.registros, hoy) + muertes; // aves al empezar el día
+    if (!(base > 0)) continue;
+    const esp = estandarDia(l, hoy, undefined).mortEsperada;
+    const pct = 100 * muertes / base;
+    if (esp > 0 && pct > 2 * esp) {
+      out.push({ id: 'mortalidad-' + l.id + '-' + hoy, tipo: 'mortalidad', gravedad: 'rojo', loteId: l.id,
+        texto: l.nombre + ': hoy murieron ' + muertes + ' aves (' + pct.toFixed(2) + ' %), más del doble de lo esperado',
+        accion: { etiqueta: 'Ver lote', ruta: _rutaLote(l) } });
+    }
+  }
+  return out;
+}
+
+function alertaPostura(datos, hoy) {
+  const out = [];
+  for (const l of _activos(datos.lotes)) {
+    const prom = desde => {
+      const v = [0, 1, 2].map(i => pctPostura(l, datos.registros, _sumaDias(hoy, -(desde + i)))).filter(x => x !== null);
+      return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+    };
+    const rec = prom(0), prev = prom(3);
+    if (rec !== null && prev !== null && prev - rec > 3) {
+      out.push({ id: 'postura-' + l.id + '-' + hoy, tipo: 'postura', gravedad: 'ambar', loteId: l.id,
+        texto: l.nombre + ': la postura bajó ' + (prev - rec).toFixed(1) + ' puntos frente a los 3 días previos',
+        accion: { etiqueta: 'Ver lote', ruta: _rutaLote(l) } });
+    }
+  }
+  return out;
+}
+
+function alertaInventario(datos) {
+  return (datos.inventario || [])
+    .filter(i => Number(i.cantidad) < Number(i.minimo))
+    .map(i => ({ id: 'inventario-' + i.id, tipo: 'inventario', gravedad: 'ambar',
+      texto: i.nombre + ': quedan ' + i.cantidad + ' ' + i.unidad + ' (mínimo ' + i.minimo + ')',
+      accion: { etiqueta: 'Ver inventario', ruta: '#/inventario' } }));
+}
+
+function alertaRetiro(datos, hoy) {
+  const out = [], activos = new Map(_activos(datos.lotes).map(l => [l.id, l]));
+  for (const r of datos.registros) {
+    const dias = Number(r.datos && r.datos.retiroDias) || 0;
+    const l = activos.get(r.loteId);
+    if (r.tipo !== 'sanidad' || dias <= 0 || !l) continue;
+    const fin = _sumaDias(r.fecha, dias);
+    if (hoy <= fin) {
+      out.push({ id: 'retiro-' + r.id, tipo: 'retiro', gravedad: 'rojo', loteId: l.id,
+        texto: 'No vendas huevos/carne hasta ' + fin + ' · ' + l.nombre,
+        accion: { etiqueta: 'Ver lote', ruta: _rutaLote(l) } });
+    }
+  }
+  return out;
+}
+
+function alertaSinRegistro(datos, hoy, ahora) {
+  if (ahora.getHours() < 18) return [];
+  return _activos(datos.lotes)
+    .filter(l => !datos.registros.some(r => r.loteId === l.id && r.fecha === hoy))
+    .map(l => ({ id: 'sin-registro-' + l.id + '-' + hoy, tipo: 'sin-registro', gravedad: 'info', loteId: l.id,
+      texto: l.nombre + ': aún no hay registros de hoy',
+      accion: { etiqueta: 'Registrar', ruta: _rutaLote(l) } }));
+}
+
+/* Avisa si la fase de alimento cambia hoy o en los próximos 7 días. */
+function alertaCambioAlimento(datos, hoy) {
+  const out = [];
+  for (const l of _activos(datos.lotes)) {
+    const g = GENETICAS.find(x => x.id === l.genetica);
+    if (!g) continue;
+    const modo = modoDe(g), d = edadDias(l, hoy);
+    for (let k = 0; k <= 7; k++) {
+      const antes = fase(g, modo, d + k - 1), despues = fase(g, modo, d + k);
+      if (antes.id !== despues.id) {
+        const cuando = k === 0 ? 'hoy' : k === 1 ? 'mañana' : 'en ' + k + ' días';
+        out.push({ id: 'fase-' + l.id + '-' + despues.id, tipo: 'fase', gravedad: 'info', loteId: l.id,
+          texto: l.nombre + ': ' + cuando + ' pasa a la fase "' + despues.n + '" de alimento',
+          accion: { etiqueta: 'Ver lote', ruta: _rutaLote(l) } });
+        break;
+      }
+    }
+  }
+  return out;
+}
+
+function generarAlertas(datos, ahora) {
+  const hoy = hoyLocal(ahora);
+  const orden = { rojo: 0, ambar: 1, info: 2 };
+  return [
+    ...alertaVacunas(datos, hoy), ...alertaMortalidad(datos, hoy), ...alertaPostura(datos, hoy),
+    ...alertaInventario(datos), ...alertaRetiro(datos, hoy), ...alertaSinRegistro(datos, hoy, ahora),
+    ...alertaCambioAlimento(datos, hoy)
+  ].map((a, i) => [a, i]).sort((x, y) => orden[x[0].gravedad] - orden[y[0].gravedad] || x[1] - y[1]).map(x => x[0]);
+}
+
+</script>
+<script>
+/* =========================================================================
+   APPOLLO · Persistencia (IndexedDB con respaldo en memoria)
+   Script plano: define el global DB. Todas las operaciones devuelven Promise.
+   ========================================================================= */
+const DB = (function () {
+  'use strict';
+  const NOMBRE = 'appollo', VERSION = 1;
+  const STORES = ['granja', 'lotes', 'registros', 'inventario', 'vacunasPlan'];
+  const K_V1 = 'appollo.v1.lotes', K_MIGRADO = 'appollo.v2.migrado';
+  let impl = null, abriendo = null;
+
+  const nuevoId = () => {
+    try { if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID(); } catch (e) { /* sigue */ }
+    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
+  };
+  const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } };
+  const copia = o => JSON.parse(JSON.stringify(o));
+  const coincide = (obj, filtro) => {
+    if (!filtro) return true;
+    if (typeof filtro === 'function') return !!filtro(obj);
+    return Object.keys(filtro).every(k => obj[k] === filtro[k]);
+  };
+  const exigeStore = s => { if (!STORES.includes(s)) throw new Error('Almacén desconocido: ' + s); };
+
+  /* ---------------------------- IndexedDB ---------------------------- */
+  const pedido = r => new Promise((ok, mal) => { r.onsuccess = () => ok(r.result); r.onerror = () => mal(r.error || new Error('Error de IndexedDB')); });
+  const transaccion = tx => new Promise((ok, mal) => {
+    tx.oncomplete = () => ok();
+    tx.onerror = () => mal(tx.error || new Error('Error de IndexedDB'));
+    tx.onabort = () => mal(tx.error || new Error('Transacción cancelada'));
+  });
+
+  function abrirIDB() {
+    return new Promise((ok, mal) => {
+      let req;
+      try { req = indexedDB.open(NOMBRE, VERSION); } catch (e) { mal(e); return; }
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        STORES.forEach(s => {
+          const st = db.createObjectStore(s, { keyPath: 'id' });
+          if (s === 'registros') st.createIndex('loteId+fecha', ['loteId', 'fecha']);
+          if (s === 'vacunasPlan') st.createIndex('loteId', 'loteId');
+        });
+      };
+      req.onsuccess = () => ok(req.result);
+      req.onerror = () => mal(req.error || new Error('No se pudo abrir IndexedDB'));
+      req.onblocked = () => mal(new Error('IndexedDB bloqueada'));
+    }).then(db => ({
+      modo: 'indexeddb',
+      async todos(s) { return pedido(db.transaction(s).objectStore(s).getAll()); },
+      async uno(s, id) { return pedido(db.transaction(s).objectStore(s).get(id)); },
+      async poner(s, o) { const tx = db.transaction(s, 'readwrite'); tx.objectStore(s).put(o); await transaccion(tx); },
+      async quitar(s, id) { const tx = db.transaction(s, 'readwrite'); tx.objectStore(s).delete(id); await transaccion(tx); },
+      async reemplazar(datos) {
+        const tx = db.transaction(STORES, 'readwrite');
+        STORES.forEach(s => { const st = tx.objectStore(s); st.clear(); (datos[s] || []).forEach(o => st.put(o)); });
+        await transaccion(tx);
+      }
+    }));
+  }
+
+  /* ----------------------------- Memoria ----------------------------- */
+  function abrirMemoria() {
+    const m = {};
+    STORES.forEach(s => { m[s] = new Map(); });
+    return {
+      modo: 'memoria',
+      async todos(s) { return Array.from(m[s].values()).map(copia); },
+      async uno(s, id) { return m[s].has(id) ? copia(m[s].get(id)) : undefined; },
+      async poner(s, o) { m[s].set(o.id, copia(o)); },
+      async quitar(s, id) { m[s].delete(id); },
+      async reemplazar(datos) { STORES.forEach(s => { m[s] = new Map((datos[s] || []).map(o => [o.id, copia(o)])); }); }
+    };
+  }
+
+  /* ------------------------------ API ------------------------------ */
+  function abrir() {
+    if (impl) return Promise.resolve({ modo: impl.modo });
+    if (!abriendo) {
+      abriendo = (typeof indexedDB === 'undefined' || !indexedDB ? Promise.reject(new Error('Sin IndexedDB')) : abrirIDB())
+        .catch(() => abrirMemoria())
+        .then(i => { impl = i; return { modo: i.modo }; });
+    }
+    return abriendo;
+  }
+  const lista = async () => { await abrir(); return impl; };
+
+  async function listar(store, filtro) {
+    exigeStore(store);
+    const todos = await (await lista()).todos(store);
+    return filtro ? todos.filter(o => coincide(o, filtro)) : todos;
+  }
+  async function obtener(store, id) { exigeStore(store); return (await lista()).uno(store, id); }
+  async function guardar(store, obj) {
+    exigeStore(store);
+    const o = Object.assign({}, obj);
+    if (o.id === undefined || o.id === null || o.id === '') o.id = nuevoId();
+    await (await lista()).poner(store, o);
+    return o;
+  }
+  async function borrar(store, id) { exigeStore(store); await (await lista()).quitar(store, id); }
+
+  async function exportar() {
+    const i = await lista(), datos = {};
+    for (const s of STORES) datos[s] = await i.todos(s);
+    return JSON.stringify({ version: 1, exportado: new Date().toISOString(), datos });
+  }
+
+  function validar(texto) {
+    let j;
+    try { j = JSON.parse(texto); } catch (e) { return { error: 'El archivo no es un respaldo válido: no se pudo leer el JSON.' }; }
+    if (!j || typeof j !== 'object' || Array.isArray(j)) return { error: 'El respaldo no tiene el formato esperado.' };
+    if (j.version !== 1) return { error: 'Versión de respaldo no compatible (se esperaba la versión 1).' };
+    if (!j.datos || typeof j.datos !== 'object' || Array.isArray(j.datos)) return { error: 'El respaldo no contiene la sección de datos.' };
+    for (const k of Object.keys(j.datos)) {
+      if (!STORES.includes(k)) return { error: 'El respaldo contiene datos desconocidos: ' + k + '.' };
+      if (!Array.isArray(j.datos[k])) return { error: 'Los datos de "' + k + '" deben ser una lista.' };
+      if (!j.datos[k].every(o => o && typeof o === 'object' && !Array.isArray(o) && o.id !== undefined && o.id !== null && o.id !== ''))
+        return { error: 'Hay registros inválidos en "' + k + '" (cada uno debe tener un id).' };
+    }
+    return { datos: j.datos };
+  }
+
+  async function importar(texto) {
+    const v = validar(texto);
+    if (v.error) return { ok: false, error: v.error };
+    try { await (await lista()).reemplazar(v.datos); } catch (e) { return { ok: false, error: 'No se pudo guardar el respaldo en este dispositivo.' }; }
+    return { ok: true };
+  }
+
+  async function migrarLS() {
+    if (lsGet(K_MIGRADO)) return 0;
+    const crudo = lsGet(K_V1);
+    let viejos = [];
+    try { const p = crudo ? JSON.parse(crudo) : []; viejos = Array.isArray(p) ? p : []; } catch (e) { viejos = []; }
+    let n = 0;
+    for (const e of viejos) {
+      if (!e || typeof e !== 'object') continue;
+      const est = e.estado && typeof e.estado === 'object' ? e.estado : {};
+      const gid = est.gid || e.gid || e.genetica || null;
+      const aves = Number(est.aves !== undefined ? est.aves : (e.avesInicio !== undefined ? e.avesInicio : e.aves));
+      let gNombre = gid;
+      try { const g = typeof GENETICAS !== 'undefined' && GENETICAS.find(x => x.id === gid); if (g) gNombre = g.nombre; } catch (x) { /* sin catálogo */ }
+      const fecha = typeof e.fecha === 'string' ? e.fecha.slice(0, 10) : '';
+      const nombre = [gNombre || 'Lote anterior', fecha].filter(Boolean).join(' · ');
+      await guardar('lotes', {
+        id: 'ls-' + (e.id !== undefined ? e.id : nuevoId()),
+        nombre, genetica: gid, avesInicio: isFinite(aves) ? aves : 0,
+        fechaLlegada: fecha || null, estado: 'cerrado', origen: 'v1', resumen: e.resumen || ''
+      });
+      n++;
+    }
+    lsSet(K_MIGRADO, '1');
+    return n;
+  }
+
+  return { abrir, listar, obtener, guardar, borrar, exportar, importar, migrarLS, STORES };
+})();
+
+</script>
+<script>
+/* =========================================================================
    APPOLLO · Interfaz
    ========================================================================= */
 (function () {
