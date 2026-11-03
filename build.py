@@ -27,6 +27,13 @@ SCRIPTS = ("data.js", "model.js", "calc.js", "alertas.js", "db.js",
            "ui/componentes.js", "ui/grafico.js", "ui/animar.js")
 
 
+def scripts_app():
+    """Base + src/vistas/*.js en orden alfabético (sin *.legacy.js) + app.js al final."""
+    vistas = sorted(p.relative_to(SRC).as_posix() for p in (SRC / "vistas").glob("*.js")
+                    if not p.name.endswith(".legacy.js"))
+    return SCRIPTS + tuple(vistas) + ("app.js",)
+
+
 def fuentes_css(incrustar=False):
     """@font-face con url(fonts/...) relativa, o con data URI base64 (una sola página)."""
     reglas = []
@@ -47,7 +54,7 @@ def leer(nombre):
 
 def cuerpo():
     css, body = leer("styles.css"), leer("body.html")
-    scripts = "\n".join(f"<script>\n{leer(n)}\n</script>" for n in SCRIPTS + ("app.js",))
+    scripts = "\n".join(f"<script>\n{leer(n)}\n</script>" for n in scripts_app())
     return css, body, scripts
 
 

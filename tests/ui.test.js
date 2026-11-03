@@ -26,6 +26,11 @@ assert.ok(/^<button type="button"/.test(h));
 assert.ok(/btn-secundario/.test(c.Boton({ texto: 'x' })), 'variante por defecto secundario');
 assert.ok(/btn-peligro/.test(c.Boton({ texto: 'x', variante: 'peligro' })));
 assert.ok(/btn-secundario/.test(c.Boton({ texto: 'x', variante: 'raro' })), 'variante desconocida cae a secundario');
+h = c.Boton({ texto: 'Ir', accion: 'ir', datos: { ruta: '#/lote/"1"', id: 'L1', 'Malo': 'x', 'a b': 'y', vacio: null }, clase: 'btn-ancho' });
+assert.ok(h.includes('data-ruta="#/lote/&quot;1&quot;"'), 'Boton escapa data-*');
+assert.ok(h.includes('data-id="L1"') && !h.includes('Malo') && !h.includes('a b') && !h.includes('data-vacio'), 'Boton filtra claves data-* inválidas');
+assert.ok(/class="btn btn-secundario btn-ancho"/.test(h), 'Boton acepta clase extra');
+assert.ok(!/data-accion="x"/.test(c.Boton({ texto: 'x', accion: 'ir', datos: { accion: 'x' } })), 'datos no pisa data-accion');
 
 // Tarjeta
 h = c.Tarjeta({ titulo: 'Aves <vivas>', cifra: 1234, unidad: 'aves', estado: 'rojo', icono: 'gallina', pie: 'hoy' });

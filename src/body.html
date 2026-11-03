@@ -22,12 +22,23 @@
     <symbol id="i-lotes" viewBox="0 0 24 24"><path d="M6.5 3.5h11v17l-5.5-3.8-5.5 3.8z"/></symbol>
     <symbol id="i-aviso" viewBox="0 0 24 24"><path d="M12 3.5l9 16.5H3z"/><path d="M12 10v4.2"/><path d="M12 17.2v.1"/></symbol>
     <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><path d="M12 7.8v.1"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></symbol>
+    <symbol id="i-grafico" viewBox="0 0 24 24"><path d="M4 4v15.5A.5.5 0 0 0 4.5 20H20"/><path d="M7.5 15.5l4-4.5 3 2.5 5-6"/></symbol>
+    <symbol id="i-ajustes" viewBox="0 0 24 24"><path d="M4 7h9"/><path d="M17 7h3"/><circle cx="15" cy="7" r="2"/><path d="M4 17h3"/><path d="M11 17h9"/><circle cx="9" cy="17" r="2"/></symbol>
     <symbol id="i-copiar" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M15.5 8.5V5.5a1.5 1.5 0 0 0-1.5-1.5H5.5A1.5 1.5 0 0 0 4 5.5V14a1.5 1.5 0 0 0 1.5 1.5h3"/></symbol>
   </defs>
 </svg>
-<div class="app">
-  <header class="top" id="top"></header>
-  <main id="view"></main>
+<div class="franjas" id="franjas">
+  <p class="franja franja-memoria" id="franja-memoria" role="alert" hidden><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-aviso"></use></svg><span>Tu navegador no permite guardar datos: exporta un respaldo</span></p>
+  <p class="franja franja-offline" id="franja-offline" role="status" hidden><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-info"></use></svg><span>Sin conexión, tus datos se guardan en el teléfono</span></p>
 </div>
-<nav class="barra" id="barra" hidden></nav>
-<div class="toast" id="toast" role="status" hidden></div>
+<main class="vista" id="view" tabindex="-1"></main>
+<nav class="nav" id="nav" aria-label="Navegación principal">
+  <a class="nav-item" href="#/inicio" data-nav="inicio"><span class="nav-icono"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-inicio"></use></svg></span><span class="nav-texto">Inicio</span></a>
+  <a class="nav-item" href="#/lotes" data-nav="lotes"><span class="nav-icono"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-gallina"></use></svg></span><span class="nav-texto">Lotes</span></a>
+  <button type="button" class="nav-item nav-registrar" data-accion="registrar"><span class="nav-circulo"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-mas"></use></svg></span><span class="nav-texto">Registrar</span></button>
+  <a class="nav-item" href="#/alertas" data-nav="alertas"><span class="nav-icono"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-campana"></use></svg><span class="nav-insignia" id="nav-insignia" hidden></span></span><span class="nav-texto">Alertas</span></a>
+  <a class="nav-item" href="#/mas" data-nav="mas"><span class="nav-icono"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-menu"></use></svg></span><span class="nav-texto">Más</span></a>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div id="capas"></div>

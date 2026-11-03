@@ -109,3 +109,60 @@ function rendimiento(lote, registros, fecha) {
   const real = pctPostura(lote, registros, fecha);
   return real === null || !(e.hdPct > 0) ? null : 100 * real / e.hdPct;
 }
+
+/* ---------------------- Validación de un registro ----------------------
+   validarRegistro(tipo, datos, lote, registros, fecha) -> {ok, mensaje?, duplicado?}
+   `duplicado` (con ok:true) avisa que ya existe un registro del mismo lote, tipo y día. */
+const TIPOS_DIARIOS = ['alimento', 'huevos', 'mortalidad', 'peso'];
+
+function fechaValida(s) {
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  return hoyLocal(fechaADate(s)) === s; // descarta 2026-02-30, mes 13, etc.
+}
+
+function validarRegistro(tipo, datos, lote, registros, fecha) {
+  const no = mensaje => ({ ok: false, mensaje });
+  const d = datos || {}, regs = registros || [];
+  const entero = x => x !== '' && x !== null && x !== undefined && Number.isInteger(Number(x));
+  const texto = x => typeof x === 'string' && x.trim() !== '';
+  if (!lote) return no('Elige un lote');
+  if (!fechaValida(fecha)) return no('La fecha no es válida');
+  if (fecha > hoyLocal()) return no('La fecha no puede ser futura');
+  if (fechaValida(lote.fechaLlegada) && fecha < lote.fechaLlegada)
+    return no('La fecha es anterior a la llegada del lote (' + lote.fechaLlegada + ')');
+
+  switch (tipo) {
+    case 'mortalidad': {
+      if (!entero(d.cantidad) || Number(d.cantidad) < 1) return no('Las aves muertas deben ser un número entero de 1 o más');
+      const vivas = Math.max(0, avesVivas(lote, regs, fecha));
+      if (Number(d.cantidad) > vivas) return no('Solo quedan ' + vivas + ' aves en el lote');
+      break;
+    }
+    case 'alimento':
+      if (!(Number.isFinite(Number(d.kg)) && Number(d.kg) > 0) || d.kg === null || d.kg === '') return no('Los kilos de alimento deben ser mayores que 0');
+      break;
+    case 'huevos':
+      if (!entero(d.cantidad) || Number(d.cantidad) < 0) return no('Los huevos deben ser un número entero de 0 o más');
+      if (d.rotos !== undefined && d.rotos !== null && d.rotos !== '') {
+        if (!entero(d.rotos) || Number(d.rotos) < 0) return no('Los huevos rotos deben ser un número entero de 0 o más');
+        if (Number(d.rotos) > Number(d.cantidad)) return no('Los huevos rotos no pueden ser más que los recogidos');
+      }
+      break;
+    case 'peso':
+      if (!(Number.isFinite(Number(d.gramos)) && Number(d.gramos) > 0) || d.gramos === null || d.gramos === '') return no('El peso debe ser mayor que 0 gramos');
+      break;
+    case 'vacuna':
+      if (!texto(d.nombre)) return no('Escribe el nombre de la vacuna');
+      break;
+    case 'sanidad':
+      if (!texto(d.enfermedad) && !texto(d.tratamiento)) return no('Escribe la enfermedad o el tratamiento');
+      if (d.retiroDias !== undefined && d.retiroDias !== null && d.retiroDias !== '' &&
+        (!entero(d.retiroDias) || Number(d.retiroDias) < 0)) return no('Los días de retiro deben ser un número entero de 0 o más');
+      break;
+    default:
+      return no('Tipo de registro desconocido');
+  }
+  const dup = TIPOS_DIARIOS.includes(tipo) &&
+    regs.some(r => r && r.loteId === lote.id && r.tipo === tipo && r.fecha === fecha);
+  return dup ? { ok: true, duplicado: true } : { ok: true };
+}

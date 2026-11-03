@@ -20,10 +20,16 @@ function icono(nombre, clase) {
   return `<svg class="ic${clase ? ' ' + esc(clase) : ''}" aria-hidden="true" focusable="false"><use href="#i-${esc(nombre)}"></use></svg>`;
 }
 
-function Boton({ texto, icono: ic, variante, accion } = {}) {
+/* `datos` opcional: {ruta:'#/x', id:'L1'} -> data-ruta="#/x" data-id="L1" (claves en minúsculas y guiones).
+   `clase` opcional: clases extra (p. ej. 'btn-ancho'). */
+function Boton({ texto, icono: ic, variante, accion, datos, clase } = {}) {
   const v = ['primario', 'secundario', 'peligro'].includes(variante) ? variante : 'secundario';
   const da = accion !== undefined && accion !== null ? ` data-accion="${esc(accion)}"` : '';
-  return `<button type="button" class="btn btn-${v}"${da}>${icono(ic)}<span class="btn-texto">${esc(texto)}</span></button>`;
+  const dd = datos && typeof datos === 'object' ? Object.keys(datos)
+    .filter(k => /^[a-z][a-z0-9-]*$/.test(k) && k !== 'accion' && datos[k] !== undefined && datos[k] !== null)
+    .map(k => ` data-${k}="${esc(datos[k])}"`).join('') : '';
+  const cl = clase ? ' ' + esc(clase) : '';
+  return `<button type="button" class="btn btn-${v}${cl}"${da}${dd}>${icono(ic)}<span class="btn-texto">${esc(texto)}</span></button>`;
 }
 
 const _ESTADOS = { verde: 'Bien', ambar: 'Revisar', rojo: 'Atención' };
