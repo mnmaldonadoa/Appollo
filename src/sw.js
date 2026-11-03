@@ -1,6 +1,8 @@
 /* Appollo · Service worker: guarda la app en el teléfono para usarla sin internet */
-const CACHE = 'appollo-v1';
-const ARCHIVOS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png'];
+const CACHE = 'appollo-v2';
+const ARCHIVOS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
+  './fonts/atkinson-hyperlegible-latin-400-normal.woff2', './fonts/atkinson-hyperlegible-latin-700-normal.woff2',
+  './fonts/zilla-slab-latin-600-normal.woff2', './fonts/zilla-slab-latin-700-normal.woff2'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARCHIVOS)).then(() => self.skipWaiting()));
@@ -27,17 +29,6 @@ self.addEventListener('fetch', e => {
         caches.open(CACHE).then(c => c.put(req, copia));
         return res;
       }).catch(() => caches.match('./index.html')))
-    );
-    return;
-  }
-
-  // Tipografías: se guardan la primera vez que se descargan
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    e.respondWith(
-      caches.open(CACHE).then(c => c.match(req).then(guardado => {
-        const red = fetch(req).then(res => { c.put(req, res.clone()); return res; }).catch(() => guardado);
-        return guardado || red;
-      }))
     );
   }
 });

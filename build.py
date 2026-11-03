@@ -1,10 +1,14 @@
 """Construye Appollo a partir de src/:
    dist/            -> app instalable (PWA) lista para subir a un hosting
    artifact.html    -> versión de una sola página para vista previa
-Uso: python3 build.py
+   dist/_kit.html   -> muestrario del sistema visual (con --kit)
+Uso: python3 build.py [--kit]
 """
+import base64
 import json
+import re
 import shutil
+import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -12,10 +16,29 @@ from PIL import Image, ImageDraw
 RAIZ = Path(__file__).parent
 SRC, DIST = RAIZ / "src", RAIZ / "dist"
 
-FUENTES = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
-           '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
-           '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700'
-           '&family=Zilla+Slab:wght@500;600;700&display=swap">')
+# Tipografías empaquetadas (subconjunto latino de @fontsource): (familia, peso, archivo)
+FUENTES = [
+    ("Atkinson Hyperlegible", 400, "atkinson-hyperlegible-latin-400-normal.woff2"),
+    ("Atkinson Hyperlegible", 700, "atkinson-hyperlegible-latin-700-normal.woff2"),
+    ("Zilla Slab", 600, "zilla-slab-latin-600-normal.woff2"),
+    ("Zilla Slab", 700, "zilla-slab-latin-700-normal.woff2"),
+]
+SCRIPTS = ("data.js", "model.js", "calc.js", "alertas.js", "db.js",
+           "ui/componentes.js", "ui/grafico.js", "ui/animar.js")
+
+
+def fuentes_css(incrustar=False):
+    """@font-face con url(fonts/...) relativa, o con data URI base64 (una sola página)."""
+    reglas = []
+    for familia, peso, archivo in FUENTES:
+        if incrustar:
+            datos = base64.b64encode((SRC / "fonts" / archivo).read_bytes()).decode("ascii")
+            url = f"data:font/woff2;base64,{datos}"
+        else:
+            url = f"fonts/{archivo}"
+        reglas.append(f'@font-face {{ font-family: "{familia}"; font-style: normal; font-weight: {peso}; '
+                      f'font-display: swap; src: url({url}) format("woff2"); }}')
+    return "<style>\n" + "\n".join(reglas) + "\n</style>"
 
 
 def leer(nombre):
@@ -24,7 +47,7 @@ def leer(nombre):
 
 def cuerpo():
     css, body = leer("styles.css"), leer("body.html")
-    scripts = "\n".join(f"<script>\n{leer(n)}\n</script>" for n in ("data.js", "model.js", "calc.js", "alertas.js", "db.js", "app.js"))
+    scripts = "\n".join(f"<script>\n{leer(n)}\n</script>" for n in SCRIPTS + ("app.js",))
     return css, body, scripts
 
 
@@ -75,7 +98,7 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-{FUENTES}
+{fuentes_css()}
 <style>
 {css}
 </style>
@@ -108,12 +131,15 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     }
     (DIST / "manifest.webmanifest").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     shutil.copy(SRC / "sw.js", DIST / "sw.js")
+    (DIST / "fonts").mkdir()
+    for _, _, archivo in FUENTES:
+        shutil.copy(SRC / "fonts" / archivo, DIST / "fonts" / archivo)
     iconos(DIST / "icons")
 
     # Versión de una sola página (vista previa)
     artefacto = f"""<title>Appollo</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-{FUENTES}
+{fuentes_css(incrustar=True)}
 <style>
 {css}
 </style>
@@ -124,5 +150,37 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     print("Listo: dist/ y artifact.html")
 
 
+def construir_kit():
+    """dist/_kit.html: cada componente en tema claro y oscuro (sin app.js)."""
+    css = leer("styles.css")
+    sprite = re.match(r"\s*(<svg.*?</svg>)", leer("body.html"), re.S).group(1)
+    scripts = "\n".join(f"<script>\n{leer(n)}\n</script>" for n in SCRIPTS + ("ui/kit.js",))
+    kit = f"""<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Appollo · Kit visual</title>
+{fuentes_css()}
+<style>
+{css}
+{leer("ui/kit.css")}
+</style>
+</head>
+<body>
+{sprite}
+<header class="kit-portada"><p class="kit-marca">Appollo 2</p><h1>Kit visual</h1>
+<p>Componentes del sistema en tema claro y oscuro. Sin atributo, la página sigue el tema del teléfono.</p></header>
+<main id="kit"></main>
+{scripts}
+</body>
+</html>
+"""
+    (DIST / "_kit.html").write_text(kit, encoding="utf-8")
+    print("Listo: dist/_kit.html")
+
+
 if __name__ == "__main__":
     construir()
+    if "--kit" in sys.argv[1:]:
+        construir_kit()
