@@ -54,8 +54,15 @@ const DB = (function () {
       async quitar(s, id) { const tx = db.transaction(s, 'readwrite'); tx.objectStore(s).delete(id); await transaccion(tx); },
       async reemplazar(datos) {
         const tx = db.transaction(STORES, 'readwrite');
-        STORES.forEach(s => { const st = tx.objectStore(s); st.clear(); (datos[s] || []).forEach(o => st.put(o)); });
-        await transaccion(tx);
+        const fin = transaccion(tx);
+        try {
+          STORES.forEach(s => { const st = tx.objectStore(s); st.clear(); (datos[s] || []).forEach(o => st.put(o)); });
+        } catch (e) {
+          try { tx.abort(); } catch (x) { /* ya cerrada */ }
+          try { await fin; } catch (x) { /* abortada */ }
+          throw e;
+        }
+        await fin;
       }
     }));
   }
@@ -107,6 +114,8 @@ const DB = (function () {
     return JSON.stringify({ version: 1, exportado: new Date().toISOString(), datos });
   }
 
+  const idValido = id => (typeof id === 'string' && id !== '') || (typeof id === 'number' && isFinite(id));
+
   function validar(texto) {
     let j;
     try { j = JSON.parse(texto); } catch (e) { return { error: 'El archivo no es un respaldo válido: no se pudo leer el JSON.' }; }
@@ -116,8 +125,8 @@ const DB = (function () {
     for (const k of Object.keys(j.datos)) {
       if (!STORES.includes(k)) return { error: 'El respaldo contiene datos desconocidos: ' + k + '.' };
       if (!Array.isArray(j.datos[k])) return { error: 'Los datos de "' + k + '" deben ser una lista.' };
-      if (!j.datos[k].every(o => o && typeof o === 'object' && !Array.isArray(o) && o.id !== undefined && o.id !== null && o.id !== ''))
-        return { error: 'Hay registros inválidos en "' + k + '" (cada uno debe tener un id).' };
+      if (!j.datos[k].every(o => o && typeof o === 'object' && !Array.isArray(o) && idValido(o.id)))
+        return { error: 'Hay registros inválidos en "' + k + '" (cada uno debe tener un id de texto o número).' };
     }
     return { datos: j.datos };
   }
@@ -130,6 +139,7 @@ const DB = (function () {
   }
 
   async function migrarLS() {
+    await abrir();
     if (lsGet(K_MIGRADO)) return 0;
     const crudo = lsGet(K_V1);
     let viejos = [];
@@ -151,7 +161,8 @@ const DB = (function () {
       });
       n++;
     }
-    lsSet(K_MIGRADO, '1');
+    // En modo memoria los datos no persisten: no se marca la migración para reintentarla tras recargar.
+    if (impl && impl.modo === 'indexeddb') lsSet(K_MIGRADO, '1');
     return n;
   }
 

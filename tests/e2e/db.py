@@ -5,6 +5,7 @@ from playwright.sync_api import sync_playwright
 
 RAIZ = Path(__file__).resolve().parents[2]
 fallos = 0
+errores_pagina = []
 
 
 def libre():
@@ -27,6 +28,8 @@ def main():
         for _ in range(50):
             try: urllib.request.urlopen(url, timeout=1); break
             except Exception: time.sleep(0.1)
+        else:
+            print("FAIL el servidor http no arrancó"); sys.exit(1)
         with sync_playwright() as pw:
             br = pw.chromium.launch()
 
@@ -34,7 +37,7 @@ def main():
                 ctx = br.new_context()
                 if init: ctx.add_init_script(init)
                 pg = ctx.new_page()
-                pg.on("pageerror", lambda e: print("  pageerror:", e))
+                pg.on("pageerror", lambda e: (print("  pageerror:", e), errores_pagina.append(str(e))))
                 pg.goto(url)
                 return ctx, pg
 
@@ -106,6 +109,21 @@ def main():
                   all(r[k] == {"ok": False, "msg": True} for k in
                       ["noJson", "version", "storeDesconocido", "noArreglo", "sinDatos", "mezcla"]), r)
             check("importar invalido deja datos intactos", r["n"] == 2, r)
+            r = pg.evaluate("""async () => {
+              const antes = JSON.stringify((await DB.listar('lotes')).map(l => l.id).sort());
+              const out = {};
+              const casos = {
+                idTrue: {version:1, datos:{lotes:[{id:'ok1', nombre:'nuevo'}], registros:[{id:true}]}},
+                idObjeto: {version:1, datos:{lotes:[{id:{}}]}},
+                sinId: {version:1, datos:{lotes:[{id:'ok2'}, {nombre:'sin id'}]}},
+              };
+              for (const [k, c] of Object.entries(casos)) out[k] = (await DB.importar(JSON.stringify(c))).ok;
+              out.intacto = antes === JSON.stringify((await DB.listar('lotes')).map(l => l.id).sort());
+              out.regs = (await DB.listar('registros')).length;
+              return out;
+            }""")
+            check("importar con id:true / id objeto / sin id falla", r["idTrue"] is False and r["idObjeto"] is False and r["sinId"] is False, r)
+            check("importar con ids invalidos deja lotes y registros intactos", r["intacto"] and r["regs"] == 1, r)
             ctx.close()
 
             # 4. persistencia entre recargas
@@ -162,6 +180,17 @@ def main():
             check("migrarLS corre una sola vez", r["n2"] == 0 and r["flag"], r)
             ctx.close()
 
+            # 7b. migrarLS en modo memoria no marca la migracion
+            ctx, pg = nueva("Object.defineProperty(window, 'indexedDB', {value: undefined, configurable: true});")
+            pg.evaluate("v => localStorage.setItem('appollo.v1.lotes', JSON.stringify(v))", viejos)
+            r = pg.evaluate("""async () => {
+              const m = await DB.abrir();
+              const n = await DB.migrarLS();
+              return {modo:m.modo, n, flag:localStorage.getItem('appollo.v2.migrado'), legado:!!localStorage.getItem('appollo.v1.lotes')};
+            }""")
+            check("memoria: migrarLS importa pero no marca ni borra el legado", r["modo"] == "memoria" and r["n"] == 2 and r["flag"] is None and r["legado"], r)
+            ctx.close()
+
             # 8. migrarLS sin datos / localStorage roto
             ctx, pg = nueva()
             n = pg.evaluate("async () => { await DB.abrir(); return await DB.migrarLS(); }")
@@ -176,6 +205,8 @@ def main():
         srv.terminate()
         try: srv.wait(5)
         except Exception: srv.kill()
+    if errores_pagina:
+        print("FAIL errores de página:", errores_pagina); globals()["fallos"] += 1
     print("RESULTADO:", "FALLO" if fallos else "OK")
     sys.exit(1 if fallos else 0)
 
