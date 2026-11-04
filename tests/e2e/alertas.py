@@ -187,6 +187,7 @@ def main():
             check("Entrada suma stock (5 + 30 = 35) y quita el chip Bajo", pg.evaluate(INV, mid)["cantidad"] == 35
                   and pg.locator(f"#view [data-item='{mid}'] .chip").count() == 0)
             pg.evaluate("DB.guardar('inventario', {id:'dec', nombre:'Vitamina', categoria:'medicamento', unidad:'litros', cantidad:1.25, minimo:2.5, costo:3})")
+            pg.wait_for_selector("#toast", state="hidden", timeout=8000)
             ir("#/alertas"); ir("#/inventario"); quieto()
             check("decimales con coma en inventario y alertas", "1,25 litros" in pg.inner_text("#view"))
             ir("#/alertas"); check("alerta de inventario con coma", "1,25" in pg.inner_text("#view .al-ambar") and "." not in pg.inner_text("#view .al-ambar").split("mínimo")[0].replace("Maíz", ""), pg.inner_text("#view .al-ambar"))
@@ -199,6 +200,7 @@ def main():
             pg.wait_for_selector("#toast:not([hidden]) [data-accion=deshacer]")
             check("eliminar quita el ítem", pg.evaluate("DB.obtener('inventario', 'dec')") is None and pg.locator("#view [data-item=dec]").count() == 0)
             pg.click("#toast [data-accion=deshacer]"); pg.wait_for_selector("#view [data-item=dec]")
+            pg.wait_for_function("DB.obtener('inventario', 'dec').then(i => !!i)")
             check("Deshacer restaura el ítem", pg.evaluate("DB.obtener('inventario', 'dec')")["cantidad"] == 1.25)
 
             # ---------- 8. descontarAlimento robusto ----------
