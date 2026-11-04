@@ -44,6 +44,7 @@ def main():
         with sync_playwright() as pw:
             br = pw.chromium.launch()
             ctx = br.new_context(viewport={"width": 360, "height": 740})
+            ctx.clock.set_fixed_time("2026-11-04T10:00:00")   # fecha fija; los temporizadores siguen en tiempo real
             pg = ctx.new_page()
             pg.on("pageerror", lambda e: errores.append("pageerror: " + str(e)))
             pg.on("console", lambda m: m.type == "error" and errores.append("console: " + m.text))
@@ -101,10 +102,8 @@ def main():
             # estado vacío
             pg.evaluate("DB.borrar('vacunasPlan', 'vp1')"); pg.evaluate("location.reload()"); pg.wait_for_selector("#view .pantalla")
             ir("#/inicio"); ir("#/alertas")
-            hoyh = pg.evaluate("new Date().getHours()")
-            if hoyh < 18:
-                check("sin alertas: 'Todo en orden'", "Todo en orden" in pg.inner_text("#view") and pg.locator("#view .vacia-ilustracion").count() == 1)
-                medir("alertas vacío")
+            check("sin alertas: 'Todo en orden'", "Todo en orden" in pg.inner_text("#view") and pg.locator("#view .vacia-ilustracion").count() == 1, pg.inner_text("#view"))
+            medir("alertas vacío")
 
             # ---------- 3. Inventario: crear ----------
             ir("#/inventario"); quieto()
@@ -210,6 +209,81 @@ def main():
               await Inventario.descontarAlimento(1e9); const cero = (await DB.obtener('inventario', '%s')).cantidad;
               return {igual, cero}; }""" % (mid, mid, mid))
             check("descontarAlimento ignora no finitos y no baja de 0", r["igual"] and r["cero"] == 0, r)
+            # ---------- 9. Deshacer exacto con stock recortado ----------
+            def poner(cant, vinculo=True):
+                pg.evaluate("""async ([id, c, v]) => { const i = await DB.obtener('inventario', id); i.cantidad = c; i.unidad = 'kg'; delete i.kgPorUnidad;
+                  if (v) i.vinculoAlimento = true; else delete i.vinculoAlimento; await DB.guardar('inventario', i); }""", [mid, cant, vinculo])
+            def stock(): return pg.evaluate(INV, mid)["cantidad"]
+            def limpiar():
+                pg.evaluate("DB.listar('registros').then(rs => Promise.all(rs.filter(r => r.tipo === 'alimento').map(r => DB.borrar('registros', r.id))))")
+                pg.wait_for_selector("#toast", state="hidden", timeout=8000)
+            def esperar(f): pg.wait_for_function(f"({f})()", timeout=3000)
+            def desc(v): esperar(f"() => DB.listar('registros').then(rs => rs.some(r => r.tipo === 'alimento' && r.datos.descontadoKg === {v}))")
+            ir("#/inicio"); limpiar(); poner(20)
+            registrar_kg(50)
+            esperar(f"() => DB.obtener('inventario', '{mid}').then(i => i.cantidad === 0)")
+            desc(20)
+            check("stock 20 + registro de 50 kg -> 0 y guarda descontadoKg 20", stock() == 0 and pg.evaluate(REGS, "alimento")[0]["datos"]["descontadoKg"] == 20)
+            pg.click("#toast [data-accion=deshacer]")
+            esperar(f"() => DB.obtener('inventario', '{mid}').then(i => i.cantidad === 20)")
+            check("Deshacer devuelve exactamente 20 (no 50)", stock() == 20 and len(pg.evaluate(REGS, "alimento")) == 0)
+            pg.wait_for_selector("#toast", state="hidden", timeout=8000)
+            registrar_kg(50)
+            esperar(f"() => DB.obtener('inventario', '{mid}').then(i => i.cantidad === 0)")
+            pg.wait_for_selector("#toast", state="hidden", timeout=8000)
+            ir(f"#/lote/{lid}"); pg.click("#view .dl-borrar >> nth=0")
+            esperar(f"() => DB.obtener('inventario', '{mid}').then(i => i.cantidad === 20)")
+            check("borrar ese registro en el detalle deja 20 (no 70)", stock() == 20)
+            pg.click("#toast [data-accion=deshacer]")
+            esperar(f"() => DB.obtener('inventario', '{mid}').then(i => i.cantidad === 0)")
+            desc(20)
+            check("Deshacer el borrado vuelve a 0 y conserva descontadoKg 20",
+                  stock() == 0 and pg.evaluate(REGS, "alimento")[0]["datos"]["descontadoKg"] == 20)
+            pg.wait_for_selector("#toast", state="hidden", timeout=8000)
+            # Sumar y deshacer
+            ir("#/inicio"); limpiar(); poner(20)
+            registrar_kg(10)
+            esperar(f"() => DB.obtener('inventario', '{mid}').then(i => i.cantidad === 10)")
+            pg.wait_for_selector("#toast", state="hidden", timeout=8000)
+            pg.click("#nav [data-accion=registrar]"); pg.click(".hoja [data-tipo=alimento]"); pg.wait_for_selector("#reg-valor")
+            pg.fill("#reg-valor", "30"); pg.click(".hoja [data-accion=reg-guardar]")
+            pg.wait_for_selector(".hoja [data-accion=reg-sumar]"); pg.click(".hoja [data-accion=reg-sumar]")
+            esperar(f"() => DB.obtener('inventario', '{mid}').then(i => i.cantidad === 0)")
+            desc(20)
+            r = pg.evaluate(REGS, "alimento")[0]["datos"]
+            check("Sumar con stock insuficiente: kg 40 y descontadoKg 20", r["kg"] == 40 and r["descontadoKg"] == 20, r)
+            pg.wait_for_selector("#toast:not([hidden]) [data-accion=deshacer]"); pg.click("#toast [data-accion=deshacer]")
+            esperar(f"() => DB.obtener('inventario', '{mid}').then(i => i.cantidad === 10)")
+            desc(10)
+            r = pg.evaluate(REGS, "alimento")[0]["datos"]
+            check("Deshacer Sumar vuelve al stock original (10) y a descontadoKg 10", stock() == 10 and r["kg"] == 10 and r["descontadoKg"] == 10, r)
+            pg.wait_for_selector("#toast", state="hidden", timeout=8000)
+            # registro anterior al vínculo
+            ir("#/inicio"); limpiar(); poner(20, vinculo=False)
+            registrar_kg(30)
+            pg.wait_for_selector("#toast", state="hidden", timeout=8000)
+            check("sin vínculo no guarda descontadoKg", "descontadoKg" not in pg.evaluate(REGS, "alimento")[0]["datos"])
+            poner(20, vinculo=True)
+            ir(f"#/lote/{lid}"); pg.click("#view .dl-borrar >> nth=0")
+            pg.wait_for_selector("#toast:not([hidden])"); pg.wait_for_timeout(300)
+            check("borrar un registro creado antes del vínculo no cambia el stock", stock() == 20 and len(pg.evaluate(REGS, "alimento")) == 0, stock())
+            pg.wait_for_selector("#toast", state="hidden", timeout=8000)
+
+            # ---------- 10. A las 19:00: aviso 'sin registro' no suma al contador ----------
+            ctx2 = br.new_context(viewport={"width": 360, "height": 740}); ctx2.clock.set_fixed_time("2026-11-04T19:00:00")
+            p2 = ctx2.new_page(); p2.on("pageerror", lambda e: errores.append("pageerror: " + str(e)))
+            p2.on("console", lambda m: m.type == "error" and errores.append("console: " + m.text))
+            p2.goto(url); p2.wait_for_selector("#view .pantalla")
+            p2.evaluate("DB.guardar('granja', {id:'granja', nombre:'La Esperanza', tipo:'postura', altitud:2800, tema:'auto'})")
+            p2.evaluate("NuevoLote.crear({genetica:'hyline-brown', avesInicio:100, altitud:2800, galpon:'G1', edadDias:30})")
+            p2.evaluate("DB.listar('vacunasPlan').then(vs => Promise.all(vs.map(v => DB.borrar('vacunasPlan', v.id))))")
+            p2.reload(); p2.wait_for_selector("#view .pantalla")
+            p2.evaluate("location.hash = '#/alertas'"); p2.wait_for_selector("#view .al-card")
+            card = p2.locator("#view .al-card")
+            check("a las 19:00 aparece el aviso 'sin registro' etiquetado 'Aviso'",
+                  card.count() == 1 and "Aviso" in card.inner_text() and "aún no hay registros" in card.inner_text(), p2.inner_text("#view"))
+            check("el aviso informativo no cuenta en la insignia", p2.evaluate("document.querySelector('#nav-insignia').hidden"))
+            ctx2.close()
             check("sin errores de consola", not errores, errores[:5])
             ctx.close(); br.close()
     finally:

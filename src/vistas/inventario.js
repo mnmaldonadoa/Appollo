@@ -6,13 +6,17 @@ var VISTAS = window.VISTAS || (window.VISTAS = {});
 var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
 
 var Inventario = {
+  /* Aplica `kg` de alimento (negativo = devolver) al ítem vinculado. Devuelve {aplicadoKg}: los kg que de verdad
+     salieron (o volvieron) del stock, para poder deshacer exactamente aunque el stock se haya recortado a 0. */
   async descontarAlimento(kg) {
-    if (typeof kg !== 'number' || !Number.isFinite(kg)) return;
-    const item = (await DB.listar('inventario')).find(i => i.vinculoAlimento === true);
-    if (!item) return;
-    const nueva = calcularDescuento(item, kg);
-    if (nueva === item.cantidad || !Number.isFinite(Number(nueva))) return;
+    if (typeof kg !== 'number' || !Number.isFinite(kg)) return { aplicadoKg: 0 };
+    const item = (await DB.listar('inventario')).filter(i => i.vinculoAlimento === true)
+      .sort((a, b) => String(a.id).localeCompare(String(b.id)))[0];
+    if (!item) return { aplicadoKg: 0 };
+    const nueva = calcularDescuento(item, kg), aplicadoKg = kgDescontados(item, kg);
+    if (nueva === item.cantidad || !Number.isFinite(Number(nueva))) return { aplicadoKg: 0 };
     await DB.guardar('inventario', Object.assign({}, item, { cantidad: nueva }));
+    return { aplicadoKg };
   }
 };
 
@@ -63,12 +67,14 @@ var Inventario = {
     const f = el.closest('.inv-form'), suma = Number(f.querySelector('#inv-suma').value), err = f.querySelector('.reg-error');
     if (!Number.isFinite(suma) || suma <= 0) { err.textContent = 'Escribe una cantidad mayor que 0'; err.hidden = false; return; }
     el.disabled = true;
-    const i = await DB.obtener('inventario', f.dataset.id);
-    if (!i) { App.cerrarHoja(); return; }
-    const previo = copia(i);
-    await DB.guardar('inventario', Object.assign({}, i, { cantidad: Math.round((Number(i.cantidad) + suma) * 1e6) / 1e6 }));
-    App.cerrarHoja(); await App.refrescar();
-    App.toast('Entrada guardada', { deshacer: () => DB.guardar('inventario', previo) });
+    try {
+      const i = await DB.obtener('inventario', f.dataset.id);
+      if (!i) { App.cerrarHoja(); return; }
+      const previo = copia(i);
+      await DB.guardar('inventario', Object.assign({}, i, { cantidad: Math.round((Number(i.cantidad) + suma) * 1e6) / 1e6 }));
+      App.cerrarHoja(); await App.refrescar();
+      App.toast('Entrada guardada', { deshacer: () => DB.guardar('inventario', previo) });
+    } catch (e) { el.disabled = false; App.toast('No se pudo guardar. Intenta de nuevo.'); }
   };
 
   /* ------------------------------ Formulario ------------------------------ */
@@ -140,10 +146,10 @@ var Inventario = {
       const previos = todos.map(copia);
       const actual = id ? todos.find(i => i.id === id) : null;
       const nuevo = Object.assign({}, actual ? { id: actual.id } : {}, r.datos);
+      const guardado = await DB.guardar('inventario', nuevo);
       if (r.datos.vinculoAlimento) {
         for (const o of todos) if (o.id !== id && o.vinculoAlimento) { const c = copia(o); delete c.vinculoAlimento; await DB.guardar('inventario', c); }
       }
-      const guardado = await DB.guardar('inventario', nuevo);
       App.cerrarHoja(); await App.refrescar();
       App.toast(id ? 'Cambios guardados' : 'Ítem guardado', { deshacer: async () => {
         if (!id) await DB.borrar('inventario', guardado.id);
@@ -162,10 +168,12 @@ var Inventario = {
   ACCIONES['inv-borrar-no'] = () => confirmar(false);
   ACCIONES['inv-borrar-si'] = async el => {
     el.disabled = true;
-    const id = el.closest('.inv-form').dataset.id, previo = await DB.obtener('inventario', id);
-    if (!previo) { App.cerrarHoja(); App.refrescar(); return; }
-    await DB.borrar('inventario', id);
-    App.cerrarHoja(); await App.refrescar();
-    App.toast('Ítem eliminado', { deshacer: () => DB.guardar('inventario', previo) });
+    try {
+      const id = el.closest('.inv-form').dataset.id, previo = await DB.obtener('inventario', id);
+      if (!previo) { App.cerrarHoja(); App.refrescar(); return; }
+      await DB.borrar('inventario', id);
+      App.cerrarHoja(); await App.refrescar();
+      App.toast('Ítem eliminado', { deshacer: () => DB.guardar('inventario', previo) });
+    } catch (e) { el.disabled = false; App.toast('No se pudo eliminar. Intenta de nuevo.'); }
   };
 })();

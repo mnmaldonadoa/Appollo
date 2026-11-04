@@ -226,3 +226,12 @@ function calcularDescuento(item, kg) {
   const nueva = Number(cant) - kg / por;
   return Math.max(0, Math.round(nueva * 1e6) / 1e6);
 }
+
+/* Kg realmente quitados del stock al aplicar `kg` (positivo: salieron; negativo: se devolvieron; 0 si nada cambió). */
+function kgDescontados(item, kg) {
+  if (!item) return 0;
+  const nueva = Number(calcularDescuento(item, kg)), cant = Number(item.cantidad);
+  const por = item.unidad === 'kg' ? 1 : Number(item.kgPorUnidad);
+  if (!Number.isFinite(nueva) || !Number.isFinite(cant) || !(por > 0)) return 0;
+  return Math.round((cant - nueva) * por * 1e6) / 1e6;
+}

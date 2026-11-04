@@ -112,9 +112,10 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   };
 
   /* ------------------------------ Acciones ------------------------------ */
+  /* Aplica kg al inventario vinculado; devuelve los kg realmente aplicados (0 si no hay ítem o falla). */
   async function inventario(kg) {
-    if (!(Number.isFinite(kg) && kg !== 0) || typeof Inventario === 'undefined' || !Inventario || typeof Inventario.descontarAlimento !== 'function') return;
-    try { await Inventario.descontarAlimento(kg); } catch (e) { /* no crítico */ }
+    if (!(Number.isFinite(kg) && kg !== 0) || typeof Inventario === 'undefined' || !Inventario || typeof Inventario.descontarAlimento !== 'function') return 0;
+    try { const r = await Inventario.descontarAlimento(kg); return Number(r && r.aplicadoKg) || 0; } catch (e) { return 0; }
   }
   async function hacer(fn, msg, deshacer) {
     try { await fn(); } catch (e) { App.toast('No se pudo guardar. Intenta de nuevo.'); return; }
@@ -138,7 +139,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     el.disabled = true;
     const r = await DB.obtener('registros', el.dataset.id);
     if (!r) { App.refrescar(); return; }
-    const previo = copia(r), kg = r.tipo === 'alimento' ? Number(r.datos && r.datos.kg) || 0 : 0;
+    const previo = copia(r), kg = r.tipo === 'alimento' ? Number(r.datos && r.datos.descontadoKg) || 0 : 0;
     const plan = r.tipo === 'vacuna' && r.datos && r.datos.planId ? await DB.obtener('vacunasPlan', r.datos.planId) : null;
     const planPrevio = plan ? copia(plan) : null;
     await hacer(async () => {
@@ -148,7 +149,8 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     }, 'Registro borrado', async () => {
       await DB.guardar('registros', previo);
       if (planPrevio) await DB.guardar('vacunasPlan', planPrevio);
-      await inventario(kg);
+      const ap = await inventario(kg);
+      if (kg && ap !== kg) await DB.guardar('registros', Object.assign({}, previo, { datos: Object.assign({}, previo.datos, { descontadoKg: ap }) }));
     });
   };
 

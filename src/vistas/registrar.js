@@ -206,23 +206,34 @@ ${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'reg-cancelar-dup',
     if (b) try { b.focus({ preventScroll: true }); } catch (e) { /* sin foco */ }
   }
 
+  /* Aplica kg al inventario vinculado; devuelve los kg realmente aplicados (0 si no hay ítem o falla). */
   async function inventario(kg) {
-    if (!(Number.isFinite(kg) && kg !== 0)) return;
+    if (!(Number.isFinite(kg) && kg !== 0)) return 0;
     if (typeof Inventario !== 'undefined' && Inventario && typeof Inventario.descontarAlimento === 'function') {
-      try { await Inventario.descontarAlimento(kg); } catch (e) { /* el registro vale aunque falle el inventario */ }
+      try { const r = await Inventario.descontarAlimento(kg); return Number(r && r.aplicadoKg) || 0; } catch (e) { /* el registro vale aunque falle el inventario */ }
     }
+    return 0;
   }
+  const descontado = r => Number(r && r.datos && r.datos.descontadoKg) || 0;
+  const conDescontado = (datos, kg) => { const d = Object.assign({}, datos); if (kg) d.descontadoKg = kg; else delete d.descontadoKg; return d; };
 
-  /* Escribe el cambio y devuelve la función que lo revierte exactamente. */
+  /* Escribe el cambio y devuelve la función que lo revierte exactamente (el inventario se revierte con
+     los kg realmente descontados, guardados en datos.descontadoKg). */
   async function escribir(modo, datos) {
-    const l = lote(), hoy = hoyLocal(), ahora = new Date().toISOString();
+    const l = lote(), hoy = hoyLocal(), ahora = new Date().toISOString(), ali = st.tipo === 'alimento';
     if (modo === 'sumar' || modo === 'reemplazar') {
-      const previo = JSON.parse(JSON.stringify(st.existente));
+      const previo = JSON.parse(JSON.stringify(st.existente)), prevDesc = descontado(previo);
       const final = modo === 'sumar' ? sumarDatos(previo.datos, datos) : datos;
-      await DB.guardar('registros', Object.assign({}, previo, { datos: final, editado: ahora }));
-      const dkg = st.tipo === 'alimento' ? (Number(final.kg) || 0) - (Number(previo.datos && previo.datos.kg) || 0) : 0;
-      await inventario(dkg);
-      return async () => { await DB.guardar('registros', previo); await inventario(-dkg); };
+      const guardarReg = d => DB.guardar('registros', Object.assign({}, previo, { datos: d, editado: ahora }));
+      await guardarReg(final);
+      let neto = 0;
+      if (ali) {
+        if (modo === 'sumar') neto = await inventario((Number(final.kg) || 0) - (Number(previo.datos && previo.datos.kg) || 0));
+        else { await inventario(-prevDesc); neto = await inventario(Number(final.kg) || 0) - prevDesc; }
+        const nuevoDesc = prevDesc + neto;
+        if (nuevoDesc !== descontado({ datos: final }) || (nuevoDesc && !final.descontadoKg)) await guardarReg(conDescontado(final, nuevoDesc));
+      }
+      return async () => { await DB.guardar('registros', previo); if (ali) await inventario(-neto); };
     }
     let planPrevio = null;
     if (st.tipo === 'vacuna' && datos.planId) {
@@ -231,12 +242,15 @@ ${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'reg-cancelar-dup',
       await DB.guardar('vacunasPlan', Object.assign({}, plan, { fechaAplicada: hoy }));
     }
     const nuevo = await DB.guardar('registros', { loteId: l.id, fecha: hoy, tipo: st.tipo, datos, creado: ahora });
-    const dkg = st.tipo === 'alimento' ? Number(datos.kg) || 0 : 0;
-    await inventario(dkg);
+    let desc = 0;
+    if (ali) {
+      desc = await inventario(Number(datos.kg) || 0);
+      if (desc) await DB.guardar('registros', Object.assign({}, nuevo, { datos: conDescontado(datos, desc) }));
+    }
     return async () => {
       await DB.borrar('registros', nuevo.id);
       if (planPrevio) await DB.guardar('vacunasPlan', planPrevio);
-      await inventario(-dkg);
+      if (desc) await inventario(-desc);
     };
   }
 

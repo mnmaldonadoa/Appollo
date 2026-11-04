@@ -1556,6 +1556,15 @@ function calcularDescuento(item, kg) {
   return Math.max(0, Math.round(nueva * 1e6) / 1e6);
 }
 
+/* Kg realmente quitados del stock al aplicar `kg` (positivo: salieron; negativo: se devolvieron; 0 si nada cambió). */
+function kgDescontados(item, kg) {
+  if (!item) return 0;
+  const nueva = Number(calcularDescuento(item, kg)), cant = Number(item.cantidad);
+  const por = item.unidad === 'kg' ? 1 : Number(item.kgPorUnidad);
+  if (!Number.isFinite(nueva) || !Number.isFinite(cant) || !(por > 0)) return 0;
+  return Math.round((cant - nueva) * por * 1e6) / 1e6;
+}
+
 </script>
 <script>
 /* =========================================================================
@@ -2341,9 +2350,10 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   };
 
   /* ------------------------------ Acciones ------------------------------ */
+  /* Aplica kg al inventario vinculado; devuelve los kg realmente aplicados (0 si no hay ítem o falla). */
   async function inventario(kg) {
-    if (!(Number.isFinite(kg) && kg !== 0) || typeof Inventario === 'undefined' || !Inventario || typeof Inventario.descontarAlimento !== 'function') return;
-    try { await Inventario.descontarAlimento(kg); } catch (e) { /* no crítico */ }
+    if (!(Number.isFinite(kg) && kg !== 0) || typeof Inventario === 'undefined' || !Inventario || typeof Inventario.descontarAlimento !== 'function') return 0;
+    try { const r = await Inventario.descontarAlimento(kg); return Number(r && r.aplicadoKg) || 0; } catch (e) { return 0; }
   }
   async function hacer(fn, msg, deshacer) {
     try { await fn(); } catch (e) { App.toast('No se pudo guardar. Intenta de nuevo.'); return; }
@@ -2367,7 +2377,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     el.disabled = true;
     const r = await DB.obtener('registros', el.dataset.id);
     if (!r) { App.refrescar(); return; }
-    const previo = copia(r), kg = r.tipo === 'alimento' ? Number(r.datos && r.datos.kg) || 0 : 0;
+    const previo = copia(r), kg = r.tipo === 'alimento' ? Number(r.datos && r.datos.descontadoKg) || 0 : 0;
     const plan = r.tipo === 'vacuna' && r.datos && r.datos.planId ? await DB.obtener('vacunasPlan', r.datos.planId) : null;
     const planPrevio = plan ? copia(plan) : null;
     await hacer(async () => {
@@ -2377,7 +2387,8 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     }, 'Registro borrado', async () => {
       await DB.guardar('registros', previo);
       if (planPrevio) await DB.guardar('vacunasPlan', planPrevio);
-      await inventario(kg);
+      const ap = await inventario(kg);
+      if (kg && ap !== kg) await DB.guardar('registros', Object.assign({}, previo, { datos: Object.assign({}, previo.datos, { descontadoKg: ap }) }));
     });
   };
 
@@ -2593,13 +2604,17 @@ var VISTAS = window.VISTAS || (window.VISTAS = {});
 var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
 
 var Inventario = {
+  /* Aplica `kg` de alimento (negativo = devolver) al ítem vinculado. Devuelve {aplicadoKg}: los kg que de verdad
+     salieron (o volvieron) del stock, para poder deshacer exactamente aunque el stock se haya recortado a 0. */
   async descontarAlimento(kg) {
-    if (typeof kg !== 'number' || !Number.isFinite(kg)) return;
-    const item = (await DB.listar('inventario')).find(i => i.vinculoAlimento === true);
-    if (!item) return;
-    const nueva = calcularDescuento(item, kg);
-    if (nueva === item.cantidad || !Number.isFinite(Number(nueva))) return;
+    if (typeof kg !== 'number' || !Number.isFinite(kg)) return { aplicadoKg: 0 };
+    const item = (await DB.listar('inventario')).filter(i => i.vinculoAlimento === true)
+      .sort((a, b) => String(a.id).localeCompare(String(b.id)))[0];
+    if (!item) return { aplicadoKg: 0 };
+    const nueva = calcularDescuento(item, kg), aplicadoKg = kgDescontados(item, kg);
+    if (nueva === item.cantidad || !Number.isFinite(Number(nueva))) return { aplicadoKg: 0 };
     await DB.guardar('inventario', Object.assign({}, item, { cantidad: nueva }));
+    return { aplicadoKg };
   }
 };
 
@@ -2650,12 +2665,14 @@ var Inventario = {
     const f = el.closest('.inv-form'), suma = Number(f.querySelector('#inv-suma').value), err = f.querySelector('.reg-error');
     if (!Number.isFinite(suma) || suma <= 0) { err.textContent = 'Escribe una cantidad mayor que 0'; err.hidden = false; return; }
     el.disabled = true;
-    const i = await DB.obtener('inventario', f.dataset.id);
-    if (!i) { App.cerrarHoja(); return; }
-    const previo = copia(i);
-    await DB.guardar('inventario', Object.assign({}, i, { cantidad: Math.round((Number(i.cantidad) + suma) * 1e6) / 1e6 }));
-    App.cerrarHoja(); await App.refrescar();
-    App.toast('Entrada guardada', { deshacer: () => DB.guardar('inventario', previo) });
+    try {
+      const i = await DB.obtener('inventario', f.dataset.id);
+      if (!i) { App.cerrarHoja(); return; }
+      const previo = copia(i);
+      await DB.guardar('inventario', Object.assign({}, i, { cantidad: Math.round((Number(i.cantidad) + suma) * 1e6) / 1e6 }));
+      App.cerrarHoja(); await App.refrescar();
+      App.toast('Entrada guardada', { deshacer: () => DB.guardar('inventario', previo) });
+    } catch (e) { el.disabled = false; App.toast('No se pudo guardar. Intenta de nuevo.'); }
   };
 
   /* ------------------------------ Formulario ------------------------------ */
@@ -2727,10 +2744,10 @@ var Inventario = {
       const previos = todos.map(copia);
       const actual = id ? todos.find(i => i.id === id) : null;
       const nuevo = Object.assign({}, actual ? { id: actual.id } : {}, r.datos);
+      const guardado = await DB.guardar('inventario', nuevo);
       if (r.datos.vinculoAlimento) {
         for (const o of todos) if (o.id !== id && o.vinculoAlimento) { const c = copia(o); delete c.vinculoAlimento; await DB.guardar('inventario', c); }
       }
-      const guardado = await DB.guardar('inventario', nuevo);
       App.cerrarHoja(); await App.refrescar();
       App.toast(id ? 'Cambios guardados' : 'Ítem guardado', { deshacer: async () => {
         if (!id) await DB.borrar('inventario', guardado.id);
@@ -2749,11 +2766,13 @@ var Inventario = {
   ACCIONES['inv-borrar-no'] = () => confirmar(false);
   ACCIONES['inv-borrar-si'] = async el => {
     el.disabled = true;
-    const id = el.closest('.inv-form').dataset.id, previo = await DB.obtener('inventario', id);
-    if (!previo) { App.cerrarHoja(); App.refrescar(); return; }
-    await DB.borrar('inventario', id);
-    App.cerrarHoja(); await App.refrescar();
-    App.toast('Ítem eliminado', { deshacer: () => DB.guardar('inventario', previo) });
+    try {
+      const id = el.closest('.inv-form').dataset.id, previo = await DB.obtener('inventario', id);
+      if (!previo) { App.cerrarHoja(); App.refrescar(); return; }
+      await DB.borrar('inventario', id);
+      App.cerrarHoja(); await App.refrescar();
+      App.toast('Ítem eliminado', { deshacer: () => DB.guardar('inventario', previo) });
+    } catch (e) { el.disabled = false; App.toast('No se pudo eliminar. Intenta de nuevo.'); }
   };
 })();
 
@@ -3255,23 +3274,34 @@ ${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'reg-cancelar-dup',
     if (b) try { b.focus({ preventScroll: true }); } catch (e) { /* sin foco */ }
   }
 
+  /* Aplica kg al inventario vinculado; devuelve los kg realmente aplicados (0 si no hay ítem o falla). */
   async function inventario(kg) {
-    if (!(Number.isFinite(kg) && kg !== 0)) return;
+    if (!(Number.isFinite(kg) && kg !== 0)) return 0;
     if (typeof Inventario !== 'undefined' && Inventario && typeof Inventario.descontarAlimento === 'function') {
-      try { await Inventario.descontarAlimento(kg); } catch (e) { /* el registro vale aunque falle el inventario */ }
+      try { const r = await Inventario.descontarAlimento(kg); return Number(r && r.aplicadoKg) || 0; } catch (e) { /* el registro vale aunque falle el inventario */ }
     }
+    return 0;
   }
+  const descontado = r => Number(r && r.datos && r.datos.descontadoKg) || 0;
+  const conDescontado = (datos, kg) => { const d = Object.assign({}, datos); if (kg) d.descontadoKg = kg; else delete d.descontadoKg; return d; };
 
-  /* Escribe el cambio y devuelve la función que lo revierte exactamente. */
+  /* Escribe el cambio y devuelve la función que lo revierte exactamente (el inventario se revierte con
+     los kg realmente descontados, guardados en datos.descontadoKg). */
   async function escribir(modo, datos) {
-    const l = lote(), hoy = hoyLocal(), ahora = new Date().toISOString();
+    const l = lote(), hoy = hoyLocal(), ahora = new Date().toISOString(), ali = st.tipo === 'alimento';
     if (modo === 'sumar' || modo === 'reemplazar') {
-      const previo = JSON.parse(JSON.stringify(st.existente));
+      const previo = JSON.parse(JSON.stringify(st.existente)), prevDesc = descontado(previo);
       const final = modo === 'sumar' ? sumarDatos(previo.datos, datos) : datos;
-      await DB.guardar('registros', Object.assign({}, previo, { datos: final, editado: ahora }));
-      const dkg = st.tipo === 'alimento' ? (Number(final.kg) || 0) - (Number(previo.datos && previo.datos.kg) || 0) : 0;
-      await inventario(dkg);
-      return async () => { await DB.guardar('registros', previo); await inventario(-dkg); };
+      const guardarReg = d => DB.guardar('registros', Object.assign({}, previo, { datos: d, editado: ahora }));
+      await guardarReg(final);
+      let neto = 0;
+      if (ali) {
+        if (modo === 'sumar') neto = await inventario((Number(final.kg) || 0) - (Number(previo.datos && previo.datos.kg) || 0));
+        else { await inventario(-prevDesc); neto = await inventario(Number(final.kg) || 0) - prevDesc; }
+        const nuevoDesc = prevDesc + neto;
+        if (nuevoDesc !== descontado({ datos: final }) || (nuevoDesc && !final.descontadoKg)) await guardarReg(conDescontado(final, nuevoDesc));
+      }
+      return async () => { await DB.guardar('registros', previo); if (ali) await inventario(-neto); };
     }
     let planPrevio = null;
     if (st.tipo === 'vacuna' && datos.planId) {
@@ -3280,12 +3310,15 @@ ${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'reg-cancelar-dup',
       await DB.guardar('vacunasPlan', Object.assign({}, plan, { fechaAplicada: hoy }));
     }
     const nuevo = await DB.guardar('registros', { loteId: l.id, fecha: hoy, tipo: st.tipo, datos, creado: ahora });
-    const dkg = st.tipo === 'alimento' ? Number(datos.kg) || 0 : 0;
-    await inventario(dkg);
+    let desc = 0;
+    if (ali) {
+      desc = await inventario(Number(datos.kg) || 0);
+      if (desc) await DB.guardar('registros', Object.assign({}, nuevo, { datos: conDescontado(datos, desc) }));
+    }
     return async () => {
       await DB.borrar('registros', nuevo.id);
       if (planPrevio) await DB.guardar('vacunasPlan', planPrevio);
-      await inventario(-dkg);
+      if (desc) await inventario(-desc);
     };
   }
 
