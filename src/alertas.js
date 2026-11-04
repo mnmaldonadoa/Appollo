@@ -42,7 +42,7 @@ function alertaMortalidad(datos, hoy) {
     const pct = 100 * muertes / base;
     if (esp > 0 && pct > 2 * esp) {
       out.push({ id: 'mortalidad-' + l.id + '-' + hoy, tipo: 'mortalidad', gravedad: 'rojo', loteId: l.id,
-        texto: l.nombre + ': hoy murieron ' + muertes + ' aves (' + pct.toFixed(2) + ' %), más del doble de lo esperado',
+        texto: l.nombre + (muertes === 1 ? ': hoy murió 1 ave (' : ': hoy murieron ' + muertes + ' aves (') + pct.toFixed(2) + ' %), más del doble de lo esperado',
         accion: { etiqueta: 'Ver lote', ruta: _rutaLote(l) } });
     }
   }

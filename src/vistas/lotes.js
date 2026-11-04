@@ -10,7 +10,7 @@ function resumenLote(l, registros, vacunas, fecha) {
   const vivas = Number.isFinite(Number(l.avesInicio)) ? Math.max(0, avesVivas(l, registros, fin)) : null;
   return { g, ok, edad, vivas, estado: ok ? estadoSanitario(l, registros, vacunas, fin) : null };
 }
-const textoEdad = d => (d === null || d === undefined ? 'Edad —' : `${formatoNumero(d)} ${d === 1 ? 'día' : 'días'} · ${formatoNumero(Math.floor(d / 7))} sem`);
+const textoEdad = d => (d === null || d === undefined ? 'Edad —' : `${formatoNumero(d)}\u00a0${d === 1 ? 'día' : 'días'} · ${formatoNumero(Math.floor(d / 7))}\u00a0sem`);
 const chipEstado = e => (e ? `<span class="chip chip-${e}"><span class="chip-punto" aria-hidden="true"></span>${{ verde: 'Bien', ambar: 'Revisar', rojo: 'Atención' }[e]}</span>` : '');
 
 VISTAS.lotes = async function () {

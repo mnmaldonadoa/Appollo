@@ -280,7 +280,7 @@ def main():
             pg.evaluate("DB.guardar('granja', {id: 'granja', nombre: 'Mi granja', tipo: 'carne', altitud: null, tema: 'auto'})")
             pg.reload(); pg.wait_for_selector("#view .pantalla-vacia")
             b = pg.locator("#view [data-accion=nuevo-lote]")
-            check("Inicio sin lotes: botón grande para crear el primero", b.count() == 1 and b.is_visible())
+            check("Inicio sin lotes: botón grande 'Nuevo lote'", b.count() == 1 and b.is_visible() and "Nuevo lote" in b.inner_text())
             pg.click("#nav [data-nav=lotes]"); pg.wait_for_selector("#view h1:has-text('Lotes')")
             check("Lotes vacío ofrece Nuevo lote", pg.locator("#view [data-accion=nuevo-lote]").count() >= 1)
             medir(pg, "lotes vacío")

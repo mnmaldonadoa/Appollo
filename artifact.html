@@ -273,8 +273,8 @@ button { cursor: pointer; }
 
 .nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) 88px repeat(2, minmax(0, 1fr)); align-items: end; gap: 2px;
-  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) 84px repeat(2, minmax(0, 1fr)); align-items: end; gap: 8px;
+  padding: 6px 2px calc(6px + env(safe-area-inset-bottom, 0px));
   background: var(--superficie); border-top: 1px solid var(--linea); box-shadow: 0 -6px 20px -14px rgba(43, 33, 24, .5);
 }
 .nav-item {
@@ -375,6 +375,96 @@ button { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* ---------- Pantallas de gestión (Task 6) ---------- */
+[hidden].btn, .dl-confirmar[hidden] { display: none !important; }
+.eyebrow { color: var(--secundario); font-size: 1rem; font-weight: 700; letter-spacing: .02em; }
+.seccion-titulo { margin-top: 8px; display: flex; align-items: baseline; gap: 8px; }
+.seccion-titulo .num { color: var(--secundario); font-family: var(--f-texto); font-size: 1rem; }
+
+.bienvenida { padding-top: 32px; }
+.bv-ilustracion { display: grid; place-items: center; width: 96px; height: 96px; border-radius: 32px;
+  background: var(--huevo-suave); color: var(--precaucion); transform: rotate(-4deg); }
+.bv-ilustracion .ic { width: 56px; height: 56px; stroke-width: 1.6; }
+.bv-opcion { grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 14px; min-height: 72px; }
+.bv-opcion > .ic { width: 32px; height: 32px; color: var(--primario); }
+.bv-opcion-texto { display: grid; gap: 2px; }
+
+.pasos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.paso { display: grid; gap: 6px; color: var(--secundario); font-size: 1rem; font-weight: 700; }
+.paso-barra { height: 6px; border-radius: 3px; background: var(--linea); }
+.paso-hecho .paso-barra { background: var(--ok-viva); }
+.paso[aria-current="step"] { color: var(--texto); }
+.paso[aria-current="step"] .paso-barra { background: var(--huevo); }
+.paso-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.gen-lista { display: grid; gap: 10px; }
+.gen-opcion { display: grid; gap: 4px; min-height: 72px; padding: 12px 16px; border-radius: var(--r); text-align: left;
+  background: var(--superficie); color: var(--texto); border: 2px solid var(--linea-fuerte); box-shadow: var(--sombra); touch-action: manipulation; }
+.gen-opcion:active { background: var(--primario-suave); }
+.gen-opcion[aria-pressed="true"] { border-color: var(--primario); box-shadow: inset 0 0 0 2px var(--primario); }
+.gen-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.gen-nombre { font-family: var(--f-titulo); font-size: 1.25rem; line-height: 1.2; }
+.gen-tipo { flex: none; padding: 2px 10px; border-radius: 999px; font-size: 1rem; font-weight: 700; color: var(--texto); background: var(--superficie-2); }
+.gen-tipo-postura { background: var(--huevo-suave); }
+.gen-tipo-doble, .gen-tipo-criolla { background: var(--primario-suave); }
+.gen-desc { color: var(--secundario); font-size: 1rem; }
+
+.segmento, .nl-presets, .nl-alturas { display: flex; flex-wrap: wrap; gap: 8px; }
+.segmento-btn { flex: 1 1 auto; min-height: 56px; padding: 8px 14px; border-radius: var(--r-s); font-weight: 700; touch-action: manipulation;
+  background: var(--superficie); color: var(--texto); border: 2px solid var(--linea-fuerte); }
+.segmento-btn[aria-pressed="true"] { background: var(--primario); color: var(--sobre-primario); border-color: var(--primario); }
+.nl-presets .segmento-btn { flex: 0 0 auto; }
+.nl-alturas { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+.nl-altura { display: grid; gap: 0; line-height: 1.2; }
+.nl-altura span { font-weight: 400; font-size: 1rem; }
+
+.ini-cab { display: grid; gap: 4px; }
+.ini-selector { display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 6px; scrollbar-width: none; }
+.selector-btn { flex: none; min-height: 56px; max-width: 70vw; padding: 8px 18px; border-radius: 999px; font-weight: 700; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; background: var(--superficie); color: var(--texto); border: 2px solid var(--linea-fuerte); touch-action: manipulation; }
+.selector-btn[aria-pressed="true"] { background: var(--primario); color: var(--sobre-primario); border-color: var(--primario); }
+.ini-rejilla { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ini-celda { min-width: 0; display: grid; }
+.ini-ancha { grid-column: 1 / -1; }
+.ini-celda:not(.ini-ancha) .tarjeta { padding: 14px 14px 16px 20px; }
+.ini-celda:not(.ini-ancha) .tarjeta-cifra { font-size: 2.25rem; }
+.ini-celda:not(.ini-ancha) .tarjeta-icono { display: none; }
+.ini-enlace { color: inherit; text-decoration: none; border-radius: var(--r-l); }
+.ini-enlace .tarjeta-pie::after { content: " ›"; font-weight: 700; }
+.ini-enlace:active .tarjeta { transform: translateY(2px); }
+
+.lotes-lista { display: grid; gap: 12px; }
+.lote-item { position: relative; display: grid; gap: 4px; width: 100%; min-height: 96px; padding: 14px 16px 14px 20px; text-align: left;
+  background: var(--superficie); color: var(--texto); border: 1px solid var(--linea); border-radius: var(--r-l); box-shadow: var(--sombra); touch-action: manipulation; }
+.lote-item:active { background: var(--primario-suave); }
+.lote-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.lote-nombre { font-family: var(--f-titulo); font-size: 1.3rem; line-height: 1.2; min-width: 0; overflow-wrap: anywhere; }
+.lote-gen { color: var(--secundario); }
+.lote-datos { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 14px; }
+.lotes-cerrados .lote-item { background: var(--superficie-2); box-shadow: none; }
+
+.dl-volver { justify-self: start; }
+.dl-cab { display: grid; gap: 6px; justify-items: start; }
+.dl-cab h1 { overflow-wrap: anywhere; }
+.dl-datos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.dl-dato { display: grid; gap: 2px; padding: 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); min-width: 0; }
+.dl-dato span { color: var(--secundario); font-size: 1rem; }
+.dl-dato b { font-family: var(--f-titulo); font-size: 1.3rem; overflow-wrap: anywhere; }
+.dl-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.dl-reg, .dl-vac { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 10px 10px 10px 14px; border-radius: var(--r);
+  background: var(--superficie); border: 1px solid var(--linea); }
+.dl-icono { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--primario-suave); color: var(--primario); flex: none; }
+.dl-fila-texto { display: grid; gap: 2px; flex: 1 1 140px; min-width: 0; }
+.dl-fila-texto b { overflow-wrap: anywhere; }
+.dl-fila-texto span { color: var(--secundario); font-size: 1rem; }
+.dl-borrar { flex: none; padding-inline: 16px; color: var(--alerta); border-color: var(--alerta); }
+.dl-vac .btn { margin-top: 2px; }
+.dl-vac-hecha { background: var(--superficie-2); }
+.dl-hechas summary { display: flex; align-items: center; min-height: 56px; padding: 0 4px; font-weight: 700; color: var(--primario); cursor: pointer; }
+.dl-cierre { display: grid; gap: 12px; margin-top: 12px; padding-top: 16px; border-top: 1px dashed var(--linea-fuerte); }
+.dl-confirmar { display: grid; gap: 12px; padding: 14px; border-radius: var(--r); background: var(--huevo-suave); color: var(--texto); }
+h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 700; letter-spacing: 0; }
 
 </style>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -1381,6 +1471,52 @@ function validarRegistro(tipo, datos, lote, registros, fecha) {
   return dup ? { ok: true, duplicado: true } : { ok: true };
 }
 
+/* ---------------------- Estado sanitario del lote ----------------------
+   estadoSanitario(lote, registros, vacunasPlan, fecha) -> 'verde' | 'ambar' | 'rojo'
+   Rojo: vacuna vencida sin aplicar, retiro de medicamento activo o mortalidad de hoy > 2× la esperada.
+   Ámbar: vacuna para hoy o mañana, mortalidad de hoy > 1,5× la esperada, o lote activo con más de
+   3 días desde la llegada y sin registros hoy, ayer ni anteayer. Un lote cerrado no exige vacunas ni registros. */
+function _masDias(fecha, n) {
+  const d = fechaADate(fecha);
+  d.setDate(d.getDate() + n);
+  return hoyLocal(d);
+}
+
+function estadoSanitario(lote, registros, vacunasPlan, fecha) {
+  const regs = (registros || []).filter(r => r && r.loteId === lote.id);
+  const vacs = (vacunasPlan || []).filter(v => v && v.loteId === lote.id && !v.fechaAplicada && v.fechaPrevista);
+  const activo = lote.estado === 'activo', manana = _masDias(fecha, 1);
+  let ambar = false;
+
+  if (activo) {
+    if (vacs.some(v => v.fechaPrevista < fecha)) return 'rojo';
+    if (vacs.some(v => v.fechaPrevista === fecha || v.fechaPrevista === manana)) ambar = true;
+  }
+  for (const r of regs) {
+    const dias = Number(r.datos && r.datos.retiroDias) || 0;
+    if (r.tipo === 'sanidad' && dias > 0 && r.fecha <= fecha && fecha <= _masDias(r.fecha, dias)) return 'rojo';
+  }
+
+  const g = _genDe(lote);
+  const muertes = _suma(regs.filter(r => r.tipo === 'mortalidad' && r.fecha === fecha), 'cantidad');
+  if (g && muertes > 0 && typeof lote.fechaLlegada === 'string') {
+    const base = avesVivas(lote, regs, fecha) + muertes; // aves al empezar el día
+    const esp = base > 0 ? estandarDia(lote, fecha).mortEsperada : 0;
+    if (esp > 0) {
+      const pct = 100 * muertes / base;
+      if (pct > 2 * esp) return 'rojo';
+      if (pct > 1.5 * esp) ambar = true;
+    }
+  }
+
+  if (activo && typeof lote.fechaLlegada === 'string' && fechaValida(lote.fechaLlegada)) {
+    const desde = edadDias({ fechaLlegada: lote.fechaLlegada, edadLlegadaDias: 0 }, fecha);
+    const inicio = _masDias(fecha, -2);
+    if (desde > 3 && !regs.some(r => r.fecha >= inicio && r.fecha <= fecha)) ambar = true;
+  }
+  return ambar ? 'ambar' : 'verde';
+}
+
 </script>
 <script>
 /* =========================================================================
@@ -1427,7 +1563,7 @@ function alertaMortalidad(datos, hoy) {
     const pct = 100 * muertes / base;
     if (esp > 0 && pct > 2 * esp) {
       out.push({ id: 'mortalidad-' + l.id + '-' + hoy, tipo: 'mortalidad', gravedad: 'rojo', loteId: l.id,
-        texto: l.nombre + ': hoy murieron ' + muertes + ' aves (' + pct.toFixed(2) + ' %), más del doble de lo esperado',
+        texto: l.nombre + (muertes === 1 ? ': hoy murió 1 ave (' : ': hoy murieron ' + muertes + ' aves (') + pct.toFixed(2) + ' %), más del doble de lo esperado',
         accion: { etiqueta: 'Ver lote', ruta: _rutaLote(l) } });
     }
   }
@@ -1914,33 +2050,443 @@ VISTAS.alertas = async function () {
 
 </script>
 <script>
-/* Appollo · Vista "Lote" (provisional: la reemplaza una tarea posterior). */
+/* Appollo · Bienvenida (primera vez, granja sin nombre): 2 pasos → "Crear mi primer lote".
+   Guarda granja {nombre, tipo: 'postura'|'carne'|'ambas'} y lleva a #/nuevo-lote. */
 var VISTAS = window.VISTAS || (window.VISTAS = {});
-VISTAS.detalleLote = async function () {
-  return `<section class="pantalla"><h1>Lote</h1>
-  <div class="proximamente">${icono('hoja')}<p>Próximamente: resumen, historial y vacunas del lote.</p></div></section>`;
-};
+var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
+
+(function () {
+  'use strict';
+  const st = { paso: 1, nombre: '', tipo: '' };
+  const TIPOS = [
+    { id: 'postura', texto: 'Gallinas de postura', ayuda: 'Para huevos', icono: 'huevo' },
+    { id: 'carne', texto: 'Pollos de carne', ayuda: 'Para engorde y venta', icono: 'balanza' },
+    { id: 'ambas', texto: 'Las dos', ayuda: 'Huevos y carne', icono: 'gallina' },
+  ];
+  const $v = s => document.querySelector('#view ' + s);
+
+  function paso1() {
+    return `<div class="bv-ilustracion" aria-hidden="true">${icono('gallina')}</div>
+  <p class="eyebrow">Paso 1 de 2</p>
+  <h1>Bienvenido a Appollo</h1>
+  <p class="pantalla-texto">Lleva el control diario de tus aves, aunque no tengas internet.</p>
+  <div class="reg-campo"><label class="reg-etiqueta" for="bv-nombre">¿Cómo se llama tu granja?</label>
+    <input class="reg-texto" id="bv-nombre" type="text" autocomplete="organization" enterkeyhint="next" maxlength="60" placeholder="Ej.: Granja San José" value="${esc(st.nombre)}"></div>
+  <p class="reg-error bv-error" role="alert" hidden></p>
+  ${Boton({ texto: 'Siguiente', icono: 'sig', variante: 'primario', accion: 'bv-siguiente', clase: 'btn-ancho btn-grande' })}`;
+  }
+
+  function paso2() {
+    return `<p class="eyebrow">Paso 2 de 2</p>
+  <h1>¿Qué aves crías?</h1>
+  <p class="pantalla-texto">Así te mostramos primero las genéticas que te sirven. Puedes tener lotes de cualquier tipo.</p>
+  <div class="reg-opciones" role="group" aria-label="Tipo de granja">${TIPOS.map(t =>
+    `<button type="button" class="reg-opcion bv-opcion" data-accion="bv-tipo" data-tipo="${t.id}" aria-pressed="${st.tipo === t.id}">
+    ${icono(t.icono)}<span class="bv-opcion-texto"><b>${t.texto}</b><span>${t.ayuda}</span></span></button>`).join('')}</div>
+  <p class="reg-error bv-error" role="alert" hidden></p>
+  ${Boton({ texto: 'Crear mi primer lote', icono: 'mas', variante: 'primario', accion: 'bv-crear', clase: 'btn-ancho btn-grande' })}
+  ${Boton({ texto: 'Atrás', icono: 'atras', variante: 'secundario', accion: 'bv-atras', clase: 'btn-ancho' })}`;
+  }
+
+  const html = () => `<section class="pantalla bienvenida" data-paso="${st.paso}">${st.paso === 1 ? paso1() : paso2()}</section>`;
+
+  function pintar() {
+    const s = $v('.bienvenida');
+    if (!s) return;
+    s.outerHTML = html();
+    const foco = st.paso === 1 ? $v('#bv-nombre') : $v('[data-accion=bv-tipo]');
+    if (foco) try { foco.focus({ preventScroll: true }); } catch (e) { /* sin foco */ }
+  }
+  function error(msg) { const p = $v('.bv-error'); if (p) { p.textContent = msg; p.hidden = false; } }
+
+  VISTAS.bienvenida = async function () {
+    const g = App.estado.granja || {};
+    if (!st.nombre && g.nombre) st.nombre = g.nombre;
+    return html();
+  };
+  VISTAS.bienvenida.montar = function (raiz) {
+    raiz.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target && e.target.id === 'bv-nombre') { e.preventDefault(); ACCIONES['bv-siguiente'](); }
+    });
+  };
+
+  ACCIONES['bv-siguiente'] = () => {
+    const el = $v('#bv-nombre');
+    st.nombre = el ? el.value.trim() : st.nombre;
+    if (!st.nombre) { error('Escribe el nombre de tu granja'); if (el) el.focus(); return; }
+    st.paso = 2; pintar();
+  };
+  ACCIONES['bv-atras'] = () => { st.paso = 1; pintar(); };
+  ACCIONES['bv-tipo'] = el => {
+    st.tipo = el.dataset.tipo;
+    document.querySelectorAll('#view [data-accion=bv-tipo]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tipo === st.tipo)));
+    const p = $v('.bv-error'); if (p) p.hidden = true;
+  };
+  ACCIONES['bv-crear'] = async el => {
+    if (!st.tipo) { error('Elige qué aves crías'); return; }
+    el.disabled = true;
+    try {
+      App.estado.granja = await DB.guardar('granja', Object.assign({ id: 'granja', altitud: null, tema: 'auto' },
+        App.estado.granja, { nombre: st.nombre, tipo: st.tipo }));
+    } catch (e) { el.disabled = false; error('No se pudo guardar. Intenta de nuevo.'); return; }
+    st.paso = 1;
+    App.ir('#/nuevo-lote');
+  };
+})();
 
 </script>
 <script>
-/* Appollo · Vista "Inicio" (provisional: Task 6 pone las tarjetas del lote). */
+/* =========================================================================
+   APPOLLO · Detalle de lote: resumen, gráfica real vs proyectado, historial (Borrar + Deshacer),
+   calendario de vacunas (Marcar aplicada + Deshacer) y Cerrar / Reabrir lote.
+   ========================================================================= */
 var VISTAS = window.VISTAS || (window.VISTAS = {});
-VISTAS.inicio = async function () {
-  let lotes = [];
-  try { lotes = await DB.listar('lotes', { estado: 'activo' }); } catch (e) { lotes = []; }
-  const granja = App.estado.granja && App.estado.granja.nombre;
-  if (!lotes.length) {
-    return `<section class="pantalla pantalla-vacia">
-  <div class="vacia-ilustracion" aria-hidden="true">${icono('gallina')}</div>
-  <h1>${granja ? esc(granja) : 'Bienvenido a Appollo'}</h1>
-  <p class="pantalla-texto">Aún no tienes lotes. Crea el primero para registrar mortalidad, alimento y huevos cada día.</p>
-  ${Boton({ texto: 'Crear mi primer lote', icono: 'mas', variante: 'primario', accion: 'nuevo-lote', clase: 'btn-ancho btn-grande' })}
+var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
+
+(function () {
+  'use strict';
+  const PAGINA = 30, limites = {};
+  const fin = x => (Number.isFinite(x) ? x : null);
+  const r1 = x => (x === null ? null : Math.round(x * 10) / 10);
+  const masDias = (f, n) => { const d = fechaADate(f); d.setDate(d.getDate() + n); return hoyLocal(d); };
+  const fechaTxt = f => (typeof f === 'string' && f.length >= 10 ? f.slice(8, 10) + '/' + f.slice(5, 7) + '/' + f.slice(0, 4) : '—');
+  const n = x => (Number.isFinite(Number(x)) ? formatoNumero(Number(x)) : '—');
+  const copia = o => JSON.parse(JSON.stringify(o));
+  const TIPO = { mortalidad: ['Mortalidad', 'cruz'], alimento: ['Alimento', 'saco'], huevos: ['Huevos', 'huevo'],
+    peso: ['Peso', 'balanza'], vacuna: ['Vacuna', 'jeringa'], sanidad: ['Sanidad', 'termo'] };
+
+  function valorReg(r) {
+    const d = r.datos || {};
+    switch (r.tipo) {
+      case 'mortalidad': return `${n(d.cantidad)} ${Number(d.cantidad) === 1 ? 'ave' : 'aves'}${d.causa ? ' · ' + d.causa : ''}`;
+      case 'alimento': return `${n(d.kg)} kg`;
+      case 'huevos': return `${n(d.cantidad)} huevos${Number(d.rotos) > 0 ? ' · ' + n(d.rotos) + ' rotos' : ''}`;
+      case 'peso': return `${n(d.gramos)} g por ave`;
+      case 'vacuna': return d.nombre || 'Vacuna';
+      case 'sanidad': return [d.enfermedad, d.tratamiento].filter(Boolean).join(' · ') + (Number(d.retiroDias) > 0 ? ` · retiro ${n(d.retiroDias)} días` : '');
+    }
+    return '';
+  }
+
+  /* Real vs proyectado desde la llegada (máx. 60 días) hasta hoy o el cierre. */
+  function grafica(l, regs, res, hasta, alt) {
+    if (!res.ok) return Grafico({});
+    const carne = modoDe(res.g) === 'carne', desde = [l.fechaLlegada, masDias(hasta, -59)].sort().pop(), dias = [];
+    for (let f = desde; f <= hasta; f = masDias(f, 1)) dias.push(f);
+    const real = [], est = [];
+    for (const f of dias) {
+      const e = estandarDia(l, f, alt, Math.max(0, avesVivas(l, regs, f)));
+      if (carne) {
+        const p = regs.filter(r => r.tipo === 'peso' && r.fecha === f).pop();
+        real.push(p ? fin(Number(p.datos.gramos)) : null); est.push(r1(fin(e.pesoG)));
+      } else { real.push(r1(fin(pctPostura(l, regs, f)))); est.push(r1(fin(e.hdPct))); }
+    }
+    return Grafico({ serieReal: real, serieEstandar: est, etiquetas: dias.map(f => f.slice(8, 10) + '/' + f.slice(5, 7)) });
+  }
+
+  function vacunaHtml(v, hoy, activo) {
+    let chip = ['verde', 'Aplicada ' + fechaTxt(v.fechaAplicada)];
+    if (!v.fechaAplicada) chip = v.fechaPrevista < hoy ? ['rojo', 'Vencida'] : v.fechaPrevista === hoy ? ['ambar', 'Hoy']
+      : v.fechaPrevista === masDias(hoy, 1) ? ['ambar', 'Mañana'] : ['', 'Prevista'];
+    return `<li class="dl-vac${v.fechaAplicada ? ' dl-vac-hecha' : ''}">
+  <div class="dl-fila-texto"><b>${esc(v.nombre)}</b><span>${esc(fechaTxt(v.fechaPrevista))}${v.via ? ' · ' + esc(v.via) : ''}</span></div>
+  <span class="chip${chip[0] ? ' chip-' + chip[0] : ''}">${chip[0] ? '<span class="chip-punto" aria-hidden="true"></span>' : ''}${esc(chip[1])}</span>
+  ${!v.fechaAplicada && activo ? Boton({ texto: 'Marcar aplicada', icono: 'jeringa', variante: 'secundario', accion: 'dl-aplicar', datos: { id: v.id }, clase: 'btn-ancho' }) : ''}
+</li>`;
+  }
+
+  VISTAS.detalleLote = async function (params) {
+    const l = await DB.obtener('lotes', params.id);
+    if (!l) {
+      return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${icono('aviso')}</div>
+  <h1>Este lote no existe</h1><p class="pantalla-texto">Quizá fue borrado o el enlace está mal.</p>
+  ${Boton({ texto: 'Ver mis lotes', icono: 'lotes', variante: 'primario', accion: 'ir', datos: { ruta: '#/lotes' }, clase: 'btn-ancho' })}</section>`;
+    }
+    const [regs, vacs] = await Promise.all([DB.listar('registros', { loteId: l.id }), DB.listar('vacunasPlan', { loteId: l.id })]);
+    const hoy = hoyLocal(), activo = l.estado === 'activo', hasta = activo ? hoy : (l.fechaCierre || hoy);
+    const alt = App.estado.granja && App.estado.granja.altitud;
+    const res = resumenLote(l, regs, vacs, hasta), mort = res.ok ? fin(mortalidadPct(l, regs, hasta)) : null;
+    const carne = res.ok && modoDe(res.g) === 'carne';
+    const orden = regs.slice().sort((a, b) => (b.fecha + (b.creado || '')).localeCompare(a.fecha + (a.creado || '')));
+    const lim = limites[l.id] || PAGINA;
+    const pend = vacs.filter(v => !v.fechaAplicada).sort((a, b) => String(a.fechaPrevista).localeCompare(String(b.fechaPrevista)));
+    const hechas = vacs.filter(v => v.fechaAplicada).sort((a, b) => String(b.fechaAplicada).localeCompare(String(a.fechaAplicada)));
+    const dato = (t, v) => `<div class="dl-dato"><span>${t}</span><b class="num">${v}</b></div>`;
+    return `<section class="pantalla detalle-lote">
+  ${Boton({ texto: 'Lotes', icono: 'atras', variante: 'secundario', accion: 'ir', datos: { ruta: '#/lotes' }, clase: 'dl-volver' })}
+  <header class="dl-cab">
+    <p class="eyebrow">${activo ? 'Lote activo' : 'Lote cerrado' + (l.fechaCierre ? ' el ' + esc(fechaTxt(l.fechaCierre)) : '')}</p>
+    <h1>${esc(l.nombre || 'Lote')}</h1>
+    <p class="pantalla-texto">${esc(res.g ? res.g.nombre : l.genetica || 'Genética desconocida')}${l.galpon ? ' · ' + esc(l.galpon) : ''} · llegó el ${esc(fechaTxt(l.fechaLlegada))}</p>
+    ${activo ? chipEstado(res.estado) : ''}
+  </header>
+  <div class="dl-datos">
+    ${dato('Aves vivas', res.vivas === null ? '—' : formatoNumero(res.vivas) + ' / ' + n(l.avesInicio))}
+    ${dato('Edad', esc(textoEdad(res.edad)))}
+    ${dato('Mortalidad', mort === null ? '—' : formatoNumero(r1(mort)) + ' %')}
+    ${dato('Registros', formatoNumero(regs.length))}
+  </div>
+  ${l.resumen ? `<p class="pantalla-texto">${esc(l.resumen)}</p>` : ''}
+  <article class="tarjeta" data-t="grafica"><header class="tarjeta-cab"><h2 class="tarjeta-titulo">${carne ? 'Peso (g)' : '% de postura'}: real vs proyectado</h2></header>${grafica(l, regs, res, hasta, alt)}</article>
+  <h2 class="seccion-titulo">Historial</h2>
+  ${orden.length ? `<ul class="dl-lista">${orden.slice(0, lim).map(r => {
+    const t = TIPO[r.tipo] || [r.tipo, 'hoja'];
+    return `<li class="dl-reg"><span class="dl-icono">${icono(t[1])}</span><div class="dl-fila-texto"><b>${esc(t[0])} · ${esc(valorReg(r))}</b><span>${esc(fechaTxt(r.fecha))}</span></div>
+  ${Boton({ texto: 'Borrar', variante: 'secundario', accion: 'dl-borrar', datos: { id: r.id }, clase: 'dl-borrar' })}</li>`;
+  }).join('')}</ul>${orden.length > lim ? Boton({ texto: `Ver más (${formatoNumero(orden.length - lim)})`, variante: 'secundario', accion: 'dl-mas', datos: { id: l.id }, clase: 'btn-ancho' }) : ''}`
+    : '<p class="pantalla-texto">Aún no hay registros. Usa ＋ Registrar en la barra de abajo.</p>'}
+  <h2 class="seccion-titulo">Calendario de vacunas</h2>
+  ${vacs.length ? `${pend.length ? `<ul class="dl-lista">${pend.slice(0, 3).map(v => vacunaHtml(v, hoy, activo)).join('')}</ul>` : '<p class="pantalla-texto">No quedan vacunas pendientes.</p>'}
+  ${pend.length > 3 ? `<details class="dl-hechas"><summary>Siguientes vacunas (${formatoNumero(pend.length - 3)})</summary><ul class="dl-lista">${pend.slice(3).map(v => vacunaHtml(v, hoy, activo)).join('')}</ul></details>` : ''}
+  ${hechas.length ? `<details class="dl-hechas"><summary>Aplicadas (${formatoNumero(hechas.length)})</summary><ul class="dl-lista">${hechas.map(v => vacunaHtml(v, hoy, activo)).join('')}</ul></details>` : ''}`
+    : '<p class="pantalla-texto">Este lote no tiene vacunas previstas.</p>'}
+  <div class="dl-cierre">
+  ${activo ? `${Boton({ texto: 'Cerrar lote', variante: 'secundario', accion: 'dl-cerrar', clase: 'btn-ancho dl-cerrar' })}
+  <div class="dl-confirmar" hidden><p><b>¿Cerrar este lote?</b> Ya no aparecerá en Inicio ni en el registro rápido. Sus datos se conservan y puedes reabrirlo.</p>
+    <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'dl-cerrar-no' })}${Boton({ texto: 'Sí, cerrar lote', variante: 'peligro', accion: 'dl-cerrar-si', datos: { id: l.id } })}</div></div>`
+    : Boton({ texto: 'Reabrir lote', variante: 'primario', accion: 'dl-reabrir', datos: { id: l.id }, clase: 'btn-ancho' })}
+  </div>
+</section>`;
+  };
+
+  /* ------------------------------ Acciones ------------------------------ */
+  async function inventario(kg) {
+    if (!(Number.isFinite(kg) && kg !== 0) || typeof Inventario === 'undefined' || !Inventario || typeof Inventario.descontarAlimento !== 'function') return;
+    try { await Inventario.descontarAlimento(kg); } catch (e) { /* no crítico */ }
+  }
+  async function hacer(fn, msg, deshacer) {
+    try { await fn(); } catch (e) { App.toast('No se pudo guardar. Intenta de nuevo.'); return; }
+    await App.refrescar();
+    App.toast(msg, deshacer ? { deshacer } : undefined);
+  }
+
+  ACCIONES['dl-borrar'] = async el => {
+    el.disabled = true;
+    const r = await DB.obtener('registros', el.dataset.id);
+    if (!r) { App.refrescar(); return; }
+    const previo = copia(r), kg = r.tipo === 'alimento' ? Number(r.datos && r.datos.kg) || 0 : 0;
+    const plan = r.tipo === 'vacuna' && r.datos && r.datos.planId ? await DB.obtener('vacunasPlan', r.datos.planId) : null;
+    const planPrevio = plan ? copia(plan) : null;
+    await hacer(async () => {
+      await DB.borrar('registros', r.id);
+      if (plan) { const p = copia(plan); delete p.fechaAplicada; await DB.guardar('vacunasPlan', p); }
+      await inventario(-kg);
+    }, 'Registro borrado', async () => {
+      await DB.guardar('registros', previo);
+      if (planPrevio) await DB.guardar('vacunasPlan', planPrevio);
+      await inventario(kg);
+    });
+  };
+
+  ACCIONES['dl-aplicar'] = async el => {
+    el.disabled = true;
+    const v = await DB.obtener('vacunasPlan', el.dataset.id);
+    if (!v || v.fechaAplicada) { App.refrescar(); return; }
+    const previo = copia(v), hoy = hoyLocal();
+    let nuevo = null;
+    await hacer(async () => {
+      nuevo = await DB.guardar('registros', { loteId: v.loteId, fecha: hoy, tipo: 'vacuna',
+        datos: { nombre: v.nombre, via: v.via || '', planId: v.id }, creado: new Date().toISOString() });
+      await DB.guardar('vacunasPlan', Object.assign({}, v, { fechaAplicada: hoy }));
+    }, 'Vacuna aplicada', async () => {
+      if (nuevo) await DB.borrar('registros', nuevo.id);
+      await DB.guardar('vacunasPlan', previo);
+    });
+  };
+
+  ACCIONES['dl-mas'] = el => { limites[el.dataset.id] = (limites[el.dataset.id] || PAGINA) + PAGINA; App.refrescar(); };
+  const confirmar = ver => {
+    const c = document.querySelector('#view .dl-confirmar'), b = document.querySelector('#view .dl-cerrar');
+    if (!c || !b) return;
+    c.hidden = !ver; b.hidden = ver;
+    const foco = ver ? c.querySelector('[data-accion=dl-cerrar-no]') : b;
+    try { foco.focus({ preventScroll: true }); } catch (e) { /* sin foco */ }
+    if (ver) c.scrollIntoView({ block: 'nearest' });
+  };
+  ACCIONES['dl-cerrar'] = () => confirmar(true);
+  ACCIONES['dl-cerrar-no'] = () => confirmar(false);
+
+  async function cambiarEstado(id, cerrar) {
+    const l = await DB.obtener('lotes', id);
+    if (!l) return;
+    const previo = copia(l), nuevo = copia(l);
+    if (cerrar) { nuevo.estado = 'cerrado'; nuevo.fechaCierre = hoyLocal(); } else { nuevo.estado = 'activo'; delete nuevo.fechaCierre; }
+    const lsPrevio = App.estado.loteActivoId;
+    await hacer(async () => {
+      await DB.guardar('lotes', nuevo);
+      if (cerrar && App.estado.loteActivoId === id) App.fijarLote(null);
+    }, cerrar ? 'Lote cerrado' : 'Lote reabierto', async () => {
+      await DB.guardar('lotes', previo);
+      if (cerrar && lsPrevio === id) App.fijarLote(id);
+    });
+  }
+  ACCIONES['dl-cerrar-si'] = el => { el.disabled = true; return cambiarEstado(el.dataset.id, true); };
+  ACCIONES['dl-reabrir'] = el => { el.disabled = true; return cambiarEstado(el.dataset.id, false); };
+})();
+
+</script>
+<script>
+/* =========================================================================
+   APPOLLO · Inicio: selector Todos / lote y tarjetas del día (aves, mortalidad, alimento,
+   producción, estado sanitario, alertas, rendimiento) con minigráfica de 14 días.
+   "Todos" suma los lotes activos. Lo que no se puede calcular se muestra "—", nunca NaN.
+   ========================================================================= */
+var VISTAS = window.VISTAS || (window.VISTAS = {});
+var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
+
+(function () {
+  'use strict';
+  let verTodos = false, ultimo = '', previo = {};
+  const fin = x => (Number.isFinite(x) ? x : null);
+  const r1 = x => (x === null ? null : Math.round(x * 10) / 10);
+  const suma = xs => xs.reduce((s, x) => s + x, 0);
+  const sumaDatos = (rs, campo) => suma(rs.map(r => Number(r.datos && r.datos[campo]) || 0));
+  const masDias = (f, n) => { const d = fechaADate(f); d.setDate(d.getDate() + n); return hoyLocal(d); };
+  const ddmm = f => f.slice(8, 10) + '/' + f.slice(5, 7);
+  const ESTADO = { verde: 'Verde', ambar: 'Amarillo', rojo: 'Rojo' }, PEOR = ['verde', 'ambar', 'rojo'];
+
+  /* Cifras de un lote para el día `hoy`. */
+  function metricas(l, regs, vacs, hoy, alt) {
+    const propios = regs.filter(r => r.loteId === l.id), del = t => propios.filter(r => r.tipo === t && r.fecha === hoy);
+    const res = resumenLote(l, propios, vacs, hoy), carne = !!res.g && modoDe(res.g) === 'carne';
+    let std = null;
+    if (res.ok) { try { std = estandarDia(l, hoy, alt, res.vivas); } catch (e) { std = null; } }
+    const ps = propios.filter(r => r.tipo === 'peso' && r.fecha <= hoy && Number(r.datos && r.datos.gramos) > 0).sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
+    const alim = del('alimento'), hue = del('huevos');
+    return { l, res, carne, std, propios,
+      inicio: Number(l.avesInicio) || 0, muertesTot: mortalidadTotal(l, propios, hoy), muertesHoy: sumaDatos(del('mortalidad'), 'cantidad'),
+      kg: alim.length ? sumaDatos(alim, 'kg') : null, huevos: hue.length ? sumaDatos(hue, 'cantidad') : null,
+      peso: ps.length ? Number(ps[ps.length - 1].datos.gramos) : null,
+      rend: res.ok ? fin(rendimiento(l, propios, hoy)) : null };
+  }
+
+  /* Suma de varios lotes (o de uno solo). */
+  function agregado(ms) {
+    const vivas = suma(ms.map(m => m.res.vivas || 0)), inicio = suma(ms.map(m => m.inicio));
+    const post = ms.filter(m => !m.carne && m.res.ok), conH = post.filter(m => m.huevos !== null && m.res.vivas > 0);
+    const vivH = suma(conH.map(m => m.res.vivas)), stdH = suma(conH.map(m => (m.std && m.std.huevos) || 0));
+    const conR = ms.filter(m => m.rend !== null && m.res.vivas > 0), vivR = suma(conR.map(m => m.res.vivas));
+    const conKg = ms.filter(m => m.kg !== null), stds = ms.filter(m => m.std && m.std.alimentoKg > 0);
+    const estados = ms.map(m => m.res.estado).filter(Boolean);
+    return {
+      vivas, inicio, mortPct: inicio > 0 ? fin(100 * suma(ms.map(m => m.muertesTot)) / inicio) : null, muertesHoy: suma(ms.map(m => m.muertesHoy)),
+      kg: conKg.length ? suma(conKg.map(m => m.kg)) : null, kgStd: stds.length ? suma(stds.map(m => m.std.alimentoKg)) : null,
+      postura: post.length > 0 || !ms.some(m => m.carne),
+      huevos: conH.length ? suma(conH.map(m => m.huevos)) : null,
+      pct: vivH > 0 ? fin(100 * suma(conH.map(m => m.huevos)) / vivH) : null, pctStd: vivH > 0 ? fin(100 * stdH / vivH) : null,
+      carneUnico: ms.filter(m => m.carne).length === 1 ? ms.find(m => m.carne) : null,
+      rend: vivR > 0 ? fin(suma(conR.map(m => m.rend * m.res.vivas)) / vivR) : null,
+      estado: estados.length ? estados.reduce((a, b) => (PEOR.indexOf(b) > PEOR.indexOf(a) ? b : a)) : null
+    };
+  }
+
+  /* 14 días: % postura real vs estándar (postura) o peso real vs estándar (un lote de carne). */
+  function serie14(ms, a, hoy, alt) {
+    const dias = []; for (let i = 13; i >= 0; i--) dias.push(masDias(hoy, -i));
+    const real = [], est = [];
+    for (const f of dias) {
+      if (a.postura) {
+        let h = 0, vh = 0, sh = 0, vs = 0;
+        for (const m of ms.filter(x => !x.carne && x.res.ok && f >= x.l.fechaLlegada)) {
+          const v = Math.max(0, avesVivas(m.l, m.propios, f)), hs = m.propios.filter(r => r.tipo === 'huevos' && r.fecha === f);
+          if (hs.length && v > 0) { h += sumaDatos(hs, 'cantidad'); vh += v; }
+          const e = fin(estandarDia(m.l, f, alt, v).hdPct);
+          if (e !== null && v > 0) { sh += e * v; vs += v; }
+        }
+        real.push(vh > 0 ? r1(100 * h / vh) : null); est.push(vs > 0 ? r1(sh / vs) : null);
+      } else if (a.carneUnico && a.carneUnico.res.ok && f >= a.carneUnico.l.fechaLlegada) {
+        const m = a.carneUnico, p = m.propios.filter(r => r.tipo === 'peso' && r.fecha === f).pop();
+        real.push(p ? fin(Number(p.datos.gramos)) : null); est.push(r1(fin(estandarDia(m.l, f, alt).pesoG)));
+      } else { real.push(null); est.push(null); }
+    }
+    return { serieReal: real, serieEstandar: est, etiquetas: dias.map(ddmm) };
+  }
+
+  const celda = (t, html, ancho) => `<div class="ini-celda${ancho ? ' ini-ancha' : ''}" data-t="${t}">${html}</div>`;
+  const kg = x => (x === null ? '—' : formatoNumero(r1(x)) + ' kg');
+
+  function construir(d) {
+    const { activos, sel, ms, a, alertas, hoy, alt } = d;
+    const g = App.estado.granja || {};
+    const uno = sel !== 'todos' ? ms[0] : null;
+    const selector = activos.length > 1 ? `<div class="ini-selector" role="group" aria-label="Ver lote">${[{ id: 'todos', nombre: 'Todos' }].concat(activos).map(l =>
+      `<button type="button" class="selector-btn" data-accion="ini-lote" data-id="${esc(l.id)}" aria-pressed="${sel === l.id}">${esc(l.nombre || 'Lote')}</button>`).join('')}</div>` : '';
+    const sub = uno ? `${esc(uno.l.nombre || 'Lote')} · ${esc(textoEdad(uno.res.edad))}` : `${activos.length} lotes activos`;
+    const rojas = alertas.filter(x => x.gravedad === 'rojo').length;
+    let prod;
+    if (a.postura) prod = Tarjeta({ titulo: 'Huevos de hoy', icono: 'huevo', cifra: a.huevos, unidad: a.huevos === null ? '' : 'huevos',
+      pie: `Postura ${a.pct === null ? '—' : formatoNumero(r1(a.pct)) + ' %'} · estándar ${a.pctStd === null ? '—' : formatoNumero(r1(a.pctStd)) + ' %'}` });
+    else {
+      const m = a.carneUnico;
+      prod = Tarjeta({ titulo: 'Peso promedio', icono: 'balanza', cifra: m ? m.peso : null, unidad: m && m.peso !== null ? 'g' : '',
+        pie: m ? `Estándar ${m.std && fin(m.std.pesoG) !== null ? formatoNumero(Math.round(m.std.pesoG)) + ' g' : '—'}` : 'Elige un lote para ver su peso' });
+    }
+    const motivo = alertas.find(x => x.gravedad !== 'info');
+    const s14 = a.postura || a.carneUnico ? serie14(ms, a, hoy, alt) : null;
+    const graf = Grafico(s14 && s14.serieReal.some(v => v !== null) ? s14 : {});
+    return `<section class="pantalla inicio">
+  <header class="ini-cab"><h1>${esc(g.nombre || 'Inicio')}</h1><p class="pantalla-texto">${sub}</p></header>
+  ${selector}
+  <div class="ini-rejilla">
+  ${celda('aves', Tarjeta({ titulo: 'Aves vivas', icono: 'gallina', cifra: a.vivas, pie: `de ${formatoNumero(a.inicio)} al llegar` }))}
+  ${celda('mortalidad', Tarjeta({ titulo: 'Mortalidad', icono: 'cruz', cifra: r1(a.mortPct), unidad: a.mortPct === null ? '' : '%', pie: `Hoy: ${formatoNumero(a.muertesHoy)} ${a.muertesHoy === 1 ? 'ave' : 'aves'}` }))}
+  ${celda('alimento', Tarjeta({ titulo: 'Alimento de hoy', icono: 'saco', cifra: r1(a.kg), unidad: a.kg === null ? '' : 'kg', pie: 'Estándar ' + kg(a.kgStd) }), true)}
+  ${celda('produccion', prod, true)}
+  <div class="ini-celda ini-ancha" data-t="sanitario" data-estado="${a.estado || ''}">${Tarjeta({ titulo: 'Estado sanitario', icono: 'escudo', estado: a.estado || undefined,
+    cifra: a.estado ? ESTADO[a.estado] : null, pie: motivo ? motivo.texto : a.estado === 'ambar' ? 'Sin registros en los últimos 3 días' : 'Todo en orden' })}</div>
+  <a class="ini-celda ini-ancha ini-enlace" data-t="alertas" href="#/alertas">${Tarjeta({ titulo: 'Alertas pendientes', icono: 'campana', cifra: alertas.length,
+    estado: rojas ? 'rojo' : alertas.length ? 'ambar' : undefined, pie: alertas.length ? 'Toca para verlas' : 'Nada pendiente' })}</a>
+  ${celda('rendimiento', Tarjeta({ titulo: 'Rendimiento vs estándar', icono: 'grafico', cifra: r1(a.rend), unidad: a.rend === null ? '' : '%',
+    pie: a.postura ? 'Postura real ÷ estándar' : 'Peso real ÷ estándar' }), true)}
+  ${celda('grafica', `<article class="tarjeta"><header class="tarjeta-cab"><h3 class="tarjeta-titulo">Últimos 14 días · ${a.postura ? '% postura' : 'peso (g)'}</h3></header>${graf}</article>`, true)}
+  </div>
 </section>`;
   }
-  return `<section class="pantalla"><h1>${granja ? esc(granja) : 'Inicio'}</h1>
-  <p class="pantalla-texto">${lotes.length === 1 ? '1 lote activo' : lotes.length + ' lotes activos'}</p>
-  <div class="proximamente">${icono('hoja')}<p>Próximamente: aves vivas, mortalidad, alimento y producción de un vistazo.</p></div></section>`;
-};
+
+  const vacio = () => `<section class="pantalla pantalla-vacia">
+  <div class="vacia-ilustracion" aria-hidden="true">${icono('gallina')}</div>
+  <h1>${esc((App.estado.granja && App.estado.granja.nombre) || 'Bienvenido a Appollo')}</h1>
+  <p class="pantalla-texto">Aún no tienes lotes. Crea el primero para registrar mortalidad, alimento y huevos cada día.</p>
+  ${Boton({ texto: 'Nuevo lote', icono: 'mas', variante: 'primario', accion: 'nuevo-lote', clase: 'btn-ancho btn-grande' })}
+</section>`;
+
+  VISTAS.inicio = async function () {
+    const activos = await DB.listar('lotes', { estado: 'activo' });
+    if (!activos.length) { ultimo = ''; return vacio(); }
+    return ultimo || `<section class="pantalla inicio">${Esqueleto(5)}</section>`;
+  };
+
+  VISTAS.inicio.montar = async function (raiz) {
+    if (!raiz.querySelector('.inicio')) return;
+    const [lotes, registros, vacunasPlan, inventario] = await Promise.all(['lotes', 'registros', 'vacunasPlan', 'inventario'].map(s => DB.listar(s)));
+    const activos = lotes.filter(l => l.estado === 'activo').sort((x, y) => String(x.fechaLlegada || '').localeCompare(String(y.fechaLlegada || '')));
+    const hoy = hoyLocal(), alt = App.estado.granja && App.estado.granja.altitud;
+    const id = App.estado.loteActivoId;
+    const sel = activos.length === 1 ? activos[0].id : !verTodos && activos.some(l => l.id === id) ? id : 'todos';
+    const elegidos = sel === 'todos' ? activos : activos.filter(l => l.id === sel);
+    const ms = elegidos.map(l => metricas(l, registros, vacunasPlan, hoy, alt));
+    let alertas = [];
+    try { alertas = generarAlertas({ lotes, registros, vacunasPlan, inventario, granja: App.estado.granja }, new Date()); } catch (e) { alertas = []; }
+    alertas = alertas.filter(x => x.gravedad !== 'info' && (sel === 'todos' || !x.loteId || x.loteId === sel));
+    if (!raiz.isConnected) return;
+    raiz.innerHTML = construir({ activos, sel, ms, a: agregado(ms), alertas, hoy, alt });
+    ultimo = raiz.innerHTML;
+    raiz.querySelectorAll('[data-t] .tarjeta-cifra[data-cifra]').forEach(el => {
+      const t = el.closest('[data-t]').dataset.t, clave = sel + ':' + t, meta = Number(el.dataset.cifra);
+      if (previo[clave] !== undefined && previo[clave] !== meta) { const c = el.closest('.tarjeta'); if (c && !reducirMovimiento()) c.classList.add('pop'); }
+      el.textContent = formatoNumero(previo[clave] !== undefined ? previo[clave] : 0);
+      previo[clave] = meta;
+      contar(el, meta);
+    });
+  };
+
+  ACCIONES['ini-lote'] = el => {
+    const id = el.dataset.id;
+    verTodos = id === 'todos';
+    if (!verTodos) App.fijarLote(id);
+    App.refrescar();
+  };
+})();
 
 </script>
 <script>
@@ -1953,11 +2499,47 @@ VISTAS.inventario = async function () {
 
 </script>
 <script>
-/* Appollo · Vista "Lotes" (provisional: la reemplaza una tarea posterior). */
+/* Appollo · Vista "Lotes": activos y cerrados como tarjetas tocables → #/lote/:id. */
 var VISTAS = window.VISTAS || (window.VISTAS = {});
+
+/* Resumen compartido por Lotes, Inicio y Detalle. Nunca devuelve NaN: lo que no se puede calcular es null. */
+function resumenLote(l, registros, vacunas, fecha) {
+  const g = typeof GENETICAS !== 'undefined' ? GENETICAS.find(x => x.id === l.genetica) : null;
+  const ok = g && typeof l.fechaLlegada === 'string' && fechaValida(l.fechaLlegada) && Number.isFinite(Number(l.edadLlegadaDias));
+  const fin = fecha || hoyLocal();
+  const edad = ok ? edadDias(l, fin) : null;
+  const vivas = Number.isFinite(Number(l.avesInicio)) ? Math.max(0, avesVivas(l, registros, fin)) : null;
+  return { g, ok, edad, vivas, estado: ok ? estadoSanitario(l, registros, vacunas, fin) : null };
+}
+const textoEdad = d => (d === null || d === undefined ? 'Edad —' : `${formatoNumero(d)}\u00a0${d === 1 ? 'día' : 'días'} · ${formatoNumero(Math.floor(d / 7))}\u00a0sem`);
+const chipEstado = e => (e ? `<span class="chip chip-${e}"><span class="chip-punto" aria-hidden="true"></span>${{ verde: 'Bien', ambar: 'Revisar', rojo: 'Atención' }[e]}</span>` : '');
+
 VISTAS.lotes = async function () {
-  return `<section class="pantalla"><h1>Lotes</h1>
-  <div class="proximamente">${icono('hoja')}<p>Próximamente: aquí verás tus lotes activos y cerrados.</p></div></section>`;
+  const [lotes, registros, vacunas] = await Promise.all(['lotes', 'registros', 'vacunasPlan'].map(s => DB.listar(s)));
+  const hoy = hoyLocal();
+  const tarjeta = l => {
+    const r = resumenLote(l, registros, vacunas, l.estado === 'activo' ? hoy : (l.fechaCierre || hoy));
+    return `<button type="button" class="lote-item" data-accion="ir" data-ruta="#/lote/${esc(encodeURIComponent(l.id))}">
+  <span class="lote-cab"><b class="lote-nombre">${esc(l.nombre || 'Lote')}</b>${chipEstado(l.estado === 'activo' ? r.estado : null)}</span>
+  <span class="lote-gen">${esc(r.g ? r.g.nombre : l.genetica || 'Genética desconocida')}</span>
+  <span class="lote-datos"><span><b class="num">${r.vivas === null ? '—' : formatoNumero(r.vivas)}</b> aves vivas</span><span>${textoEdad(r.edad)}</span></span>
+</button>`;
+  };
+  const orden = (a, b) => String(b.fechaLlegada || '').localeCompare(String(a.fechaLlegada || ''));
+  const activos = lotes.filter(l => l.estado === 'activo').sort(orden), cerrados = lotes.filter(l => l.estado !== 'activo').sort(orden);
+  const nuevo = Boton({ texto: 'Nuevo lote', icono: 'mas', variante: 'primario', accion: 'nuevo-lote', clase: 'btn-ancho btn-grande' });
+  if (!lotes.length) {
+    return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${icono('gallina')}</div>
+  <h1>Lotes</h1><p class="pantalla-texto">Aún no tienes lotes. Un lote es un grupo de aves que llegó junto.</p>${nuevo}</section>`;
+  }
+  return `<section class="pantalla">
+  <h1>Lotes</h1>
+  ${nuevo}
+  <h2 class="seccion-titulo">Activos <span class="num">(${activos.length})</span></h2>
+  <div class="lotes-lista lotes-activos">${activos.length ? activos.map(tarjeta).join('') : '<p class="pantalla-texto">No hay lotes activos.</p>'}</div>
+  ${cerrados.length ? `<h2 class="seccion-titulo">Cerrados <span class="num">(${cerrados.length})</span></h2>
+  <div class="lotes-lista lotes-cerrados">${cerrados.map(tarjeta).join('')}</div>` : ''}
+</section>`;
 };
 
 </script>
@@ -1979,12 +2561,229 @@ VISTAS.mas = async function () {
 
 </script>
 <script>
-/* Appollo · Vista "Nuevo lote" (provisional: la reemplaza una tarea posterior). */
+/* =========================================================================
+   APPOLLO · Nuevo lote (3 pasos: genética → aves y edad → altitud y galpón).
+   NuevoLote.crear({genetica, avesInicio, fechaLlegada|edadDias, edadLlegadaDias?, altitud, galpon, nombre?})
+   -> Promise<Lote>; rechaza con un Error de mensaje en español y sin guardar nada.
+   Escribe también el vacunasPlan del lote desde vacunasPara(g, modo).
+   ========================================================================= */
 var VISTAS = window.VISTAS || (window.VISTAS = {});
-VISTAS.nuevoLote = async function () {
-  return `<section class="pantalla"><h1>Nuevo lote</h1>
-  <div class="proximamente">${icono('hoja')}<p>Próximamente: crea un lote en tres pasos (genética, aves y galpón).</p></div></section>`;
-};
+var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
+
+const NuevoLote = (function () {
+  'use strict';
+  const K_ALT = 'appollo.v2.altitud', REPITE_CADA = 63, MAX_AVES = 1000000;
+  const ALTITUDES = [[0, 'Costa'], [500, 'Amazonía'], [1500, 'Valle'], [2800, 'Sierra'], [3500, 'Páramo']];
+  const ORDEN = { postura: ['postura', 'doble', 'criolla', 'carne'], carne: ['carne', 'doble', 'criolla', 'postura'] };
+  const genDe = id => GENETICAS.find(g => g.id === id);
+  const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* sin almacenamiento */ } };
+
+  /* --------------------------- Reglas (sin DOM) --------------------------- */
+  const maxDias = g => (modoDe(g) === 'huevos' ? 693 : g.carne.rango[1] - 1);
+  const masDias = (f, n) => { const d = fechaADate(f); d.setDate(d.getDate() + n); return hoyLocal(d); };
+  const corta = g => g.nombre.split(' ').slice(0, 2).join(' ');
+  const numero = x => (typeof x === 'number' ? x : typeof x === 'string' && x.trim() !== '' ? Number(x) : NaN);
+  const semanas = d => formatoNumero(Math.floor(d / 7)) + ' sem';
+
+  /* Fechas del plan: cada vacuna a su día de vida; las ya pasadas al llegar se omiten. */
+  function planVacunas(g, lote) {
+    const max = maxDias(g), out = [];
+    for (const v of vacunasPara(g, modoDe(g))) {
+      const dias = [v.d];
+      if (v.repite) for (let d = v.d + REPITE_CADA; d <= max; d += REPITE_CADA) dias.push(d);
+      for (const d of dias) {
+        if (d < lote.edadLlegadaDias) continue;
+        out.push({ loteId: lote.id, vacunaId: v.id, nombre: v.n, via: v.via, fechaPrevista: masDias(lote.fechaLlegada, d - lote.edadLlegadaDias) });
+      }
+    }
+    return out.sort((a, b) => (a.fechaPrevista < b.fechaPrevista ? -1 : 1));
+  }
+
+  /* -> {mensaje} si algo no vale, o {lote} listo para guardar (sin id). */
+  function validar(o) {
+    const no = mensaje => ({ mensaje }), hoy = hoyLocal();
+    const g = o && genDe(o.genetica);
+    if (!g) return no('Elige la genética de tus aves');
+    const aves = numero(o.avesInicio);
+    if (!Number.isInteger(aves) || aves < 1) return no('La cantidad de aves debe ser un número entero de 1 o más');
+    if (aves > MAX_AVES) return no('La cantidad de aves no puede pasar de 1.000.000');
+    let fecha = hoy, llegada;
+    const edadOk = (x, que) => {
+      const n = numero(x);
+      if (!Number.isFinite(n)) return { m: 'Escribe ' + que + ' de las aves con números' };
+      if (n < 0) return { m: 'La edad no puede ser negativa' };
+      if (!Number.isInteger(n)) return { m: 'La edad debe ser un número entero de días' };
+      return { n };
+    };
+    if (o.fechaLlegada !== undefined && o.fechaLlegada !== null && o.fechaLlegada !== '') {
+      if (!fechaValida(o.fechaLlegada)) return no('La fecha de llegada no es válida');
+      if (o.fechaLlegada > hoy) return no('La fecha de llegada no puede ser futura');
+      fecha = o.fechaLlegada;
+      const e = o.edadLlegadaDias === undefined || o.edadLlegadaDias === null || o.edadLlegadaDias === '' ? { n: 0 } : edadOk(o.edadLlegadaDias, 'la edad al llegar');
+      if (e.m) return no(e.m);
+      llegada = e.n;
+    } else {
+      const e = edadOk(o.edadDias, 'la edad');
+      if (e.m) return no(e.m);
+      llegada = e.n;
+    }
+    const lote = { genetica: g.id, avesInicio: aves, fechaLlegada: fecha, edadLlegadaDias: llegada, estado: 'activo' };
+    const actual = edadDias(lote, hoy), max = maxDias(g);
+    if (actual > max) return no(`La edad (${formatoNumero(actual)} días, ${semanas(actual)}) supera el máximo para ${g.nombre}: ${formatoNumero(max)} días (${semanas(max)})`);
+    let alt = null;
+    if (o.altitud !== undefined && o.altitud !== null && o.altitud !== '') {
+      alt = numero(o.altitud);
+      if (!Number.isFinite(alt) || alt < 0 || alt > 6000) return no('La altitud debe estar entre 0 y 6000 m');
+    }
+    const galpon = String(o.galpon || '').trim().slice(0, 40);
+    const nombre = String(o.nombre || '').trim().slice(0, 60) || `${corta(g)} · ${galpon || 'Lote'}`;
+    return { lote: Object.assign(lote, { nombre, galpon, altitud: alt, creado: new Date().toISOString() }) };
+  }
+
+  async function crear(o) {
+    const v = validar(o);
+    if (v.mensaje) throw new Error(v.mensaje);
+    const g = genDe(v.lote.genetica), hechos = [];
+    let lote;
+    try {
+      lote = await DB.guardar('lotes', v.lote);
+      for (const p of planVacunas(g, lote)) hechos.push((await DB.guardar('vacunasPlan', p)).id);
+    } catch (e) {
+      for (const id of hechos) { try { await DB.borrar('vacunasPlan', id); } catch (x) { /* sigue */ } }
+      if (lote) { try { await DB.borrar('lotes', lote.id); } catch (x) { /* sigue */ } }
+      throw new Error('No se pudo guardar el lote. Intenta de nuevo.');
+    }
+    if (lote.altitud !== null) {
+      lsSet(K_ALT, String(lote.altitud));
+      try { // se lee de la base: App.estado puede estar desactualizado
+        const gr = (await DB.obtener('granja', 'granja')) || App.estado.granja || { id: 'granja' };
+        App.estado.granja = gr.altitud === lote.altitud ? gr : await DB.guardar('granja', Object.assign({}, gr, { altitud: lote.altitud }));
+      } catch (e) { /* no crítico */ }
+    }
+    return lote;
+  }
+
+  /* ------------------------------ Pantalla ------------------------------ */
+  const altGuardada = () => {
+    const ls = numero(lsGet(K_ALT)), gr = App.estado.granja && App.estado.granja.altitud;
+    return Number.isFinite(ls) ? ls : Number.isFinite(gr) ? gr : '';
+  };
+  const nuevo = () => ({ paso: 1, gid: null, aves: 100, modo: 'edad', edad: 1, unidad: 'dias', fecha: hoyLocal(), edadLlegada: 0, altitud: altGuardada(), galpon: '', nombre: '' });
+  let st = null;
+  const $v = s => document.querySelector('#view ' + s);
+  const val = id => { const el = $v('#' + id); return el ? el.value : undefined; };
+
+  function presets(g) {
+    const d = x => [x, 'dias', x === 1 ? '1 día' : x + ' días'], s = x => [x, 'semanas', x + ' sem'];
+    if (modoDe(g) === 'huevos') return [d(1), s(4), s(10), s(17), s(25), s(40), s(60)];
+    return (esBroiler(g) ? [1, 7, 14, 21, 28, 35] : g.id === 'campero' ? [1, 14, 28, 42, 56] : [1, 28, 56, 84]).map(d);
+  }
+
+  function leer() {
+    if (!st) return;
+    const v = { aves: val('nl-aves'), edad: val('nl-edad'), fecha: val('nl-fecha'), edadLlegada: val('nl-edad-llegada'),
+      altitud: val('nl-altitud'), galpon: val('nl-galpon'), nombre: val('nl-nombre') };
+    Object.keys(v).forEach(k => { if (v[k] !== undefined) st[k] = v[k]; });
+  }
+  const datos = () => {
+    const o = { genetica: st.gid, avesInicio: st.aves, altitud: st.altitud, galpon: st.galpon, nombre: st.nombre };
+    if (st.modo === 'fecha') { o.fechaLlegada = st.fecha || ' '; o.edadLlegadaDias = st.edadLlegada; }
+    else { const n = numero(st.edad); o.edadDias = st.unidad === 'semanas' && Number.isFinite(n) ? Math.round(n * 7) : st.edad; }
+    return o;
+  };
+  const seg = (accion, clave, ops) => `<div class="segmento" role="group">${ops.map(([v, t]) =>
+    `<button type="button" class="segmento-btn" data-accion="${accion}" data-${clave}="${v}" aria-pressed="${st[clave] === v || String(st[clave]) === String(v)}">${t}</button>`).join('')}</div>`;
+  const campo = (id, etiqueta, html, ayuda) => `<div class="reg-campo"><label class="reg-etiqueta" for="${id}">${etiqueta}</label>${html}${ayuda ? `<p class="reg-ayuda">${ayuda}</p>` : ''}</div>`;
+  const texto = (id, valor, extra) => `<input class="reg-texto" id="${id}" value="${esc(valor)}" ${extra}>`;
+
+  function paso1() {
+    const t = (App.estado.granja && App.estado.granja.tipo) || '', orden = ORDEN[t] || ORDEN.postura;
+    const lista = GENETICAS.slice().sort((a, b) => orden.indexOf(a.tipo) - orden.indexOf(b.tipo));
+    return `<h1>¿Qué aves llegan?</h1>
+  <div class="gen-lista">${lista.map(g => `<button type="button" class="gen-opcion" data-accion="nl-genetica" data-id="${esc(g.id)}" aria-pressed="${st.gid === g.id}">
+    <span class="gen-cab"><b class="gen-nombre">${esc(g.nombre)}</b><span class="gen-tipo gen-tipo-${esc(g.tipo)}">${esc(TIPOS[g.tipo].corto)}</span></span>
+    <span class="gen-desc">${esc(g.rasgo)} · ${esc(g.origen)}</span></button>`).join('')}</div>
+  ${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'ir', datos: { ruta: '#/lotes' }, clase: 'btn-ancho' })}`;
+  }
+
+  function paso2() {
+    const g = genDe(st.gid), max = maxDias(g);
+    const edad = st.modo === 'edad'
+      ? campo('nl-edad', 'Edad de las aves hoy', Contador({ id: 'nl-edad', valor: st.edad, min: 0, paso: 1, etiqueta: 'Edad' }) +
+        seg('nl-unidad', 'unidad', [['dias', 'Días'], ['semanas', 'Semanas']]) +
+        `<div class="nl-presets">${presets(g).map(([n, u, t]) => `<button type="button" class="segmento-btn" data-accion="nl-preset" data-valor="${n}" data-unidad="${u}">${t}</button>`).join('')}</div>`,
+        `Máximo para ${esc(g.nombre)}: ${formatoNumero(max)} días (${semanas(max)})`)
+      : campo('nl-fecha', 'Fecha de llegada', texto('nl-fecha', st.fecha, `type="date" max="${hoyLocal()}"`)) +
+        campo('nl-edad-llegada', 'Edad al llegar (días)', Contador({ id: 'nl-edad-llegada', valor: st.edadLlegada, min: 0, paso: 1, etiqueta: 'Edad al llegar en días' }), 'Pon 0 o 1 si llegaron pollitos recién nacidos');
+    return `<h1>${esc(g.nombre)}</h1>
+  ${campo('nl-aves', '¿Cuántas aves llegaron?', Contador({ id: 'nl-aves', valor: st.aves, min: 1, paso: 10, etiqueta: 'Cantidad de aves' }))}
+  <div class="reg-campo"><p class="reg-etiqueta">¿Qué sabes de su edad?</p>${seg('nl-modo', 'modo', [['edad', 'Su edad hoy'], ['fecha', 'Fecha de llegada']])}</div>
+  ${edad}
+  <p class="reg-error nl-error" role="alert" hidden></p>
+  <div class="reg-acciones">${Boton({ texto: 'Atrás', icono: 'atras', variante: 'secundario', accion: 'nl-atras' })}${Boton({ texto: 'Siguiente', icono: 'sig', variante: 'primario', accion: 'nl-siguiente' })}</div>`;
+  }
+
+  function paso3() {
+    const g = genDe(st.gid), v = validar(datos()), def = v.lote ? `${corta(g)} · ${String(st.galpon || '').trim() || 'Lote'}` : '';
+    return `<h1>¿Dónde están?</h1>
+  <div class="reg-campo"><label class="reg-etiqueta" for="nl-altitud">Altitud de la granja (metros)</label>
+    <div class="nl-alturas">${ALTITUDES.map(([m, t]) => `<button type="button" class="segmento-btn nl-altura" data-accion="nl-altitud" data-valor="${m}" aria-pressed="${String(st.altitud) === String(m)}"><b>${formatoNumero(m)} m</b><span>${t}</span></button>`).join('')}</div>
+    ${texto('nl-altitud', st.altitud, 'type="number" inputmode="numeric" min="0" max="6000" step="1" placeholder="Otra altitud en metros"')}
+    <p class="reg-ayuda">La recordamos para tus próximos lotes.</p></div>
+  ${campo('nl-galpon', 'Galpón (opcional)', texto('nl-galpon', st.galpon, 'type="text" maxlength="40" autocomplete="off" placeholder="Ej.: Galpón 2"'))}
+  ${campo('nl-nombre', 'Nombre del lote (opcional)', texto('nl-nombre', st.nombre, `type="text" maxlength="60" autocomplete="off" placeholder="${esc(def)}"`))}
+  <p class="reg-error nl-error" role="alert" hidden></p>
+  <div class="reg-acciones">${Boton({ texto: 'Atrás', icono: 'atras', variante: 'secundario', accion: 'nl-atras' })}${Boton({ texto: 'Crear lote', icono: 'mas', variante: 'primario', accion: 'nl-crear', clase: 'reg-guardar' })}</div>`;
+  }
+
+  function html() {
+    const nombres = ['Genética', 'Aves y edad', 'Lugar'];
+    return `<section class="pantalla nuevo-lote" data-paso="${st.paso}">
+  <p class="eyebrow">Nuevo lote · Paso ${st.paso} de 3</p>
+  <ol class="pasos">${nombres.map((n, i) => `<li class="paso${i + 1 < st.paso ? ' paso-hecho' : ''}"${i + 1 === st.paso ? ' aria-current="step"' : ''}><span class="paso-barra" aria-hidden="true"></span><span class="paso-nombre">${n}</span></li>`).join('')}</ol>
+  ${st.paso === 1 ? paso1() : st.paso === 2 ? paso2() : paso3()}
+</section>`;
+  }
+
+  function pintar(enfocar) {
+    const s = $v('.nuevo-lote');
+    if (!s) return;
+    s.outerHTML = html();
+    if (enfocar) { window.scrollTo(0, 0); const h = $v('.nuevo-lote h1'); if (h) { h.tabIndex = -1; try { h.focus({ preventScroll: true }); } catch (e) { /* sin foco */ } } }
+  }
+  function error(msg) { const p = $v('.nl-error'); if (p) { p.textContent = msg; p.hidden = false; p.scrollIntoView({ block: 'nearest' }); } }
+
+  VISTAS.nuevoLote = async function () { if (!st) st = nuevo(); return html(); };
+  VISTAS.nuevoLote.crear = crear;
+
+  ACCIONES['nl-genetica'] = el => { st.gid = el.dataset.id; st.paso = 2; pintar(true); };
+  ACCIONES['nl-atras'] = () => { leer(); st.paso = Math.max(1, st.paso - 1); pintar(true); };
+  ACCIONES['nl-modo'] = el => { leer(); st.modo = el.dataset.modo; pintar(); };
+  ACCIONES['nl-unidad'] = el => { leer(); st.unidad = el.dataset.unidad; pintar(); };
+  ACCIONES['nl-preset'] = el => { leer(); st.edad = el.dataset.valor; st.unidad = el.dataset.unidad; pintar(); };
+  ACCIONES['nl-altitud'] = el => { leer(); st.altitud = el.dataset.valor; pintar(); };
+  ACCIONES['nl-siguiente'] = () => {
+    leer();
+    const v = validar(Object.assign(datos(), { altitud: null }));
+    if (v.mensaje) { error(v.mensaje); return; }
+    st.paso = 3; pintar(true);
+  };
+  ACCIONES['nl-crear'] = async el => {
+    leer();
+    if (st.altitud === '' || st.altitud === null || st.altitud === undefined) { error('Elige la altitud de tu granja'); return; }
+    el.disabled = true;
+    let lote;
+    try { lote = await crear(datos()); } catch (e) { el.disabled = false; error(e.message); return; }
+    st = null;
+    App.fijarLote(lote.id);
+    App.ir('#/lote/' + encodeURIComponent(lote.id));
+    App.toast('Lote creado');
+    App.actualizarAlertas();
+  };
+
+  return { crear, validar, maxDias, planVacunas };
+})();
 
 </script>
 <script>
@@ -2328,7 +3127,7 @@ const App = (function () {
   /* ------------------------------ Rutas ------------------------------ */
   // Primer segmento del hash -> nombre de vista. Lo demás va en params.
   const ALIAS = { 'nuevo-lote': 'nuevoLote', lote: 'detalleLote', plan: 'planificar' };
-  const NAV = { inicio: 'inicio', lotes: 'lotes', nuevoLote: 'lotes', detalleLote: 'lotes', alertas: 'alertas',
+  const NAV = { inicio: 'inicio', bienvenida: 'inicio', lotes: 'lotes', nuevoLote: 'lotes', detalleLote: 'lotes', alertas: 'alertas',
     mas: 'mas', inventario: 'mas', reportes: 'mas', ajustes: 'mas', planificar: 'mas' };
   const CONOCIDAS = ['inicio', 'lotes', 'nuevoLote', 'detalleLote', 'alertas', 'mas', 'inventario', 'reportes', 'ajustes', 'planificar'];
 
@@ -2367,6 +3166,8 @@ const App = (function () {
     if (!listo) return;
     const r = resolver(location.hash);
     if (!r) { history.replaceState(null, '', '#/inicio'); return render({ animar }); }
+    // Primera vez (granja sin nombre): el Inicio es la bienvenida.
+    if (r.nombre === 'inicio' && estado.granja && !estado.granja.nombre && typeof VISTAS.bienvenida === 'function') r.nombre = 'bienvenida';
     const mio = ++turno, vista = $('#view');
     marcarNav(NAV[r.nombre] || null);
     let html, montar = null;

@@ -119,7 +119,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   <div class="vacia-ilustracion" aria-hidden="true">${icono('gallina')}</div>
   <h1>${esc((App.estado.granja && App.estado.granja.nombre) || 'Bienvenido a Appollo')}</h1>
   <p class="pantalla-texto">Aún no tienes lotes. Crea el primero para registrar mortalidad, alimento y huevos cada día.</p>
-  ${Boton({ texto: 'Crear mi primer lote', icono: 'mas', variante: 'primario', accion: 'nuevo-lote', clase: 'btn-ancho btn-grande' })}
+  ${Boton({ texto: 'Nuevo lote', icono: 'mas', variante: 'primario', accion: 'nuevo-lote', clase: 'btn-ancho btn-grande' })}
 </section>`;
 
   VISTAS.inicio = async function () {
