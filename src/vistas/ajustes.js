@@ -124,7 +124,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     if (t === 'claro' || t === 'oscuro') lsSet(K_TEMA, t); else { try { localStorage.removeItem(K_TEMA); } catch (e) { /* sin almacenamiento */ } }
     aplicarTema(t);
     document.querySelectorAll('#view [data-accion=aj-tema]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tema === t)));
-    try { App.estado.granja = await DB.guardar('granja', Object.assign({}, App.estado.granja, { id: 'granja', tema: t })); } catch (e) { /* el tema ya quedó aplicado */ }
+    try { App.estado.granja = await DB.guardar('granja', Object.assign({}, (await DB.obtener('granja', 'granja')) || App.estado.granja, { id: 'granja', tema: t })); } catch (e) { /* el tema ya quedó aplicado */ }
   };
 
   const nombreArchivo = () => `appollo-respaldo-${hoyLocal()}.json`;

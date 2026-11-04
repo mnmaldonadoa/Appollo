@@ -15,11 +15,12 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   let loteId = null, actual = null; // actual: {texto, titulo}
   const r1 = x => (x === null ? null : Math.round(x * 10) / 10);
   const dinero = x => (x === null ? null : (x < 0 ? '-$' : '$') + formatoNumero(Math.abs(x), 2));
-  const ddmm = f => f.slice(8, 10) + '/' + f.slice(5, 7);
+  const ddmm = f => (typeof f === 'string' && f.length >= 10 ? f.slice(8, 10) + '/' + f.slice(5, 7) : '—');
 
   /* Serie diaria del período (máx. 60 días finales): % postura o peso real contra el estándar. */
   function grafica(l, regs, res, g) {
     if (!g) return '';
+    if (typeof res.hasta !== 'string' || typeof res.desde !== 'string') return '';
     const fin = res.hasta, tope = _repMasDias(fin, -59), desde = res.desde > tope ? res.desde : tope;
     const real = [], est = [], dias = [];
     for (let f = desde; f <= fin; f = _repMasDias(f, 1)) {
@@ -75,6 +76,9 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     const [regs, granja] = await Promise.all([DB.listar('registros', { loteId: l.id }), DB.obtener('granja', 'granja')]);
     const hoy = hoyLocal(), per = periodoReporte(l, periodo, hoy, regs);
     const s = resumenReporte(l, regs, per.desde, per.hasta, (granja && granja.precios) || {});
+    // Lote cerrado sin registros en el período: no se muestra una viabilidad de 100 % inventada.
+    const sinDatos = !regs.some(r => r.fecha >= s.desde && r.fecha <= s.hasta), cerrado = l.estado !== 'activo';
+    if (cerrado && sinDatos) s.viabilidad = null;
     const g = GENETICAS.find(x => x.id === l.genetica);
     const texto = textoReporte(s, l, periodo, granja);
     actual = { texto, titulo: 'Reporte · ' + (l.nombre || 'Lote') };
@@ -82,7 +86,8 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     const comp = typeof navigator.share === 'function';
     const opciones = lista.map(x => `<option value="${esc(x.id)}"${x.id === l.id ? ' selected' : ''}>${esc(x.nombre || 'Lote')}${x.estado === 'activo' ? '' : ' (cerrado)'}</option>`).join('');
     return `<section class="pantalla reportes">
-  <header class="ini-cab"><h1>Reportes</h1><p class="pantalla-texto">${esc(g ? g.nombre : '')} · ${esc(ddmm(per.desde))} al ${esc(ddmm(per.hasta))}</p></header>
+  <header class="ini-cab"><h1>Reportes</h1><p class="pantalla-texto">${esc(g ? g.nombre : '')} · ${esc(ddmm(s.desde))} al ${esc(ddmm(s.hasta))}</p></header>
+  ${cerrado && sinDatos && periodo !== 'ciclo' ? '<p class="rep-aviso">Este lote está cerrado: usa Ciclo</p>' : ''}
   <div class="reg-campo"><label class="reg-etiqueta" for="rep-lote">Lote</label><select class="reg-select" id="rep-lote">${opciones}</select></div>
   <div class="segmento" role="group" aria-label="Período">${PERIODOS.map(([id, t]) =>
     `<button type="button" class="segmento-btn" data-accion="rep-periodo" data-periodo="${id}" aria-pressed="${id === periodo}">${t}</button>`).join('')}</div>

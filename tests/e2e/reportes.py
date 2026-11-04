@@ -185,8 +185,40 @@ def main():
             check("Automático quita el atributo y la preferencia", pg.evaluate("document.documentElement.getAttribute('data-tema')") is None
                   and pg.evaluate("localStorage.getItem('appollo.v2.tema')") is None)
 
+            # ---------- 7b. Lotes sin fecha de llegada (migrados de la v1 o respaldos manipulados) ----------
+            pg.evaluate("""async () => {
+              localStorage.removeItem('appollo.v2.migrado');
+              localStorage.setItem('appollo.v1.lotes', JSON.stringify([{id: 77, estado: {gid: 'isa-brown', aves: 40}, resumen: 'x'}, {id: 78, fecha: 'basura', estado: {gid: 'isa-brown', aves: 5}}]));
+              await DB.migrarLS(); }""")
+            mig = pg.evaluate("DB.listar('lotes').then(ls => ls.filter(l => l.origen === 'v1').map(l => l.fechaLlegada))")
+            check("migrarLS nunca deja la fecha de llegada vacía", len(mig) == 2 and all(isinstance(f, str) and len(f) == 10 for f in mig), mig)
+            pg.evaluate("""async () => {
+              await DB.guardar('lotes', {id: 'h1', nombre: 'Sin fecha', genetica: 'hyline-brown', avesInicio: 50, fechaLlegada: null, estado: 'cerrado'});
+              await DB.guardar('lotes', {id: 'h2', nombre: 'Fecha basura', genetica: 'cobb500', avesInicio: 30, fechaLlegada: 'basura', estado: 'activo'});
+              await DB.guardar('lotes', {id: 'h3', nombre: 'Sin nada', genetica: 'hyline-brown', avesInicio: 20, estado: 'cerrado'});
+              let i = 0;
+              for (const [l, t, f, d] of [['h1','huevos','2026-09-01',{cantidad: 20}], ['h1','alimento','2026-09-01',{kg: 5}], ['h1','mortalidad','2026-09-02',{cantidad: 2}],
+                                          ['h2','peso','2026-11-01',{gramos: 300}], ['h2','alimento','2026-11-01',{kg: 4}], ['h2','mortalidad','2026-11-02',{cantidad: 1}]])
+                await DB.guardar('registros', {id: 'hr' + (i++), loteId: l, fecha: f, tipo: t, datos: d, creado: new Date().toISOString()}); }""")
+            pg.reload(); pg.wait_for_selector("#view .pantalla, #view .vista-error")
+            def sano(donde):
+                txt = pg.inner_text("#view")
+                check(f"[{donde}] sin 'Algo salió mal' ni NaN/undefined/Infinity", "Algo salió mal" not in txt and pg.evaluate(SIN_NAN), txt[:200])
+            for h in ("#/inicio", "#/lotes", "#/lote/h1", "#/lote/h2", "#/lote/h3", "#/alertas", "#/reportes"):
+                ir(h); pg.wait_for_timeout(300); sano(h)
+            for lote in ("h1", "h2", "h3"):
+                for per in ("semana", "mes", "ciclo"):
+                    ir("#/reportes"); pg.select_option("#rep-lote", lote); pg.wait_for_timeout(250)
+                    pg.click(f"[data-accion=rep-periodo][data-periodo={per}]"); pg.wait_for_selector(f"[data-periodo={per}][aria-pressed=true]"); pg.wait_for_timeout(200)
+                    sano(f"reportes {lote} {per}")
+                    if per == "semana" and lote == "h1":
+                        check("lote cerrado sin datos en la semana: Viabilidad — y pista de Ciclo", "—" in tarjeta("Viabilidad") and "usa Ciclo" in pg.inner_text("#view"), pg.inner_text("#view")[:300])
+            pg.click("[data-accion=rep-copiar]"); pg.wait_for_selector("#toast:not([hidden])"); sano("copiar lote sin fecha")
+            pg.evaluate("localStorage.setItem('appollo.v2.periodoReporte', 'ciclo')"); pg.reload(); pg.wait_for_selector("#view .pantalla, #view .vista-error"); ir("#/reportes"); sano("recarga con ciclo guardado")
+            for l in ("h1", "h2", "h3"): pg.evaluate("id => DB.borrar('lotes', id)", l)
+
             # ---------- 8. Estado vacío ----------
-            pg.evaluate("DB.importar(JSON.stringify({version: 1, datos: {}}))"); ir("#/reportes")
+            pg.evaluate("DB.importar(JSON.stringify({version: 1, datos: {}}))"); ir("#/ajustes"); ir("#/reportes")
             pg.wait_for_selector("#view .pantalla-vacia")
             check("sin lotes, Reportes invita a crear uno", "Aún no tienes lotes" in pg.inner_text("#view") and pg.locator("#view [data-accion=nuevo-lote]").count() == 1)
             medir("reportes vacío")

@@ -15,6 +15,8 @@ function hoyLocal(d = new Date()) {
 
 /* Edad en días = edad al llegar + días enteros transcurridos desde la llegada. */
 function edadDias(lote, fecha) {
+  // Sin fecha de llegada válida (lote migrado de la v1 o respaldo manipulado) no hay días que contar.
+  if (!fechaValida(lote.fechaLlegada) || !fechaValida(fecha)) return Number(lote.edadLlegadaDias) || 0;
   const a = fechaADate(lote.fechaLlegada), b = fechaADate(fecha);
   // UTC solo para contar días enteros sin que el cambio de hora afecte el resultado
   const dias = Math.round((Date.UTC(b.getFullYear(), b.getMonth(), b.getDate()) -
@@ -247,6 +249,9 @@ const _repPrecio = p => (typeof p === 'number' && Number.isFinite(p) && p >= 0 ?
 const _repMasDias = (f, n) => { const d = fechaADate(f); d.setDate(d.getDate() + n); return hoyLocal(d); };
 
 function resumenReporte(lote, registros, desde, hasta, precios) {
+  if (!fechaValida(hasta)) hasta = fechaValida(desde) ? desde : hoyLocal();
+  if (!fechaValida(desde)) desde = hasta;
+  if (desde > hasta) desde = hasta;
   const pr = precios || {}, regs = (registros || []).filter(r => r && r.loteId === lote.id);
   const en = tipo => regs.filter(r => r.tipo === tipo && r.fecha >= desde && r.fecha <= hasta);
   const g = _genDe(lote), carne = !!g && _esCarne(g);
@@ -296,14 +301,14 @@ function resumenReporte(lote, registros, desde, hasta, precios) {
    Semana = últimos 7 días con hoy; mes = últimos 30. Ciclo = llegada → hoy (lote cerrado: su último registro,
    o su fecha de cierre, o la llegada). */
 function periodoReporte(lote, periodo, hoy, registros) {
+  if (!fechaValida(hoy)) hoy = hoyLocal();
   if (periodo === 'semana') return { desde: _repMasDias(hoy, -6), hasta: hoy };
   if (periodo === 'mes') return { desde: _repMasDias(hoy, -29), hasta: hoy };
-  const desde = lote.fechaLlegada;
+  const fs = (registros || []).filter(r => r && r.loteId === lote.id && fechaValida(r.fecha)).map(r => r.fecha).sort();
+  // Sin llegada válida: el ciclo arranca en el primer registro, o en hoy si no hay ninguno.
+  const desde = fechaValida(lote.fechaLlegada) ? lote.fechaLlegada : fs.length ? fs[0] : hoy;
   let hasta = hoy;
-  if (lote.estado !== 'activo') {
-    const fs = (registros || []).filter(r => r && r.loteId === lote.id).map(r => r.fecha).sort();
-    hasta = fs.length ? fs[fs.length - 1] : lote.fechaCierre || desde;
-  }
+  if (lote.estado !== 'activo') hasta = fs.length ? fs[fs.length - 1] : fechaValida(lote.fechaCierre) ? lote.fechaCierre : desde;
   return { desde, hasta: hasta < desde ? desde : hasta };
 }
 

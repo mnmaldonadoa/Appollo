@@ -153,11 +153,13 @@ const DB = (function () {
       let gNombre = gid;
       try { const g = typeof GENETICAS !== 'undefined' && GENETICAS.find(x => x.id === gid); if (g) gNombre = g.nombre; } catch (x) { /* sin catálogo */ }
       const fecha = typeof e.fecha === 'string' ? e.fecha.slice(0, 10) : '';
+      // Fecha de llegada siempre válida: si la entrada vieja no trae una, se usa hoy (nunca null).
+      const llegada = typeof fechaValida === 'function' && fechaValida(fecha) ? fecha : (typeof hoyLocal === 'function' ? hoyLocal() : new Date().toISOString().slice(0, 10));
       const nombre = [gNombre || 'Lote anterior', fecha].filter(Boolean).join(' · ');
       await guardar('lotes', {
         id: 'ls-' + (e.id !== undefined ? e.id : nuevoId()),
         nombre, genetica: gid, avesInicio: isFinite(aves) ? aves : 0,
-        fechaLlegada: fecha || null, estado: 'cerrado', origen: 'v1', resumen: e.resumen || ''
+        fechaLlegada: llegada, edadLlegadaDias: 0, estado: 'cerrado', origen: 'v1', resumen: e.resumen || ''
       });
       n++;
     }

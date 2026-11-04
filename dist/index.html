@@ -1373,6 +1373,8 @@ function hoyLocal(d = new Date()) {
 
 /* Edad en días = edad al llegar + días enteros transcurridos desde la llegada. */
 function edadDias(lote, fecha) {
+  // Sin fecha de llegada válida (lote migrado de la v1 o respaldo manipulado) no hay días que contar.
+  if (!fechaValida(lote.fechaLlegada) || !fechaValida(fecha)) return Number(lote.edadLlegadaDias) || 0;
   const a = fechaADate(lote.fechaLlegada), b = fechaADate(fecha);
   // UTC solo para contar días enteros sin que el cambio de hora afecte el resultado
   const dias = Math.round((Date.UTC(b.getFullYear(), b.getMonth(), b.getDate()) -
@@ -1605,6 +1607,9 @@ const _repPrecio = p => (typeof p === 'number' && Number.isFinite(p) && p >= 0 ?
 const _repMasDias = (f, n) => { const d = fechaADate(f); d.setDate(d.getDate() + n); return hoyLocal(d); };
 
 function resumenReporte(lote, registros, desde, hasta, precios) {
+  if (!fechaValida(hasta)) hasta = fechaValida(desde) ? desde : hoyLocal();
+  if (!fechaValida(desde)) desde = hasta;
+  if (desde > hasta) desde = hasta;
   const pr = precios || {}, regs = (registros || []).filter(r => r && r.loteId === lote.id);
   const en = tipo => regs.filter(r => r.tipo === tipo && r.fecha >= desde && r.fecha <= hasta);
   const g = _genDe(lote), carne = !!g && _esCarne(g);
@@ -1654,14 +1659,14 @@ function resumenReporte(lote, registros, desde, hasta, precios) {
    Semana = últimos 7 días con hoy; mes = últimos 30. Ciclo = llegada → hoy (lote cerrado: su último registro,
    o su fecha de cierre, o la llegada). */
 function periodoReporte(lote, periodo, hoy, registros) {
+  if (!fechaValida(hoy)) hoy = hoyLocal();
   if (periodo === 'semana') return { desde: _repMasDias(hoy, -6), hasta: hoy };
   if (periodo === 'mes') return { desde: _repMasDias(hoy, -29), hasta: hoy };
-  const desde = lote.fechaLlegada;
+  const fs = (registros || []).filter(r => r && r.loteId === lote.id && fechaValida(r.fecha)).map(r => r.fecha).sort();
+  // Sin llegada válida: el ciclo arranca en el primer registro, o en hoy si no hay ninguno.
+  const desde = fechaValida(lote.fechaLlegada) ? lote.fechaLlegada : fs.length ? fs[0] : hoy;
   let hasta = hoy;
-  if (lote.estado !== 'activo') {
-    const fs = (registros || []).filter(r => r && r.loteId === lote.id).map(r => r.fecha).sort();
-    hasta = fs.length ? fs[fs.length - 1] : lote.fechaCierre || desde;
-  }
+  if (lote.estado !== 'activo') hasta = fs.length ? fs[fs.length - 1] : fechaValida(lote.fechaCierre) ? lote.fechaCierre : desde;
   return { desde, hasta: hasta < desde ? desde : hasta };
 }
 
@@ -1987,11 +1992,13 @@ const DB = (function () {
       let gNombre = gid;
       try { const g = typeof GENETICAS !== 'undefined' && GENETICAS.find(x => x.id === gid); if (g) gNombre = g.nombre; } catch (x) { /* sin catálogo */ }
       const fecha = typeof e.fecha === 'string' ? e.fecha.slice(0, 10) : '';
+      // Fecha de llegada siempre válida: si la entrada vieja no trae una, se usa hoy (nunca null).
+      const llegada = typeof fechaValida === 'function' && fechaValida(fecha) ? fecha : (typeof hoyLocal === 'function' ? hoyLocal() : new Date().toISOString().slice(0, 10));
       const nombre = [gNombre || 'Lote anterior', fecha].filter(Boolean).join(' · ');
       await guardar('lotes', {
         id: 'ls-' + (e.id !== undefined ? e.id : nuevoId()),
         nombre, genetica: gid, avesInicio: isFinite(aves) ? aves : 0,
-        fechaLlegada: fecha || null, estado: 'cerrado', origen: 'v1', resumen: e.resumen || ''
+        fechaLlegada: llegada, edadLlegadaDias: 0, estado: 'cerrado', origen: 'v1', resumen: e.resumen || ''
       });
       n++;
     }
@@ -2337,7 +2344,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     if (t === 'claro' || t === 'oscuro') lsSet(K_TEMA, t); else { try { localStorage.removeItem(K_TEMA); } catch (e) { /* sin almacenamiento */ } }
     aplicarTema(t);
     document.querySelectorAll('#view [data-accion=aj-tema]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tema === t)));
-    try { App.estado.granja = await DB.guardar('granja', Object.assign({}, App.estado.granja, { id: 'granja', tema: t })); } catch (e) { /* el tema ya quedó aplicado */ }
+    try { App.estado.granja = await DB.guardar('granja', Object.assign({}, (await DB.obtener('granja', 'granja')) || App.estado.granja, { id: 'granja', tema: t })); } catch (e) { /* el tema ya quedó aplicado */ }
   };
 
   const nombreArchivo = () => `appollo-respaldo-${hoyLocal()}.json`;
@@ -3699,11 +3706,12 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   let loteId = null, actual = null; // actual: {texto, titulo}
   const r1 = x => (x === null ? null : Math.round(x * 10) / 10);
   const dinero = x => (x === null ? null : (x < 0 ? '-$' : '$') + formatoNumero(Math.abs(x), 2));
-  const ddmm = f => f.slice(8, 10) + '/' + f.slice(5, 7);
+  const ddmm = f => (typeof f === 'string' && f.length >= 10 ? f.slice(8, 10) + '/' + f.slice(5, 7) : '—');
 
   /* Serie diaria del período (máx. 60 días finales): % postura o peso real contra el estándar. */
   function grafica(l, regs, res, g) {
     if (!g) return '';
+    if (typeof res.hasta !== 'string' || typeof res.desde !== 'string') return '';
     const fin = res.hasta, tope = _repMasDias(fin, -59), desde = res.desde > tope ? res.desde : tope;
     const real = [], est = [], dias = [];
     for (let f = desde; f <= fin; f = _repMasDias(f, 1)) {
@@ -3759,6 +3767,9 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     const [regs, granja] = await Promise.all([DB.listar('registros', { loteId: l.id }), DB.obtener('granja', 'granja')]);
     const hoy = hoyLocal(), per = periodoReporte(l, periodo, hoy, regs);
     const s = resumenReporte(l, regs, per.desde, per.hasta, (granja && granja.precios) || {});
+    // Lote cerrado sin registros en el período: no se muestra una viabilidad de 100 % inventada.
+    const sinDatos = !regs.some(r => r.fecha >= s.desde && r.fecha <= s.hasta), cerrado = l.estado !== 'activo';
+    if (cerrado && sinDatos) s.viabilidad = null;
     const g = GENETICAS.find(x => x.id === l.genetica);
     const texto = textoReporte(s, l, periodo, granja);
     actual = { texto, titulo: 'Reporte · ' + (l.nombre || 'Lote') };
@@ -3766,7 +3777,8 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     const comp = typeof navigator.share === 'function';
     const opciones = lista.map(x => `<option value="${esc(x.id)}"${x.id === l.id ? ' selected' : ''}>${esc(x.nombre || 'Lote')}${x.estado === 'activo' ? '' : ' (cerrado)'}</option>`).join('');
     return `<section class="pantalla reportes">
-  <header class="ini-cab"><h1>Reportes</h1><p class="pantalla-texto">${esc(g ? g.nombre : '')} · ${esc(ddmm(per.desde))} al ${esc(ddmm(per.hasta))}</p></header>
+  <header class="ini-cab"><h1>Reportes</h1><p class="pantalla-texto">${esc(g ? g.nombre : '')} · ${esc(ddmm(s.desde))} al ${esc(ddmm(s.hasta))}</p></header>
+  ${cerrado && sinDatos && periodo !== 'ciclo' ? '<p class="rep-aviso">Este lote está cerrado: usa Ciclo</p>' : ''}
   <div class="reg-campo"><label class="reg-etiqueta" for="rep-lote">Lote</label><select class="reg-select" id="rep-lote">${opciones}</select></div>
   <div class="segmento" role="group" aria-label="Período">${PERIODOS.map(([id, t]) =>
     `<button type="button" class="segmento-btn" data-accion="rep-periodo" data-periodo="${id}" aria-pressed="${id === periodo}">${t}</button>`).join('')}</div>

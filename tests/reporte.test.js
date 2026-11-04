@@ -127,3 +127,31 @@ assert.ok(!/NaN|undefined|null|Infinity/.test(tn), tn);
 const tk = c.textoReporte({ ...k, desde: '2026-11-01', hasta: '2026-11-07' }, C, 'ciclo');
 assert.ok(tk.includes('114 kg') && tk.includes('Cobb 500') && /ciclo/i.test(tk) && tk.includes('0,53'), tk);
 console.log('reporte ok');
+
+/* ---------- Lotes sin fecha de llegada válida (migrados de la v1 o respaldos manipulados) ---------- */
+for (const fl of [null, undefined, 'basura', '', '2026-13-45']) {
+  for (const estado of ['activo', 'cerrado']) {
+    const M = { id: 'M1', nombre: 'Viejo', genetica: 'hyline-brown', avesInicio: 50, fechaLlegada: fl, estado };
+    for (const regsM of [[], [reg('M1', 'huevos', '2026-11-02', { cantidad: 10 }), reg('M1', 'mortalidad', '2026-10-30', { cantidad: 1 })]]) {
+      for (const per of ['semana', 'mes', 'ciclo']) {
+        const p = c.periodoReporte(M, per, '2026-11-04', regsM);
+        assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(p.desde) && /^\d{4}-\d{2}-\d{2}$/.test(p.hasta) && p.desde <= p.hasta, JSON.stringify([fl, estado, per, p]));
+        const r = c.resumenReporte(M, regsM, p.desde, p.hasta, P);
+        for (const v of Object.values(r)) assert.ok(v === null || typeof v === 'boolean' || typeof v === 'string' || (typeof v === 'number' && Number.isFinite(v)), JSON.stringify([fl, per, r]));
+        const txt = c.textoReporte(r, M, per);
+        assert.ok(!/NaN|undefined|null|Infinity/.test(txt), txt);
+      }
+    }
+  }
+}
+// El ciclo de un lote sin llegada arranca en su primer registro
+assert.strictEqual(c.periodoReporte({ id: 'M1', estado: 'activo', fechaLlegada: null }, 'ciclo', '2026-11-04',
+  [reg('M1', 'mortalidad', '2026-10-30', { cantidad: 1 }), reg('M1', 'huevos', '2026-11-02', { cantidad: 1 })]).desde, '2026-10-30');
+// resumenReporte tolera fechas de período inválidas
+const raro = c.resumenReporte(L, R, null, undefined, P);
+for (const v of Object.values(raro)) assert.ok(v === null || typeof v === 'boolean' || typeof v === 'string' || (typeof v === 'number' && Number.isFinite(v)));
+// edadDias sin llegada válida no es NaN
+assert.ok(Number.isFinite(c.edadDias({ fechaLlegada: null, edadLlegadaDias: 10 }, '2026-11-04')));
+assert.ok(Number.isFinite(c.edadDias({ fechaLlegada: null }, '2026-11-04')));
+// Viabilidad de un lote cerrado sin datos en el período
+console.log('reporte (sin llegada) ok');
