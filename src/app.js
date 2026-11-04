@@ -7,6 +7,17 @@
 var VISTAS = window.VISTAS || (window.VISTAS = {});
 var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
 
+const APP_VERSION = '2.0.0';
+
+/* Tema: 'claro' | 'oscuro' fijan data-tema en <html>; cualquier otro valor (automático) lo quita.
+   Se lee de localStorage y se aplica en seguida, antes del primer dibujo de una vista. */
+const K_TEMA = 'appollo.v2.tema';
+function aplicarTema(t) {
+  const el = document.documentElement;
+  if (t === 'claro' || t === 'oscuro') el.setAttribute('data-tema', t); else el.removeAttribute('data-tema');
+}
+try { aplicarTema(localStorage.getItem(K_TEMA)); } catch (e) { /* sin almacenamiento: tema automático */ }
+
 const App = (function () {
   'use strict';
   const K_LOTE = 'appollo.v2.loteActivo';

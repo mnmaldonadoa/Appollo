@@ -34,6 +34,10 @@ def scripts_app():
     return SCRIPTS + tuple(vistas) + ("app.js",)
 
 
+# Tema guardado, aplicado en <head> antes del primer dibujo (evita el parpadeo claro -> oscuro).
+TEMA_BOOT = """<script>try{var t=localStorage.getItem('appollo.v2.tema');if(t==='claro'||t==='oscuro')document.documentElement.setAttribute('data-tema',t)}catch(e){}</script>"""
+
+
 def fuentes_css(incrustar=False):
     """@font-face con url(fonts/...) relativa, o con data URI base64 (una sola página)."""
     reglas = []
@@ -105,6 +109,7 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+{TEMA_BOOT}
 {fuentes_css()}
 <style>
 {css}
@@ -146,6 +151,7 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     # Versión de una sola página (vista previa)
     artefacto = f"""<title>Appollo</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+{TEMA_BOOT}
 {fuentes_css(incrustar=True)}
 <style>
 {css}

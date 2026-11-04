@@ -481,3 +481,18 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .inv-botones .btn { flex: 1 1 120px; }
 .inv-form { display: grid; gap: 14px; }
 .inv-form [hidden] { display: none !important; }
+
+/* ---- Reportes y ajustes (tarea 8) ---- */
+.rep-aviso { display: grid; gap: 10px; padding: 14px; border-radius: var(--r); background: var(--huevo-suave); color: var(--texto); }
+.rep-acciones { display: grid; gap: 12px; }
+.rep-copia { display: grid; gap: 8px; }
+.rep-copia[hidden] { display: none; }
+.rep-texto { min-height: 160px; resize: vertical; font-size: 1rem; }
+.rep-grafica { min-width: 0; }
+.aj-seccion { display: grid; gap: 14px; padding: 16px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); }
+.aj-seccion > h2 { font-size: 1.25rem; }
+.aj-nota { color: var(--secundario); font-size: 1rem; }
+.aj-campo-error { border-color: var(--alerta-viva); }
+.aj-ok { color: var(--ok); font-weight: 700; }
+.aj-acerca { text-align: center; color: var(--secundario); padding: 8px 0 16px; }
+.aj-oculto { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
