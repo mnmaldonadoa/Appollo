@@ -19,7 +19,7 @@ const App = (function () {
   /* ------------------------------ Rutas ------------------------------ */
   // Primer segmento del hash -> nombre de vista. Lo demás va en params.
   const ALIAS = { 'nuevo-lote': 'nuevoLote', lote: 'detalleLote', plan: 'planificar' };
-  const NAV = { inicio: 'inicio', lotes: 'lotes', nuevoLote: 'lotes', detalleLote: 'lotes', alertas: 'alertas',
+  const NAV = { inicio: 'inicio', bienvenida: 'inicio', lotes: 'lotes', nuevoLote: 'lotes', detalleLote: 'lotes', alertas: 'alertas',
     mas: 'mas', inventario: 'mas', reportes: 'mas', ajustes: 'mas', planificar: 'mas' };
   const CONOCIDAS = ['inicio', 'lotes', 'nuevoLote', 'detalleLote', 'alertas', 'mas', 'inventario', 'reportes', 'ajustes', 'planificar'];
 
@@ -58,6 +58,8 @@ const App = (function () {
     if (!listo) return;
     const r = resolver(location.hash);
     if (!r) { history.replaceState(null, '', '#/inicio'); return render({ animar }); }
+    // Primera vez (granja sin nombre): el Inicio es la bienvenida.
+    if (r.nombre === 'inicio' && estado.granja && !estado.granja.nombre && typeof VISTAS.bienvenida === 'function') r.nombre = 'bienvenida';
     const mio = ++turno, vista = $('#view');
     marcarNav(NAV[r.nombre] || null);
     let html, montar = null;

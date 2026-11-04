@@ -66,8 +66,10 @@ def main():
                 check(f"[{donde}] objetivos táctiles >= 56 px", not chicos, chicos[:5])
                 check(f"[{donde}] sin desborde horizontal", not pg.evaluate(DESBORDE))
 
-            # ---------- 1. Sin lotes ----------
+            # ---------- 1. Sin lotes (granja ya nombrada: sin nombre se ve la bienvenida, ver lotes.py) ----------
             ctx, pg = nueva()
+            pg.evaluate("DB.guardar('granja', {id:'granja', nombre:'La Esperanza', tipo:'postura', altitud:null, tema:'auto'})")
+            pg.reload(); pg.wait_for_selector("#view .pantalla-vacia")
             check("arranque sin hash va a #/inicio", pg.evaluate("location.hash") == "#/inicio", pg.evaluate("location.hash"))
             check("barra inferior con 5 destinos", pg.locator("#nav .nav-item").count() == 5)
             for t in ("Inicio", "Lotes", "Registrar", "Alertas", "Más"):
