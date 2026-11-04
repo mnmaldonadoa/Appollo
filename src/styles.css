@@ -456,3 +456,28 @@ button { cursor: pointer; }
 .dl-cierre { display: grid; gap: 12px; margin-top: 12px; padding-top: 16px; border-top: 1px dashed var(--linea-fuerte); }
 .dl-confirmar { display: grid; gap: 12px; padding: 14px; border-radius: var(--r); background: var(--huevo-suave); color: var(--texto); }
 h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 700; letter-spacing: 0; }
+
+/* ---- Alertas e inventario (tarea 7) ---- */
+.al-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.al-card { position: relative; display: grid; gap: 12px; padding: 14px 14px 14px 20px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); overflow: hidden; }
+.al-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 6px; background: var(--linea-fuerte); }
+.al-rojo::before { background: var(--alerta-viva); }
+.al-ambar::before { background: var(--precaucion-viva); }
+.al-cab { display: flex; align-items: center; gap: 10px; }
+.al-icono { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--primario-suave); color: var(--primario); flex: none; }
+.al-rojo .al-icono { background: color-mix(in srgb, var(--alerta-viva) 16%, var(--superficie)); color: var(--alerta); }
+.al-ambar .al-icono { background: var(--huevo-suave); color: var(--precaucion); }
+.al-texto { font-weight: 700; overflow-wrap: anywhere; }
+.al-botones { display: grid; gap: 8px; }
+.inv-grupo { display: grid; gap: 8px; }
+.inv-grupo .seccion-titulo { align-items: center; }
+.inv-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 12px 12px 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); }
+.inv-bajo { border-color: var(--precaucion-viva); background: var(--huevo-suave); }
+.inv-info { display: grid; gap: 2px; flex: 1 1 140px; min-width: 0; }
+.inv-nombre { overflow-wrap: anywhere; }
+.inv-cant { font-family: var(--f-titulo); font-size: 1.4rem; font-weight: 700; }
+.inv-min { color: var(--secundario); }
+.inv-botones { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 100%; }
+.inv-botones .btn { flex: 1 1 120px; }
+.inv-form { display: grid; gap: 14px; }
+.inv-form [hidden] { display: none !important; }

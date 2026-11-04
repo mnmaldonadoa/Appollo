@@ -9,6 +9,8 @@ function _sumaDias(fecha, n) {
   d.setDate(d.getDate() + n);
   return hoyLocal(d);
 }
+/* Número con coma decimal (formatoNumero vive en la interfaz; en pruebas sin DOM se usa un equivalente). */
+const _num = (x, d) => (typeof formatoNumero === 'function' ? formatoNumero(x, d) : (d === undefined ? String(x) : Number(x).toFixed(d)).replace('.', ','));
 const _rutaLote = l => '#/lote/' + l.id;
 const _activos = lotes => lotes.filter(l => l.estado === 'activo');
 
@@ -42,7 +44,7 @@ function alertaMortalidad(datos, hoy) {
     const pct = 100 * muertes / base;
     if (esp > 0 && pct > 2 * esp) {
       out.push({ id: 'mortalidad-' + l.id + '-' + hoy, tipo: 'mortalidad', gravedad: 'rojo', loteId: l.id,
-        texto: l.nombre + (muertes === 1 ? ': hoy murió 1 ave (' : ': hoy murieron ' + muertes + ' aves (') + pct.toFixed(2) + ' %), más del doble de lo esperado',
+        texto: l.nombre + (muertes === 1 ? ': hoy murió 1 ave (' : ': hoy murieron ' + muertes + ' aves (') + _num(pct, 2) + ' %), más del doble de lo esperado',
         accion: { etiqueta: 'Ver lote', ruta: _rutaLote(l) } });
     }
   }
@@ -59,7 +61,7 @@ function alertaPostura(datos, hoy) {
     const rec = prom(0), prev = prom(3);
     if (rec !== null && prev !== null && prev - rec > 3) {
       out.push({ id: 'postura-' + l.id + '-' + hoy, tipo: 'postura', gravedad: 'ambar', loteId: l.id,
-        texto: l.nombre + ': la postura bajó ' + (prev - rec).toFixed(1) + ' puntos frente a los 3 días previos',
+        texto: l.nombre + ': la postura bajó ' + _num(prev - rec, 1) + ' puntos frente a los 3 días previos',
         accion: { etiqueta: 'Ver lote', ruta: _rutaLote(l) } });
     }
   }
@@ -70,7 +72,7 @@ function alertaInventario(datos) {
   return (datos.inventario || [])
     .filter(i => Number(i.cantidad) < Number(i.minimo))
     .map(i => ({ id: 'inventario-' + i.id, tipo: 'inventario', gravedad: 'ambar',
-      texto: i.nombre + ': quedan ' + i.cantidad + ' ' + i.unidad + ' (mínimo ' + i.minimo + ')',
+      texto: i.nombre + ': quedan ' + _num(Number(i.cantidad)) + ' ' + i.unidad + ' (mínimo ' + _num(Number(i.minimo)) + ')',
       accion: { etiqueta: 'Ver inventario', ruta: '#/inventario' } }));
 }
 

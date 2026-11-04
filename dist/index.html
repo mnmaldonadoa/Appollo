@@ -477,6 +477,31 @@ button { cursor: pointer; }
 .dl-confirmar { display: grid; gap: 12px; padding: 14px; border-radius: var(--r); background: var(--huevo-suave); color: var(--texto); }
 h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 700; letter-spacing: 0; }
 
+/* ---- Alertas e inventario (tarea 7) ---- */
+.al-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.al-card { position: relative; display: grid; gap: 12px; padding: 14px 14px 14px 20px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); overflow: hidden; }
+.al-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 6px; background: var(--linea-fuerte); }
+.al-rojo::before { background: var(--alerta-viva); }
+.al-ambar::before { background: var(--precaucion-viva); }
+.al-cab { display: flex; align-items: center; gap: 10px; }
+.al-icono { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--primario-suave); color: var(--primario); flex: none; }
+.al-rojo .al-icono { background: color-mix(in srgb, var(--alerta-viva) 16%, var(--superficie)); color: var(--alerta); }
+.al-ambar .al-icono { background: var(--huevo-suave); color: var(--precaucion); }
+.al-texto { font-weight: 700; overflow-wrap: anywhere; }
+.al-botones { display: grid; gap: 8px; }
+.inv-grupo { display: grid; gap: 8px; }
+.inv-grupo .seccion-titulo { align-items: center; }
+.inv-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 12px 12px 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); }
+.inv-bajo { border-color: var(--precaucion-viva); background: var(--huevo-suave); }
+.inv-info { display: grid; gap: 2px; flex: 1 1 140px; min-width: 0; }
+.inv-nombre { overflow-wrap: anywhere; }
+.inv-cant { font-family: var(--f-titulo); font-size: 1.4rem; font-weight: 700; }
+.inv-min { color: var(--secundario); }
+.inv-botones { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 100%; }
+.inv-botones .btn { flex: 1 1 120px; }
+.inv-form { display: grid; gap: 14px; }
+.inv-form [hidden] { display: none !important; }
+
 </style>
 </head>
 <body>
@@ -1530,6 +1555,20 @@ function estadoSanitario(lote, registros, vacunasPlan, fecha) {
   return ambar ? 'ambar' : 'verde';
 }
 
+/* Nueva cantidad de un ítem de inventario tras gastar `kg` de alimento (kg negativo = devolver).
+   Convierte a la unidad del ítem con kgPorUnidad; nunca baja de 0. Si no puede convertir, no cambia. */
+function calcularDescuento(item, kg) {
+  const cant = item ? item.cantidad : undefined;
+  if (typeof kg !== 'number' || !Number.isFinite(kg) || !Number.isFinite(Number(cant))) return cant;
+  let por = 1;
+  if (item.unidad !== 'kg') {
+    por = Number(item.kgPorUnidad);
+    if (!(por > 0) || !Number.isFinite(por)) return cant;
+  }
+  const nueva = Number(cant) - kg / por;
+  return Math.max(0, Math.round(nueva * 1e6) / 1e6);
+}
+
 </script>
 <script>
 /* =========================================================================
@@ -1543,6 +1582,8 @@ function _sumaDias(fecha, n) {
   d.setDate(d.getDate() + n);
   return hoyLocal(d);
 }
+/* Número con coma decimal (formatoNumero vive en la interfaz; en pruebas sin DOM se usa un equivalente). */
+const _num = (x, d) => (typeof formatoNumero === 'function' ? formatoNumero(x, d) : (d === undefined ? String(x) : Number(x).toFixed(d)).replace('.', ','));
 const _rutaLote = l => '#/lote/' + l.id;
 const _activos = lotes => lotes.filter(l => l.estado === 'activo');
 
@@ -1576,7 +1617,7 @@ function alertaMortalidad(datos, hoy) {
     const pct = 100 * muertes / base;
     if (esp > 0 && pct > 2 * esp) {
       out.push({ id: 'mortalidad-' + l.id + '-' + hoy, tipo: 'mortalidad', gravedad: 'rojo', loteId: l.id,
-        texto: l.nombre + (muertes === 1 ? ': hoy murió 1 ave (' : ': hoy murieron ' + muertes + ' aves (') + pct.toFixed(2) + ' %), más del doble de lo esperado',
+        texto: l.nombre + (muertes === 1 ? ': hoy murió 1 ave (' : ': hoy murieron ' + muertes + ' aves (') + _num(pct, 2) + ' %), más del doble de lo esperado',
         accion: { etiqueta: 'Ver lote', ruta: _rutaLote(l) } });
     }
   }
@@ -1593,7 +1634,7 @@ function alertaPostura(datos, hoy) {
     const rec = prom(0), prev = prom(3);
     if (rec !== null && prev !== null && prev - rec > 3) {
       out.push({ id: 'postura-' + l.id + '-' + hoy, tipo: 'postura', gravedad: 'ambar', loteId: l.id,
-        texto: l.nombre + ': la postura bajó ' + (prev - rec).toFixed(1) + ' puntos frente a los 3 días previos',
+        texto: l.nombre + ': la postura bajó ' + _num(prev - rec, 1) + ' puntos frente a los 3 días previos',
         accion: { etiqueta: 'Ver lote', ruta: _rutaLote(l) } });
     }
   }
@@ -1604,7 +1645,7 @@ function alertaInventario(datos) {
   return (datos.inventario || [])
     .filter(i => Number(i.cantidad) < Number(i.minimo))
     .map(i => ({ id: 'inventario-' + i.id, tipo: 'inventario', gravedad: 'ambar',
-      texto: i.nombre + ': quedan ' + i.cantidad + ' ' + i.unidad + ' (mínimo ' + i.minimo + ')',
+      texto: i.nombre + ': quedan ' + _num(Number(i.cantidad)) + ' ' + i.unidad + ' (mínimo ' + _num(Number(i.minimo)) + ')',
       accion: { etiqueta: 'Ver inventario', ruta: '#/inventario' } }));
 }
 
@@ -2054,12 +2095,62 @@ VISTAS.ajustes = async function () {
 
 </script>
 <script>
-/* Appollo · Vista "Alertas" (provisional: la reemplaza una tarea posterior). */
+/* =========================================================================
+   APPOLLO · Vista "Alertas": lista por gravedad con acción grande; las vacunas se marcan hechas aquí.
+   ========================================================================= */
 var VISTAS = window.VISTAS || (window.VISTAS = {});
-VISTAS.alertas = async function () {
-  return `<section class="pantalla"><h1>Alertas</h1>
-  <div class="proximamente">${icono('hoja')}<p>Próximamente: tus alertas ordenadas por gravedad.</p></div></section>`;
-};
+var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
+
+(function () {
+  'use strict';
+  const GRAV = {
+    rojo: { chip: 'Urgente', clase: 'chip chip-rojo', ic: 'aviso' },
+    ambar: { chip: 'Atención', clase: 'chip chip-ambar', ic: 'campana' },
+    info: { chip: 'Aviso', clase: 'chip', ic: 'info' }
+  };
+
+  async function calcular() {
+    const datos = {};
+    for (const s of DB.STORES) datos[s] = await DB.listar(s);
+    return generarAlertas(datos, new Date());
+  }
+
+  function tarjeta(a) {
+    const g = GRAV[a.gravedad] || GRAV.info;
+    const hecha = a.tipo === 'vacuna' && String(a.id).startsWith('vacuna-');
+    return `<li class="al-card al-${esc(a.gravedad)}" data-alerta="${esc(a.id)}">
+  <div class="al-cab"><span class="al-icono">${icono(g.ic)}</span><span class="${g.clase}">${a.gravedad === 'info' ? '' : '<span class="chip-punto" aria-hidden="true"></span>'}${g.chip}</span></div>
+  <p class="al-texto">${esc(a.texto)}</p>
+  <div class="al-botones">
+    ${Boton({ texto: a.accion && a.accion.etiqueta || 'Ver', variante: 'primario', accion: 'ir', datos: { ruta: a.accion && a.accion.ruta }, clase: 'btn-ancho' })}
+    ${hecha ? Boton({ texto: 'Marcar hecha', icono: 'jeringa', variante: 'secundario', accion: 'al-hecha', datos: { id: String(a.id).slice('vacuna-'.length) }, clase: 'btn-ancho' }) : ''}
+  </div>
+</li>`;
+  }
+
+  VISTAS.alertas = async function () {
+    const lista = await calcular();
+    if (!lista.length) {
+      return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${icono('escudo')}</div>
+  <h1>Todo en orden</h1><p class="pantalla-texto">No hay nada pendiente. Tus aves y tu inventario van bien.</p></section>`;
+    }
+    return `<section class="pantalla"><h1>Alertas</h1>
+  <p class="pantalla-texto">${formatoNumero(lista.length)} ${lista.length === 1 ? 'aviso' : 'avisos'}, primero lo más urgente.</p>
+  <ul class="al-lista">${lista.map(tarjeta).join('')}</ul></section>`;
+  };
+
+  ACCIONES['al-hecha'] = async el => {
+    el.disabled = true;
+    let deshacer = null;
+    try {
+      const v = await DB.obtener('vacunasPlan', el.dataset.id);
+      if (!v || v.fechaAplicada) { App.refrescar(); return; }
+      deshacer = await Vacunas.aplicar(v);
+    } catch (e) { App.toast('No se pudo guardar. Intenta de nuevo.'); el.disabled = false; return; }
+    await App.refrescar();
+    App.toast('Vacuna aplicada', { deshacer });
+  };
+})();
 
 </script>
 <script>
@@ -2273,6 +2364,18 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     App.toast(msg, deshacer ? { deshacer } : undefined);
   }
 
+  /* Marca una vacuna del plan como aplicada hoy y crea su registro. Devuelve la función que lo revierte.
+     Compartida con la vista de Alertas (Vacunas.aplicar). */
+  window.Vacunas = {
+    async aplicar(v) {
+      const previo = copia(v), hoy = hoyLocal();
+      const nuevo = await DB.guardar('registros', { loteId: v.loteId, fecha: hoy, tipo: 'vacuna',
+        datos: { nombre: v.nombre, via: v.via || '', planId: v.id }, creado: new Date().toISOString() });
+      await DB.guardar('vacunasPlan', Object.assign({}, v, { fechaAplicada: hoy }));
+      return async () => { await DB.borrar('registros', nuevo.id); await DB.guardar('vacunasPlan', previo); };
+    }
+  };
+
   ACCIONES['dl-borrar'] = async el => {
     el.disabled = true;
     const r = await DB.obtener('registros', el.dataset.id);
@@ -2295,16 +2398,8 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     el.disabled = true;
     const v = await DB.obtener('vacunasPlan', el.dataset.id);
     if (!v || v.fechaAplicada) { App.refrescar(); return; }
-    const previo = copia(v), hoy = hoyLocal();
-    let nuevo = null;
-    await hacer(async () => {
-      nuevo = await DB.guardar('registros', { loteId: v.loteId, fecha: hoy, tipo: 'vacuna',
-        datos: { nombre: v.nombre, via: v.via || '', planId: v.id }, creado: new Date().toISOString() });
-      await DB.guardar('vacunasPlan', Object.assign({}, v, { fechaAplicada: hoy }));
-    }, 'Vacuna aplicada', async () => {
-      if (nuevo) await DB.borrar('registros', nuevo.id);
-      await DB.guardar('vacunasPlan', previo);
-    });
+    let deshacer = null;
+    await hacer(async () => { deshacer = await Vacunas.aplicar(v); }, 'Vacuna aplicada', () => deshacer());
   };
 
   ACCIONES['dl-mas'] = el => { limites[el.dataset.id] = (limites[el.dataset.id] || PAGINA) + PAGINA; App.refrescar(); };
@@ -2503,12 +2598,177 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
 
 </script>
 <script>
-/* Appollo · Vista "Inventario" (provisional: la reemplaza una tarea posterior). */
+/* =========================================================================
+   APPOLLO · Inventario: ítems por categoría, entradas de stock, alta/edición/borrado con Deshacer.
+   Inventario.descontarAlimento(kg) lo llaman Registrar y Detalle del lote (kg negativo = devolver).
+   ========================================================================= */
 var VISTAS = window.VISTAS || (window.VISTAS = {});
-VISTAS.inventario = async function () {
-  return `<section class="pantalla"><h1>Inventario</h1>
-  <div class="proximamente">${icono('hoja')}<p>Próximamente: alimento, vacunas y medicamentos en bodega.</p></div></section>`;
+var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
+
+var Inventario = {
+  async descontarAlimento(kg) {
+    if (typeof kg !== 'number' || !Number.isFinite(kg)) return;
+    const item = (await DB.listar('inventario')).find(i => i.vinculoAlimento === true);
+    if (!item) return;
+    const nueva = calcularDescuento(item, kg);
+    if (nueva === item.cantidad || !Number.isFinite(Number(nueva))) return;
+    await DB.guardar('inventario', Object.assign({}, item, { cantidad: nueva }));
+  }
 };
+
+(function () {
+  'use strict';
+  const CATS = [['alimento', 'Alimento', 'saco'], ['vacuna', 'Vacunas', 'jeringa'], ['medicamento', 'Medicamentos', 'capsula'], ['otro', 'Otros', 'hoja']];
+  const UNIDADES = ['kg', 'sacos', 'dosis', 'frascos', 'unidades', 'litros'];
+  const copia = o => JSON.parse(JSON.stringify(o));
+  const num = x => formatoNumero(Number(x));
+  const bajo = i => Number(i.cantidad) < Number(i.minimo);
+  const $c = s => document.querySelector('#capas ' + s);
+
+  function fila(i) {
+    const b = bajo(i);
+    return `<li class="inv-fila${b ? ' inv-bajo' : ''}" data-item="${esc(i.id)}">
+  <div class="inv-info"><b class="inv-nombre">${esc(i.nombre)}</b>
+    <span class="inv-cant num">${num(i.cantidad)} ${esc(i.unidad)}</span>
+    <span class="inv-min">Mínimo: ${num(i.minimo)} ${esc(i.unidad)}</span></div>
+  ${b ? '<span class="chip chip-ambar"><span class="chip-punto" aria-hidden="true"></span>Bajo</span>' : ''}
+  <div class="inv-botones">${Boton({ texto: 'Entrada', icono: 'mas', variante: 'primario', accion: 'inv-entrada', datos: { id: i.id } })}
+    ${Boton({ texto: 'Editar', variante: 'secundario', accion: 'inv-editar', datos: { id: i.id } })}</div>
+</li>`;
+  }
+
+  VISTAS.inventario = async function () {
+    const items = (await DB.listar('inventario')).sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
+    const grupos = CATS.map(([id, tit, ic]) => {
+      const l = items.filter(i => (CATS.some(c => c[0] === i.categoria) ? i.categoria : 'otro') === id);
+      return l.length ? `<section class="inv-grupo"><h2 class="seccion-titulo">${icono(ic)} ${tit} <span class="num">${formatoNumero(l.length)}</span></h2>
+  <ul class="dl-lista">${l.map(fila).join('')}</ul></section>` : '';
+    }).join('');
+    return `<section class="pantalla"><h1>Inventario</h1>
+  ${Boton({ texto: 'Nuevo ítem', icono: 'mas', variante: 'primario', accion: 'inv-nuevo', clase: 'btn-ancho' })}
+  ${grupos || '<p class="pantalla-texto">Aún no tienes nada guardado. Agrega tu alimento, vacunas y medicinas para que Appollo te avise cuando se acaben.</p>'}</section>`;
+  };
+
+  /* ------------------------------ Entrada de stock ------------------------------ */
+  ACCIONES['inv-entrada'] = async el => {
+    const i = await DB.obtener('inventario', el.dataset.id);
+    if (!i) return;
+    App.abrirHoja({ titulo: 'Entrada: ' + i.nombre, contenido: `<div class="inv-form" data-id="${esc(i.id)}">
+  <div class="reg-campo"><label class="reg-etiqueta" for="inv-suma">¿Cuánto entró? (${esc(i.unidad)})</label>
+  ${Contador({ id: 'inv-suma', valor: 1, min: 0, paso: i.unidad === 'kg' ? 10 : 1, etiqueta: 'Cantidad que entró' })}</div>
+  <p class="reg-error" role="alert" hidden></p>
+  ${Boton({ texto: 'Guardar entrada', icono: 'saco', variante: 'primario', accion: 'inv-entrada-ok', clase: 'btn-ancho' })}</div>` });
+  };
+  ACCIONES['inv-entrada-ok'] = async el => {
+    const f = el.closest('.inv-form'), suma = Number(f.querySelector('#inv-suma').value), err = f.querySelector('.reg-error');
+    if (!Number.isFinite(suma) || suma <= 0) { err.textContent = 'Escribe una cantidad mayor que 0'; err.hidden = false; return; }
+    el.disabled = true;
+    const i = await DB.obtener('inventario', f.dataset.id);
+    if (!i) { App.cerrarHoja(); return; }
+    const previo = copia(i);
+    await DB.guardar('inventario', Object.assign({}, i, { cantidad: Math.round((Number(i.cantidad) + suma) * 1e6) / 1e6 }));
+    App.cerrarHoja(); await App.refrescar();
+    App.toast('Entrada guardada', { deshacer: () => DB.guardar('inventario', previo) });
+  };
+
+  /* ------------------------------ Formulario ------------------------------ */
+  const sel = (id, opts, val) => `<select class="reg-select" id="${id}">${opts.map(([v, t]) => `<option value="${v}"${v === val ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>`;
+  const campo = (id, et, html, cl) => `<div class="reg-campo${cl ? ' ' + cl : ''}"><label class="reg-etiqueta" for="${id}">${et}</label>${html}</div>`;
+
+  function formulario(i) {
+    const n = i || { categoria: 'alimento', unidad: 'kg', cantidad: 0, minimo: 0 };
+    return `<div class="inv-form" data-id="${esc(n.id || '')}">
+  ${campo('inv-nombre', 'Nombre', `<input class="reg-texto" id="inv-nombre" type="text" maxlength="60" autocomplete="off" value="${esc(n.nombre || '')}" placeholder="Ej.: Balanceado postura">`)}
+  ${campo('inv-cat', 'Categoría', sel('inv-cat', CATS.map(c => [c[0], c[1]]), n.categoria))}
+  ${campo('inv-unidad', 'Unidad', sel('inv-unidad', UNIDADES.map(u => [u, u]), n.unidad))}
+  ${campo('inv-kgpu', 'Kilos por saco o unidad', Contador({ id: 'inv-kgpu', valor: n.kgPorUnidad || 40, min: 0, paso: 1, etiqueta: 'Kilos por unidad' }), 'inv-kgpu-c')}
+  ${campo('inv-cant', 'Cantidad que tienes', Contador({ id: 'inv-cant', valor: n.cantidad, min: 0, paso: 1, etiqueta: 'Cantidad' }))}
+  ${campo('inv-min', 'Avisarme cuando queden menos de', Contador({ id: 'inv-min', valor: n.minimo, min: 0, paso: 1, etiqueta: 'Mínimo' }))}
+  ${campo('inv-costo', 'Costo por unidad en dólares (opcional)', `<input class="reg-texto" id="inv-costo" type="text" inputmode="decimal" autocomplete="off" value="${n.costo === undefined || n.costo === null ? '' : esc(String(n.costo).replace('.', ','))}" placeholder="Ej.: 22,50">`)}
+  <div class="reg-campo inv-vinculo-c"><button type="button" class="segmento-btn" id="inv-vinculo" data-accion="inv-vinculo" aria-pressed="${n.vinculoAlimento ? 'true' : 'false'}">Descontar al registrar consumo</button></div>
+  <p class="reg-error" role="alert" hidden></p>
+  ${Boton({ texto: 'Guardar', variante: 'primario', accion: 'inv-guardar', clase: 'btn-ancho' })}
+  ${n.id ? `${Boton({ texto: 'Eliminar ítem', variante: 'secundario', accion: 'inv-borrar', clase: 'btn-ancho inv-borrar' })}
+  <div class="dl-confirmar inv-confirmar" hidden><p><b>¿Eliminar "${esc(n.nombre)}"?</b> Podrás deshacerlo unos segundos.</p>
+    <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'inv-borrar-no' })}${Boton({ texto: 'Sí, eliminar', variante: 'peligro', accion: 'inv-borrar-si' })}</div></div>` : ''}</div>`;
+  }
+
+  function sincronizar() {
+    const cat = $c('#inv-cat'), un = $c('#inv-unidad');
+    if (!cat || !un) return;
+    const ali = cat.value === 'alimento';
+    $c('.inv-vinculo-c').hidden = !ali;
+    $c('.inv-kgpu-c').hidden = !(ali && un.value !== 'kg');
+  }
+  function abrirForm(i) {
+    const capa = App.abrirHoja({ titulo: i ? 'Editar ítem' : 'Nuevo ítem', contenido: formulario(i) });
+    capa.addEventListener('change', sincronizar);
+    sincronizar();
+  }
+  ACCIONES['inv-nuevo'] = () => abrirForm(null);
+  ACCIONES['inv-editar'] = async el => { const i = await DB.obtener('inventario', el.dataset.id); if (i) abrirForm(i); };
+  ACCIONES['inv-vinculo'] = el => el.setAttribute('aria-pressed', el.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+
+  function leer(f) {
+    const v = id => f.querySelector('#' + id).value, cat = v('inv-cat'), unidad = v('inv-unidad');
+    const nombre = v('inv-nombre').trim(), cant = v('inv-cant').trim(), min = v('inv-min').trim(), costoT = v('inv-costo').trim().replace(',', '.');
+    if (!nombre) return { error: 'Escribe el nombre del ítem' };
+    if (cant === '' || !Number.isFinite(Number(cant))) return { error: 'Escribe la cantidad que tienes' };
+    if (Number(cant) < 0) return { error: 'La cantidad no puede ser menor que 0' };
+    if (min === '' || !Number.isFinite(Number(min))) return { error: 'Escribe el mínimo (puede ser 0)' };
+    if (Number(min) < 0) return { error: 'El mínimo no puede ser menor que 0' };
+    if (costoT !== '' && !(Number.isFinite(Number(costoT)) && Number(costoT) >= 0)) return { error: 'El costo debe ser 0 o más (o déjalo vacío)' };
+    const o = { nombre, categoria: cat, unidad, cantidad: Number(cant), minimo: Number(min) };
+    if (costoT !== '') o.costo = Number(costoT);
+    if (cat === 'alimento') {
+      if (unidad !== 'kg') {
+        const k = Number(v('inv-kgpu'));
+        if (!(Number.isFinite(k) && k > 0)) return { error: 'Escribe cuántos kilos trae cada ' + unidad.replace(/s$/, '') };
+        o.kgPorUnidad = k;
+      }
+      if (f.querySelector('#inv-vinculo').getAttribute('aria-pressed') === 'true') o.vinculoAlimento = true;
+    }
+    return { datos: o };
+  }
+
+  ACCIONES['inv-guardar'] = async el => {
+    const f = el.closest('.inv-form'), err = f.querySelector('.reg-error'), r = leer(f);
+    if (r.error) { err.textContent = r.error; err.hidden = false; err.scrollIntoView({ block: 'nearest' }); return; }
+    el.disabled = true;
+    try {
+      const todos = await DB.listar('inventario'), id = f.dataset.id;
+      const previos = todos.map(copia);
+      const actual = id ? todos.find(i => i.id === id) : null;
+      const nuevo = Object.assign({}, actual ? { id: actual.id } : {}, r.datos);
+      if (r.datos.vinculoAlimento) {
+        for (const o of todos) if (o.id !== id && o.vinculoAlimento) { const c = copia(o); delete c.vinculoAlimento; await DB.guardar('inventario', c); }
+      }
+      const guardado = await DB.guardar('inventario', nuevo);
+      App.cerrarHoja(); await App.refrescar();
+      App.toast(id ? 'Cambios guardados' : 'Ítem guardado', { deshacer: async () => {
+        if (!id) await DB.borrar('inventario', guardado.id);
+        for (const p of previos) await DB.guardar('inventario', p);
+      } });
+    } catch (e) { el.disabled = false; err.textContent = 'No se pudo guardar. Intenta de nuevo.'; err.hidden = false; }
+  };
+
+  const confirmar = ver => {
+    const c = $c('.inv-confirmar'), b = $c('.inv-borrar');
+    if (!c || !b) return;
+    c.hidden = !ver; b.hidden = ver;
+    if (ver) c.scrollIntoView({ block: 'nearest' });
+  };
+  ACCIONES['inv-borrar'] = () => confirmar(true);
+  ACCIONES['inv-borrar-no'] = () => confirmar(false);
+  ACCIONES['inv-borrar-si'] = async el => {
+    el.disabled = true;
+    const id = el.closest('.inv-form').dataset.id, previo = await DB.obtener('inventario', id);
+    if (!previo) { App.cerrarHoja(); App.refrescar(); return; }
+    await DB.borrar('inventario', id);
+    App.cerrarHoja(); await App.refrescar();
+    App.toast('Ítem eliminado', { deshacer: () => DB.guardar('inventario', previo) });
+  };
+})();
 
 </script>
 <script>

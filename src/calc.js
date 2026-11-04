@@ -212,3 +212,17 @@ function estadoSanitario(lote, registros, vacunasPlan, fecha) {
   }
   return ambar ? 'ambar' : 'verde';
 }
+
+/* Nueva cantidad de un ítem de inventario tras gastar `kg` de alimento (kg negativo = devolver).
+   Convierte a la unidad del ítem con kgPorUnidad; nunca baja de 0. Si no puede convertir, no cambia. */
+function calcularDescuento(item, kg) {
+  const cant = item ? item.cantidad : undefined;
+  if (typeof kg !== 'number' || !Number.isFinite(kg) || !Number.isFinite(Number(cant))) return cant;
+  let por = 1;
+  if (item.unidad !== 'kg') {
+    por = Number(item.kgPorUnidad);
+    if (!(por > 0) || !Number.isFinite(por)) return cant;
+  }
+  const nueva = Number(cant) - kg / por;
+  return Math.max(0, Math.round(nueva * 1e6) / 1e6);
+}

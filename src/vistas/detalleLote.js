@@ -122,6 +122,18 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     App.toast(msg, deshacer ? { deshacer } : undefined);
   }
 
+  /* Marca una vacuna del plan como aplicada hoy y crea su registro. Devuelve la función que lo revierte.
+     Compartida con la vista de Alertas (Vacunas.aplicar). */
+  window.Vacunas = {
+    async aplicar(v) {
+      const previo = copia(v), hoy = hoyLocal();
+      const nuevo = await DB.guardar('registros', { loteId: v.loteId, fecha: hoy, tipo: 'vacuna',
+        datos: { nombre: v.nombre, via: v.via || '', planId: v.id }, creado: new Date().toISOString() });
+      await DB.guardar('vacunasPlan', Object.assign({}, v, { fechaAplicada: hoy }));
+      return async () => { await DB.borrar('registros', nuevo.id); await DB.guardar('vacunasPlan', previo); };
+    }
+  };
+
   ACCIONES['dl-borrar'] = async el => {
     el.disabled = true;
     const r = await DB.obtener('registros', el.dataset.id);
@@ -144,16 +156,8 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     el.disabled = true;
     const v = await DB.obtener('vacunasPlan', el.dataset.id);
     if (!v || v.fechaAplicada) { App.refrescar(); return; }
-    const previo = copia(v), hoy = hoyLocal();
-    let nuevo = null;
-    await hacer(async () => {
-      nuevo = await DB.guardar('registros', { loteId: v.loteId, fecha: hoy, tipo: 'vacuna',
-        datos: { nombre: v.nombre, via: v.via || '', planId: v.id }, creado: new Date().toISOString() });
-      await DB.guardar('vacunasPlan', Object.assign({}, v, { fechaAplicada: hoy }));
-    }, 'Vacuna aplicada', async () => {
-      if (nuevo) await DB.borrar('registros', nuevo.id);
-      await DB.guardar('vacunasPlan', previo);
-    });
+    let deshacer = null;
+    await hacer(async () => { deshacer = await Vacunas.aplicar(v); }, 'Vacuna aplicada', () => deshacer());
   };
 
   ACCIONES['dl-mas'] = el => { limites[el.dataset.id] = (limites[el.dataset.id] || PAGINA) + PAGINA; App.refrescar(); };
