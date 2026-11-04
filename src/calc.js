@@ -235,3 +235,103 @@ function kgDescontados(item, kg) {
   if (!Number.isFinite(nueva) || !Number.isFinite(cant) || !(por > 0)) return 0;
   return Math.round((cant - nueva) * por * 1e6) / 1e6;
 }
+
+/* ---------------------- Reportes por período ----------------------
+   resumenReporte(lote, registros, desde, hasta, precios) -> cifras del período [desde, hasta] (inclusive, 'YYYY-MM-DD').
+   Flujos (mortalidad, huevos, alimento del período) solo cuentan registros dentro del período y del lote.
+   Estados acumulados: en carne, el último peso (hasta `hasta`) y el alimento acumulado desde la llegada.
+   Todo valor sin datos suficientes es null; nunca NaN ni Infinity. */
+const _repR6 = x => Math.round(x * 1e6) / 1e6;
+const _repFin = x => (typeof x === 'number' && Number.isFinite(x) ? _repR6(x) : null);
+const _repPrecio = p => (typeof p === 'number' && Number.isFinite(p) && p >= 0 ? p : null);
+const _repMasDias = (f, n) => { const d = fechaADate(f); d.setDate(d.getDate() + n); return hoyLocal(d); };
+
+function resumenReporte(lote, registros, desde, hasta, precios) {
+  const pr = precios || {}, regs = (registros || []).filter(r => r && r.loteId === lote.id);
+  const en = tipo => regs.filter(r => r.tipo === tipo && r.fecha >= desde && r.fecha <= hasta);
+  const g = _genDe(lote), carne = !!g && _esCarne(g);
+  const a = fechaADate(desde), b = fechaADate(hasta);
+  const dias = Math.max(1, Math.round((Date.UTC(b.getFullYear(), b.getMonth(), b.getDate()) -
+    Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())) / 86400000) + 1);
+
+  const ini = lote.avesInicio > 0 ? avesVivas(lote, regs, _repMasDias(desde, -1)) : 0, fin = avesVivas(lote, regs, hasta);
+  const viab = ini > 0 ? 100 * Math.max(0, fin) / ini : null;
+  const mortalidad = _suma(en('mortalidad'), 'cantidad');
+  const alim = en('alimento'), alimentoKg = _suma(alim, 'kg');
+  const costoAlimento = alim.length && _repPrecio(pr.kgAlimento) !== null ? alimentoKg * pr.kgAlimento : null;
+
+  let produccion = null, cubetas = null, pct = null, conv = null, ingreso = null;
+  if (carne) {
+    const ps = regs.filter(r => r.tipo === 'peso' && r.fecha <= hasta && Number(r.datos && r.datos.gramos) > 0)
+      .sort((x, y) => (x.fecha < y.fecha ? -1 : 1));
+    const biomasa = ps.length && fin > 0 ? Number(ps[ps.length - 1].datos.gramos) * fin / 1000 : null;
+    const acum = _suma(regs.filter(r => r.tipo === 'alimento' && r.fecha <= hasta), 'kg');
+    produccion = biomasa;
+    conv = biomasa > 0 && acum > 0 ? acum / biomasa : null;
+    ingreso = biomasa !== null && _repPrecio(pr.kgPeso) !== null ? biomasa * pr.kgPeso : null;
+  } else {
+    const hs = en('huevos');
+    if (hs.length) {
+      const total = _suma(hs, 'cantidad'), fechas = [...new Set(hs.map(r => r.fecha))];
+      const vivasDias = fechas.reduce((s, f) => s + Math.max(0, avesVivas(lote, regs, f)), 0);
+      let masaKg = 0;
+      for (const f of fechas) {
+        let e = null;
+        try { e = g ? estandarDia(lote, f).pesoG : null; } catch (x) { e = null; }
+        masaKg += _suma(hs.filter(r => r.fecha === f), 'cantidad') * (e > 0 ? e : NaN) / 1000;
+      }
+      produccion = total; cubetas = total / 30;
+      pct = vivasDias > 0 ? 100 * total / vivasDias : null;
+      conv = alimentoKg > 0 && masaKg > 0 ? alimentoKg / masaKg : null;
+      ingreso = _repPrecio(pr.cubeta) !== null ? Math.max(0, total - _suma(hs, 'rotos')) / 30 * pr.cubeta : null;
+    }
+  }
+  const ing = _repFin(ingreso), cos = _repFin(costoAlimento);
+  return { desde, hasta, dias, carne, viabilidad: _repFin(viab), conversion: _repFin(conv), produccion: _repFin(produccion),
+    cubetas: _repFin(cubetas), pctPostura: _repFin(pct), mortalidad, alimentoKg: _repFin(alimentoKg) || 0,
+    costoAlimento: cos, ingreso: ing, margen: ing !== null && cos !== null ? _repR6(ing - cos) : null };
+}
+
+/* periodoReporte(lote, 'semana'|'mes'|'ciclo', hoy[, registros]) -> {desde, hasta}.
+   Semana = últimos 7 días con hoy; mes = últimos 30. Ciclo = llegada → hoy (lote cerrado: su último registro,
+   o su fecha de cierre, o la llegada). */
+function periodoReporte(lote, periodo, hoy, registros) {
+  if (periodo === 'semana') return { desde: _repMasDias(hoy, -6), hasta: hoy };
+  if (periodo === 'mes') return { desde: _repMasDias(hoy, -29), hasta: hoy };
+  const desde = lote.fechaLlegada;
+  let hasta = hoy;
+  if (lote.estado !== 'activo') {
+    const fs = (registros || []).filter(r => r && r.loteId === lote.id).map(r => r.fecha).sort();
+    hasta = fs.length ? fs[fs.length - 1] : lote.fechaCierre || desde;
+  }
+  return { desde, hasta: hasta < desde ? desde : hasta };
+}
+
+const _REP_PERIODOS = { semana: 'Última semana', mes: 'Último mes', ciclo: 'Ciclo completo' };
+
+/* Texto plano para WhatsApp. Lo que no se pudo calcular va como "—". */
+function textoReporte(resumen, lote, periodo, granja) {
+  const g = _genDe(lote), n = x => (x === null || x === undefined ? null : formatoNumero(Math.round(x * 10) / 10));
+  const dd = f => (f ? f.slice(8, 10) + '/' + f.slice(5, 7) + '/' + f.slice(0, 4) : '—');
+  const con = (x, f) => (x === null || x === undefined ? '—' : f(x));
+  const dinero = x => (x === null || x === undefined ? '—' : (x < 0 ? '-$' : '$') + formatoNumero(Math.abs(x), 2));
+  const prod = resumen.carne
+    ? con(resumen.produccion, x => n(x) + ' kg de pollo en pie (estimado)')
+    : resumen.produccion === null ? '—' : `${formatoNumero(resumen.produccion)} huevos (${n(resumen.cubetas)} cubetas de 30)`;
+  const nombre = (granja && granja.nombre ? granja.nombre + ' · ' : '') + (lote.nombre || 'Lote');
+  return [
+    `Reporte Appollo · ${nombre}`,
+    `Genética: ${g ? g.nombre : lote.genetica || '—'}`,
+    `Período: ${_REP_PERIODOS[periodo] || 'Período'} (${dd(resumen.desde)} al ${dd(resumen.hasta)}, ${formatoNumero(resumen.dias || 0)} ${resumen.dias === 1 ? 'día' : 'días'})`,
+    '',
+    `Viabilidad: ${con(resumen.viabilidad, x => n(x) + ' %')}`,
+    `Mortalidad: ${formatoNumero(resumen.mortalidad || 0)} ${resumen.mortalidad === 1 ? 'ave' : 'aves'}`,
+    `Producción: ${prod}`,
+    ...(resumen.carne ? [] : [`% de postura: ${con(resumen.pctPostura, x => n(x) + ' %')}`]),
+    `Conversión: ${con(resumen.conversion, x => formatoNumero(Math.round(x * 100) / 100) + ' kg de alimento por kg')}`,
+    `Alimento: ${formatoNumero(Math.round((resumen.alimentoKg || 0) * 10) / 10)} kg`,
+    `Costo de alimento: ${dinero(resumen.costoAlimento)}`,
+    `Ingreso: ${dinero(resumen.ingreso)}`,
+    `Margen: ${dinero(resumen.margen)}`
+  ].join('\n');
+}

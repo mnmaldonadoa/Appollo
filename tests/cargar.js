@@ -5,7 +5,7 @@ const vm = require('vm');
 function cargar() {
   const ctx = vm.createContext({ console });
   const dir = path.join(__dirname, '..', 'src');
-  for (const f of ['data.js', 'model.js', 'calc.js', 'alertas.js']) {
+  for (const f of ['data.js', 'model.js', 'calc.js', 'alertas.js', 'ui/componentes.js']) {
     const p = path.join(dir, f);
     if (!fs.existsSync(p)) {
       if (f === 'alertas.js') continue;
