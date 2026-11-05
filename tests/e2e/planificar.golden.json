@@ -114,6 +114,9 @@
      ]
     ],
     "lead": "Hy-Line Brown · 500 aves de 24 semanas · 2.800 msnm",
+    "avisos": [
+     "Altitud de 2.800 m: la proyección descuenta 1,2 % de producción."
+    ],
     "resumen": [
      "Appollo · Hy-Line Brown",
      "500 aves de 24 semanas · 2.800 msnm",
@@ -241,6 +244,9 @@
      ]
     ],
     "lead": "Hy-Line Brown · 500 aves de 24 semanas · 2.800 msnm",
+    "avisos": [
+     "Altitud de 2.800 m: la proyección descuenta 1,2 % de producción."
+    ],
     "resumen": [
      "Appollo · Hy-Line Brown",
      "500 aves de 24 semanas · 2.800 msnm",
@@ -361,6 +367,9 @@
      ]
     ],
     "lead": "Cobb 500 · 500 aves de 1 día · 2.800 msnm",
+    "avisos": [
+     "Altitud de 2.800 m: la proyección descuenta 8,8 % del crecimiento y suma 1,9 puntos de mortalidad por ascitis."
+    ],
     "resumen": [
      "Appollo · Cobb 500",
      "500 aves de 1 día · 2.800 msnm",
@@ -483,6 +492,9 @@
      ]
     ],
     "lead": "Ross 308 · 500 aves de 1 día · 2.800 msnm",
+    "avisos": [
+     "Altitud de 2.800 m: la proyección descuenta 8,8 % del crecimiento y suma 1,9 puntos de mortalidad por ascitis."
+    ],
     "resumen": [
      "Appollo · Ross 308",
      "500 aves de 1 día · 2.800 msnm",
@@ -606,6 +618,9 @@
      ]
     ],
     "lead": "Gallina criolla · 500 aves de 20 semanas · 2.800 msnm",
+    "avisos": [
+     "Altitud de 2.800 m: la proyección descuenta 1,2 % de producción."
+    ],
     "resumen": [
      "Appollo · Gallina criolla",
      "500 aves de 20 semanas · 2.800 msnm",
@@ -757,6 +772,9 @@
      ]
     ],
     "lead": "Rhode Island Red · 500 aves de 1 día · 2.800 msnm",
+    "avisos": [
+     "Altitud de 2.800 m: la proyección descuenta 2,6 % del crecimiento y suma 1,2 puntos de mortalidad por ascitis."
+    ],
     "resumen": [
      "Appollo · Rhode Island Red",
      "500 aves de 1 día · 2.800 msnm",
@@ -887,6 +905,10 @@
      ]
     ],
     "lead": "Lohmann Brown-Classic · 500 aves de 30 semanas · 2.800 msnm",
+    "avisos": [
+     "Altitud de 2.800 m: la proyección descuenta 1,2 % de producción.",
+     "Coccidiosis: con el tratamiento elegido se recupera cerca del 83 % de la pérdida."
+    ],
     "resumen": [
      "Appollo · Lohmann Brown-Classic",
      "500 aves de 30 semanas · 2.800 msnm",
@@ -894,6 +916,411 @@
      "Índice de manejo: 98 %",
      "Proyección a la semana 80: 140.332 huevos (4.678 cubetas de 30), 281 por ave",
      "Peso medio del huevo: 63,3 g · Alimento por docena: 1,72 kg"
+    ]
+   }
+  },
+  {
+   "config": {
+    "id": "f-hyline-real-fin90",
+    "gen": "hyline-brown",
+    "edad": 30,
+    "unidad": "semanas",
+    "aves": 500,
+    "alt": 2800,
+    "real": "85",
+    "todo": true,
+    "fin": 630
+   },
+   "esperado": {
+    "edad": 30.0,
+    "unidad": "semanas",
+    "indiceManejo": "100 %",
+    "sel": [
+     "a_conchilla",
+     "a_fase",
+     "a_racion",
+     "h_cama",
+     "h_rango",
+     "s_bio",
+     "s_desp",
+     "s_limp",
+     "s_reg",
+     "s_roed",
+     "t_luz",
+     "t_rango",
+     "t_vent",
+     "v_cor1",
+     "v_cor2",
+     "v_ea",
+     "v_estres",
+     "v_gum1",
+     "v_gum2",
+     "v_marek",
+     "v_nb1",
+     "v_nb2",
+     "v_oleo",
+     "v_ref",
+     "v_vir",
+     "w_clor",
+     "w_lib",
+     "w_limp"
+    ],
+    "heroe": "171.738huevos",
+    "sub": "5.725 cubetas de 30 · 343 huevos por ave",
+    "vs": "94 % del estándar de la genética",
+    "titulo": "HUEVOS DEL LOTE HASTA LA SEMANA 90",
+    "kpis": [
+     [
+      "85,0%",
+      "Postura esperada esta semana"
+     ],
+     [
+      "88,8%",
+      "Pico esperado (sem. 37)"
+     ],
+     [
+      "63,3g",
+      "Peso medio del huevo"
+     ],
+     [
+      "1,57kg",
+      "Alimento por docena de huevos"
+     ],
+     [
+      "2,07",
+      "Conversión (kg alimento / kg huevo)"
+     ],
+     [
+      "477aves",
+      "Al final del ciclo (95,3 % viven)"
+     ],
+     [
+      "22.518kg",
+      "Alimento en postura (lote)"
+     ],
+     [
+      "10.873kg",
+      "Masa de huevo del lote"
+     ]
+    ],
+    "indice": "100 %",
+    "brechas": [],
+    "fin": [
+     [
+      "Sem. 72",
+      false
+     ],
+     [
+      "Sem. 80",
+      false
+     ],
+     [
+      "Sem. 90",
+      true
+     ],
+     [
+      "Sem. 100",
+      false
+     ]
+    ],
+    "eco": [
+     [
+      "Ingreso por huevos",
+      "—"
+     ],
+     [
+      "Costo del alimento",
+      "—"
+     ],
+     [
+      "Margen sobre alimento",
+      "—"
+     ]
+    ],
+    "lead": "Hy-Line Brown · 500 aves de 30 semanas · 2.800 msnm",
+    "avisos": [
+     "Altitud de 2.800 m: la proyección descuenta 1,2 % de producción.",
+     "La proyección parte de tu 85,0 % de postura actual."
+    ],
+    "resumen": [
+     "Appollo · Hy-Line Brown",
+     "500 aves de 30 semanas · 2.800 msnm",
+     "Fase: Postura fase 1",
+     "Índice de manejo: 100 %",
+     "Proyección a la semana 90: 171.738 huevos (5.725 cubetas de 30), 343 por ave",
+     "Peso medio del huevo: 63,3 g · Alimento por docena: 1,57 kg"
+    ]
+   }
+  },
+  {
+   "config": {
+    "id": "g-ross-400-parcial",
+    "gen": "ross308",
+    "aves": 500,
+    "alt": 400,
+    "marcar": [
+     "a_fase",
+     "a_racion",
+     "t_rango",
+     "w_lib",
+     "b_nd",
+     "s_bio"
+    ],
+    "precios": {
+     "kgVivo": "1.90",
+     "kgAlim": "0.62"
+    }
+   },
+   "esperado": {
+    "edad": 1.0,
+    "unidad": "dias",
+    "indiceManejo": "48 %",
+    "sel": [
+     "a_fase",
+     "a_racion",
+     "b_nd",
+     "s_bio",
+     "t_rango",
+     "w_lib"
+    ],
+    "heroe": "1,89kg",
+    "sub": "762 kg en pie · 564 kg de canal",
+    "vs": "63 % del estándar de la genética",
+    "titulo": "PESO VIVO POR AVE A LOS 42 DÍAS",
+    "kpis": [
+     [
+      "1,88",
+      "Conversión acumulada"
+     ],
+     [
+      "404aves",
+      "Para la venta (80,6 % viven)"
+     ],
+     [
+      "1.597kg",
+      "Alimento desde hoy (lote)"
+     ],
+     [
+      "1,94",
+      "Conversión desde hoy"
+     ],
+     [
+      "193",
+      "Índice de eficiencia productiva (IEP)"
+     ],
+     [
+      "3,00kg",
+      "Peso estándar de la genética"
+     ]
+    ],
+    "indice": "48 %",
+    "brechas": [
+     [
+      "Newcastle + Bronquitis",
+      "+62 kg"
+     ],
+     [
+      "Newcastle + Bronquitis y Gumboro vectorial",
+      "+49 kg"
+     ],
+     [
+      "Gumboro",
+      "+49 kg"
+     ],
+     [
+      "Ventilación mínima y amoníaco bajo",
+      "+38 kg"
+     ],
+     [
+      "Limpieza, desinfección y vacío sanitario",
+      "+28 kg"
+     ]
+    ],
+    "fin": [
+     [
+      "28 días",
+      false
+     ],
+     [
+      "35 días",
+      false
+     ],
+     [
+      "42 días",
+      true
+     ],
+     [
+      "49 días",
+      false
+     ],
+     [
+      "56 días",
+      false
+     ]
+    ],
+    "eco": [
+     [
+      "Ingreso por venta en pie",
+      "$ 1.448,32"
+     ],
+     [
+      "Costo del alimento",
+      "$ 990,29"
+     ],
+     [
+      "Margen sobre alimento",
+      "$ 458,03"
+     ]
+    ],
+    "lead": "Ross 308 · 500 aves de 1 día · 400 msnm",
+    "avisos": [],
+    "resumen": [
+     "Appollo · Ross 308",
+     "500 aves de 1 día · 400 msnm",
+     "Fase: Preiniciación",
+     "Índice de manejo: 48 %",
+     "Proyección a 42 días: 1,89 kg por ave, 762 kg en pie",
+     "Conversión acumulada: 1,88 · Viabilidad: 80,6 %"
+    ]
+   }
+  },
+  {
+   "config": {
+    "id": "h-isa-1500-parcial",
+    "gen": "isa-brown",
+    "edad": 40,
+    "unidad": "semanas",
+    "aves": 300,
+    "alt": 1500,
+    "marcar": [
+     "a_fase",
+     "a_conchilla",
+     "t_luz",
+     "w_lib",
+     "w_clor",
+     "v_ref",
+     "s_desp"
+    ],
+    "precios": {
+     "cubeta": "3.60",
+     "kgAlim": "0.62"
+    }
+   },
+   "esperado": {
+    "edad": 40.0,
+    "unidad": "semanas",
+    "indiceManejo": "33 %",
+    "sel": [
+     "a_conchilla",
+     "a_fase",
+     "s_desp",
+     "t_luz",
+     "v_ref",
+     "w_clor",
+     "w_lib"
+    ],
+    "heroe": "37.214huevos",
+    "sub": "1.240 cubetas de 30 · 124 huevos por ave",
+    "vs": "51 % del estándar de la genética",
+    "titulo": "HUEVOS DEL LOTE HASTA LA SEMANA 80",
+    "kpis": [
+     [
+      "55,7%",
+      "Postura esperada esta semana"
+     ],
+     [
+      "55,7%",
+      "Pico esperado (sem. 40)"
+     ],
+     [
+      "57,3g",
+      "Peso medio del huevo"
+     ],
+     [
+      "2,50kg",
+      "Alimento por docena de huevos"
+     ],
+     [
+      "3,63",
+      "Conversión (kg alimento / kg huevo)"
+     ],
+     [
+      "210aves",
+      "Al final del ciclo (69,8 % viven)"
+     ],
+     [
+      "7.743kg",
+      "Alimento en postura (lote)"
+     ],
+     [
+      "2.133kg",
+      "Masa de huevo del lote"
+     ]
+    ],
+    "indice": "33 %",
+    "brechas": [
+     [
+      "Mantener 18–24 °C",
+      "+2.545 huevos"
+     ],
+     [
+      "Newcastle + Bronquitis",
+      "+1.816 huevos"
+     ],
+     [
+      "Newcastle + Bronquitis + EDS (oleosa)",
+      "+1.816 huevos"
+     ],
+     [
+      "Ración según tabla y comederos suficientes",
+      "+1.551 huevos"
+     ],
+     [
+      "Bioseguridad",
+      "+1.482 huevos"
+     ]
+    ],
+    "fin": [
+     [
+      "Sem. 72",
+      false
+     ],
+     [
+      "Sem. 80",
+      true
+     ],
+     [
+      "Sem. 90",
+      false
+     ],
+     [
+      "Sem. 100",
+      false
+     ]
+    ],
+    "eco": [
+     [
+      "Ingreso por huevos",
+      "$ 4.465,63"
+     ],
+     [
+      "Costo del alimento",
+      "$ 4.800,89"
+     ],
+     [
+      "Margen sobre alimento",
+      "$ -335,26"
+     ]
+    ],
+    "lead": "ISA Brown · 300 aves de 40 semanas · 1.500 msnm",
+    "avisos": [],
+    "resumen": [
+     "Appollo · ISA Brown",
+     "300 aves de 40 semanas · 1.500 msnm",
+     "Fase: Postura fase 1",
+     "Índice de manejo: 33 %",
+     "Proyección a la semana 80: 37.214 huevos (1.240 cubetas de 30), 124 por ave",
+     "Peso medio del huevo: 57,3 g · Alimento por docena: 2,50 kg"
     ]
    }
   }

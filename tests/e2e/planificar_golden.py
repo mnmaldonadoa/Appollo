@@ -9,7 +9,8 @@ RAIZ = Path(__file__).resolve().parents[2]
 SALIDA = Path(__file__).with_name("planificar.golden.json")
 
 # Configuraciones: genética, objetivo (doble/criolla), edad+unidad (None = la de fábrica), aves, altitud,
-# marcar todo, prácticas a desmarcar, enfermedad, semana/día final (None = el de fábrica), precios.
+# dato real (% postura o g), marcar todo, prácticas a desmarcar o a marcar (lista), enfermedad,
+# semana/día final en días (None = el de fábrica), precios.
 CONFIGS = [
     {"id": "a-hyline", "gen": "hyline-brown", "edad": 24, "unidad": "semanas", "aves": 500, "alt": 2800,
      "todo": False, "precios": {"cubeta": "3.60", "kgAlim": "0.62"}},
@@ -20,6 +21,13 @@ CONFIGS = [
     {"id": "d2-rhode-carne", "gen": "rhode-island", "obj": "carne", "aves": 500, "alt": 2800, "todo": True},
     {"id": "e-lohmann-enf", "gen": "lohmann-brown", "edad": 30, "unidad": "semanas", "aves": 500, "alt": 2800,
      "todo": True, "enf": "primera"},
+    # Ronda de revisión 1: dato real + fin no de fábrica, altitud baja con manejo parcial, postura parcial a 1500 m.
+    {"id": "f-hyline-real-fin90", "gen": "hyline-brown", "edad": 30, "unidad": "semanas", "aves": 500, "alt": 2800,
+     "real": "85", "todo": True, "fin": 630},
+    {"id": "g-ross-400-parcial", "gen": "ross308", "aves": 500, "alt": 400,
+     "marcar": ["a_fase", "a_racion", "t_rango", "w_lib", "b_nd", "s_bio"], "precios": {"kgVivo": "1.90", "kgAlim": "0.62"}},
+    {"id": "h-isa-1500-parcial", "gen": "isa-brown", "edad": 40, "unidad": "semanas", "aves": 300, "alt": 1500,
+     "marcar": ["a_fase", "a_conchilla", "t_luz", "w_lib", "w_clor", "v_ref", "s_desp"], "precios": {"cubeta": "3.60", "kgAlim": "0.62"}},
 ]
 
 LEER = """() => {
@@ -32,7 +40,8 @@ LEER = """() => {
     brechas: all('.brechas li', li => [li.querySelector('span span').innerText.trim(), li.querySelector('.g').innerText.trim()]),
     fin: all('[data-act=fin]', b => [b.innerText.trim(), b.getAttribute('aria-pressed') === 'true']),
     eco: all('#eco-res > div', d => [...d.querySelectorAll('span')].map(s => s.innerText.trim())),
-    lead: t('.intro .lead')
+    lead: t('.intro .lead'),
+    avisos: (() => { const e = document.querySelector('#view .aviso.suave > span'); return e ? e.innerText.split('\\n').map(x => x.trim()).filter(Boolean) : []; })()
   };
 }"""
 
@@ -51,6 +60,8 @@ def capturar(pg, url, c):
     if c.get("edad") is not None:
         pg.fill("#edad", str(c["edad"]))
     pg.fill("#aves", str(c["aves"])); pg.fill("#alt", str(c["alt"]))
+    if c.get("real") is not None:
+        pg.wait_for_selector("#real"); pg.fill("#real", str(c["real"]))
     edad = pg.input_value("#edad"); unidad = pg.evaluate("document.querySelector('[data-act=unidad][aria-pressed=true]').dataset.v")
     pg.click("#btn-sig"); pg.wait_for_selector(".resumen-manejo")
     info = {"edad": float(edad), "unidad": unidad}
@@ -63,9 +74,14 @@ def capturar(pg, url, c):
     if c.get("quitar"):
         sid = pg.evaluate("document.querySelector('input[data-sel]:checked').dataset.sel")
         pg.click(f"input[data-sel='{sid}']"); info["quitar"] = sid
+    for sid in c.get("marcar") or []:
+        pg.click(f"input[data-sel='{sid}']")
     info["indiceManejo"] = pg.inner_text("#indice")
     info["sel"] = sorted(pg.evaluate("JSON.parse(localStorage.getItem('appollo.v1.estado')).sel"))
     pg.click("#barra [data-r=proyeccion]"); pg.wait_for_selector(".heroe-num")
+    if c.get("fin"):
+        pg.click(f"[data-act=fin][data-v='{c['fin']}']")
+        pg.wait_for_selector(f"[data-act=fin][data-v='{c['fin']}'][aria-pressed=true]")
     for k, v in (c.get("precios") or {}).items():
         pg.fill({"cubeta": "#p-cubeta", "kgVivo": "#p-kg", "kgAlim": "#p-alim"}[k], v)
     info.update(pg.evaluate(LEER))
