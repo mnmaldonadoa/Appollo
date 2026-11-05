@@ -278,6 +278,7 @@ def main():
             check("con 98 % (la bloqueada no cuenta) el botón sigue en 'Marcar lo recomendado', como el original",
                   norm(pg.inner_text("#plan-indice")) == "98%" and "Marcar lo recomendado" in pg.inner_text("#view [data-accion=plan-todo]"))
             medir(pg, "manejo con enfermedad")
+            pg.locator("#view #cat-quim").scroll_into_view_if_needed(); pg.screenshot(path=str(SDD / "t9-manejo-quimico.png"))
             ctx.close()
 
             # ---------- 6. Copiar sin portapapeles: caja para copiar a mano ----------

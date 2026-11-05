@@ -538,6 +538,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .plan-elegida { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: var(--r);
   background: var(--primario-suave); color: var(--texto); }
 .plan-elegida > div { min-width: 0; }
+.plan-elegida .gen-desc { color: var(--texto); }
 .plan-elegida .btn { flex: none; padding-inline: 16px; }
 .plan-fase { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--r-s); background: var(--huevo-suave); color: var(--texto); }
 .plan-fase .ic { color: var(--precaucion); }
@@ -572,17 +573,19 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .plan-item:has(input:checked) .plan-caja { background: var(--primario); }
 .plan-item:has(input:checked) .plan-caja::after { content: ""; width: 9px; height: 16px; margin-top: -4px; border: solid var(--sobre-primario); border-width: 0 3px 3px 0; transform: rotate(45deg); }
 .plan-item:has(input:focus-visible) { outline: 3px solid var(--huevo); outline-offset: 2px; }
-.plan-item-bloqueado { cursor: not-allowed; background: var(--superficie-2); border-style: dashed; }
+.plan-item-bloqueado { cursor: not-allowed; border-style: dashed; }
 .plan-item-bloqueado .plan-caja { border-color: var(--linea-fuerte); background: var(--superficie-2); }
 .plan-item-texto { display: grid; gap: 4px; min-width: 0; }
 .plan-item-t { font-weight: 700; overflow-wrap: anywhere; }
 .plan-item-d { color: var(--secundario); font-size: 1rem; overflow-wrap: anywhere; }
 .plan-vac-edad { color: var(--primario); }
+.plan-item:has(input:checked) .plan-item-d, .plan-item:has(input:checked) .plan-vac-edad { color: var(--texto); }
 .plan-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.plan-tag { padding: 1px 10px; border-radius: 999px; font-size: 1rem; font-weight: 700; line-height: 1.4; background: var(--superficie-2); color: var(--texto); overflow-wrap: anywhere; }
-.plan-tag-clave { background: var(--primario-suave); color: var(--primario); }
-.plan-tag-alto { background: color-mix(in srgb, var(--alerta-viva) 14%, var(--superficie)); color: var(--alerta); }
-.plan-tag-medio, .plan-tag-estado-ahora { background: var(--huevo-suave); color: var(--precaucion); }
+.plan-tag { padding: 1px 10px; border-radius: 10px; font-size: 1rem; font-weight: 700; line-height: 1.4; background: var(--superficie-2); color: var(--texto); overflow-wrap: anywhere; }
+/* Texto siempre --texto (>= 7:1); el nivel se distingue por el borde de color y la palabra. */
+.plan-tag-clave, .plan-tag-alto, .plan-tag-medio, .plan-tag-estado-ahora { background: var(--superficie); border: 2px solid var(--ok-viva); padding: 0 9px; }
+.plan-tag-alto { border-color: var(--alerta-viva); }
+.plan-tag-medio, .plan-tag-estado-ahora { border-color: var(--precaucion-viva); }
 .plan-tag-ev { font-weight: 400; }
 .plan-signos { padding: 10px 14px; border-radius: var(--r-s); background: var(--superficie-2); }
 .plan-aviso { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: var(--r-s);
@@ -595,7 +598,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .plan-heroe-num { font-family: var(--f-titulo); font-size: 3rem; font-weight: 700; line-height: 1; letter-spacing: -.02em; overflow-wrap: anywhere; }
 .plan-heroe-num small { margin-left: 8px; font-family: var(--f-texto); font-size: 1.125rem; color: var(--secundario); letter-spacing: 0; }
 .plan-heroe-sub { font-size: 1.125rem; }
-.plan-vs { justify-self: start; margin-top: 4px; padding: 4px 12px; border-radius: var(--r-s); background: var(--primario-suave); color: var(--primario); font-weight: 700; }
+.plan-vs { justify-self: start; margin-top: 4px; padding: 4px 12px; border-radius: var(--r-s); background: var(--primario-suave); color: var(--texto); font-weight: 700; }
 .plan-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .plan-kpi { display: grid; align-content: start; gap: 2px; min-width: 0; padding: 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); }
 .plan-kpi-v { font-family: var(--f-titulo); font-size: 1.6rem; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
