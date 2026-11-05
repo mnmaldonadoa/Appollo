@@ -1,0 +1,901 @@
+{
+ "fuente": "Appollo 1 (dist original), capturado con tests/e2e/planificar_golden.py",
+ "configs": [
+  {
+   "config": {
+    "id": "a-hyline",
+    "gen": "hyline-brown",
+    "edad": 24,
+    "unidad": "semanas",
+    "aves": 500,
+    "alt": 2800,
+    "todo": false,
+    "precios": {
+     "cubeta": "3.60",
+     "kgAlim": "0.62"
+    }
+   },
+   "esperado": {
+    "edad": 24.0,
+    "unidad": "semanas",
+    "indiceManejo": "0 %",
+    "sel": [],
+    "heroe": "55.961huevos",
+    "sub": "1.865 cubetas de 30 · 112 huevos por ave",
+    "vs": "32 % del estándar de la genética",
+    "titulo": "HUEVOS DEL LOTE HASTA LA SEMANA 80",
+    "kpis": [
+     [
+      "36,8%",
+      "Postura esperada esta semana"
+     ],
+     [
+      "37,5%",
+      "Pico esperado (sem. 33)"
+     ],
+     [
+      "53,7g",
+      "Peso medio del huevo"
+     ],
+     [
+      "3,63kg",
+      "Alimento por docena de huevos"
+     ],
+     [
+      "5,64",
+      "Conversión (kg alimento / kg huevo)"
+     ],
+     [
+      "314aves",
+      "Al final del ciclo (62,8 % viven)"
+     ],
+     [
+      "16.939kg",
+      "Alimento en postura (lote)"
+     ],
+     [
+      "3.004kg",
+      "Masa de huevo del lote"
+     ]
+    ],
+    "indice": "0 %",
+    "brechas": [
+     [
+      "Dar balanceado de postura fase 1",
+      "+7.774 huevos"
+     ],
+     [
+      "Agua limpia y fresca a voluntad",
+      "+6.779 huevos"
+     ],
+     [
+      "Mantener 18–24 °C",
+      "+3.840 huevos"
+     ],
+     [
+      "Cumplir el programa de luz",
+      "+3.572 huevos"
+     ],
+     [
+      "Newcastle + Bronquitis",
+      "+2.779 huevos"
+     ]
+    ],
+    "fin": [
+     [
+      "Sem. 72",
+      false
+     ],
+     [
+      "Sem. 80",
+      true
+     ],
+     [
+      "Sem. 90",
+      false
+     ],
+     [
+      "Sem. 100",
+      false
+     ]
+    ],
+    "eco": [
+     [
+      "Ingreso por huevos",
+      "$ 6.715,28"
+     ],
+     [
+      "Costo del alimento",
+      "$ 10.501,96"
+     ],
+     [
+      "Margen sobre alimento",
+      "$ -3.786,68"
+     ]
+    ],
+    "lead": "Hy-Line Brown · 500 aves de 24 semanas · 2.800 msnm",
+    "resumen": [
+     "Appollo · Hy-Line Brown",
+     "500 aves de 24 semanas · 2.800 msnm",
+     "Fase: Postura fase 1",
+     "Índice de manejo: 0 %",
+     "Proyección a la semana 80: 55.961 huevos (1.865 cubetas de 30), 112 por ave",
+     "Peso medio del huevo: 53,7 g · Alimento por docena: 3,63 kg"
+    ]
+   }
+  },
+  {
+   "config": {
+    "id": "a2-hyline-todo",
+    "gen": "hyline-brown",
+    "edad": 24,
+    "unidad": "semanas",
+    "aves": 500,
+    "alt": 2800,
+    "todo": true
+   },
+   "esperado": {
+    "edad": 24.0,
+    "unidad": "semanas",
+    "indiceManejo": "100 %",
+    "sel": [
+     "a_conchilla",
+     "a_fase",
+     "a_racion",
+     "h_cama",
+     "h_rango",
+     "s_bio",
+     "s_desp",
+     "s_limp",
+     "s_reg",
+     "s_roed",
+     "t_luz",
+     "t_rango",
+     "t_vent",
+     "v_cor1",
+     "v_cor2",
+     "v_ea",
+     "v_estres",
+     "v_gum1",
+     "v_gum2",
+     "v_marek",
+     "v_nb1",
+     "v_nb2",
+     "v_oleo",
+     "v_ref",
+     "v_vir",
+     "w_clor",
+     "w_lib",
+     "w_limp"
+    ],
+    "heroe": "164.706huevos",
+    "sub": "5.490 cubetas de 30 · 329 huevos por ave",
+    "vs": "95 % del estándar de la genética",
+    "titulo": "HUEVOS DEL LOTE HASTA LA SEMANA 80",
+    "kpis": [
+     [
+      "89,1%",
+      "Postura esperada esta semana"
+     ],
+     [
+      "90,8%",
+      "Pico esperado (sem. 33)"
+     ],
+     [
+      "62,7g",
+      "Peso medio del huevo"
+     ],
+     [
+      "1,53kg",
+      "Alimento por docena de huevos"
+     ],
+     [
+      "2,04",
+      "Conversión (kg alimento / kg huevo)"
+     ],
+     [
+      "478aves",
+      "Al final del ciclo (95,6 % viven)"
+     ],
+     [
+      "21.050kg",
+      "Alimento en postura (lote)"
+     ],
+     [
+      "10.323kg",
+      "Masa de huevo del lote"
+     ]
+    ],
+    "indice": "100 %",
+    "brechas": [],
+    "fin": [
+     [
+      "Sem. 72",
+      false
+     ],
+     [
+      "Sem. 80",
+      true
+     ],
+     [
+      "Sem. 90",
+      false
+     ],
+     [
+      "Sem. 100",
+      false
+     ]
+    ],
+    "eco": [
+     [
+      "Ingreso por huevos",
+      "—"
+     ],
+     [
+      "Costo del alimento",
+      "—"
+     ],
+     [
+      "Margen sobre alimento",
+      "—"
+     ]
+    ],
+    "lead": "Hy-Line Brown · 500 aves de 24 semanas · 2.800 msnm",
+    "resumen": [
+     "Appollo · Hy-Line Brown",
+     "500 aves de 24 semanas · 2.800 msnm",
+     "Fase: Postura fase 1",
+     "Índice de manejo: 100 %",
+     "Proyección a la semana 80: 164.706 huevos (5.490 cubetas de 30), 329 por ave",
+     "Peso medio del huevo: 62,7 g · Alimento por docena: 1,53 kg"
+    ]
+   }
+  },
+  {
+   "config": {
+    "id": "b-cobb",
+    "gen": "cobb500",
+    "aves": 500,
+    "alt": 2800,
+    "todo": true,
+    "precios": {
+     "kgVivo": "1.90",
+     "kgAlim": "0.62"
+    }
+   },
+   "esperado": {
+    "edad": 1.0,
+    "unidad": "dias",
+    "indiceManejo": "100 %",
+    "sel": [
+     "a_fase",
+     "a_racion",
+     "b_gum",
+     "b_inc",
+     "b_nb",
+     "b_nd",
+     "h_cama",
+     "h_rango",
+     "s_bio",
+     "s_limp",
+     "s_peso",
+     "s_reg",
+     "s_roed",
+     "t_asc",
+     "t_luz",
+     "t_rango",
+     "t_vent",
+     "v_alt",
+     "v_estres",
+     "v_llegada",
+     "w_clor",
+     "w_lib",
+     "w_limp"
+    ],
+    "heroe": "2,71kg",
+    "sub": "1.284 kg en pie · 951 kg de canal",
+    "vs": "83 % del estándar de la genética",
+    "titulo": "PESO VIVO POR AVE A LOS 42 DÍAS",
+    "kpis": [
+     [
+      "1,69",
+      "Conversión acumulada"
+     ],
+     [
+      "474aves",
+      "Para la venta (94,8 % viven)"
+     ],
+     [
+      "2.224kg",
+      "Alimento desde hoy (lote)"
+     ],
+     [
+      "1,73",
+      "Conversión desde hoy"
+     ],
+     [
+      "362",
+      "Índice de eficiencia productiva (IEP)"
+     ],
+     [
+      "3,28kg",
+      "Peso estándar de la genética"
+     ]
+    ],
+    "indice": "100 %",
+    "brechas": [],
+    "fin": [
+     [
+      "28 días",
+      false
+     ],
+     [
+      "35 días",
+      false
+     ],
+     [
+      "42 días",
+      true
+     ],
+     [
+      "49 días",
+      false
+     ],
+     [
+      "56 días",
+      false
+     ]
+    ],
+    "eco": [
+     [
+      "Ingreso por venta en pie",
+      "$ 2.440,52"
+     ],
+     [
+      "Costo del alimento",
+      "$ 1.379,12"
+     ],
+     [
+      "Margen sobre alimento",
+      "$ 1.061,40"
+     ]
+    ],
+    "lead": "Cobb 500 · 500 aves de 1 día · 2.800 msnm",
+    "resumen": [
+     "Appollo · Cobb 500",
+     "500 aves de 1 día · 2.800 msnm",
+     "Fase: Preiniciación",
+     "Índice de manejo: 100 %",
+     "Proyección a 42 días: 2,71 kg por ave, 1.284 kg en pie",
+     "Conversión acumulada: 1,69 · Viabilidad: 94,8 %"
+    ]
+   }
+  },
+  {
+   "config": {
+    "id": "c-ross",
+    "gen": "ross308",
+    "aves": 500,
+    "alt": 2800,
+    "todo": true,
+    "quitar": "primero"
+   },
+   "esperado": {
+    "edad": 1.0,
+    "unidad": "dias",
+    "quitar": "a_fase",
+    "indiceManejo": "89 %",
+    "sel": [
+     "a_racion",
+     "b_gum",
+     "b_inc",
+     "b_nb",
+     "b_nd",
+     "h_cama",
+     "h_rango",
+     "s_bio",
+     "s_limp",
+     "s_peso",
+     "s_reg",
+     "s_roed",
+     "t_asc",
+     "t_luz",
+     "t_rango",
+     "t_vent",
+     "v_alt",
+     "v_estres",
+     "v_llegada",
+     "w_clor",
+     "w_lib",
+     "w_limp"
+    ],
+    "heroe": "2,10kg",
+    "sub": "990 kg en pie · 733 kg de canal",
+    "vs": "70 % del estándar de la genética",
+    "titulo": "PESO VIVO POR AVE A LOS 42 DÍAS",
+    "kpis": [
+     [
+      "1,82",
+      "Conversión acumulada"
+     ],
+     [
+      "472aves",
+      "Para la venta (94,3 % viven)"
+     ],
+     [
+      "1.852kg",
+      "Alimento desde hoy (lote)"
+     ],
+     [
+      "1,87",
+      "Conversión desde hoy"
+     ],
+     [
+      "259",
+      "Índice de eficiencia productiva (IEP)"
+     ],
+     [
+      "3,00kg",
+      "Peso estándar de la genética"
+     ]
+    ],
+    "indice": "89 %",
+    "brechas": [
+     [
+      "Dar balanceado de preiniciador",
+      "+186 kg"
+     ]
+    ],
+    "fin": [
+     [
+      "28 días",
+      false
+     ],
+     [
+      "35 días",
+      false
+     ],
+     [
+      "42 días",
+      true
+     ],
+     [
+      "49 días",
+      false
+     ],
+     [
+      "56 días",
+      false
+     ]
+    ],
+    "eco": [
+     [
+      "Ingreso por venta en pie",
+      "—"
+     ],
+     [
+      "Costo del alimento",
+      "—"
+     ],
+     [
+      "Margen sobre alimento",
+      "—"
+     ]
+    ],
+    "lead": "Ross 308 · 500 aves de 1 día · 2.800 msnm",
+    "resumen": [
+     "Appollo · Ross 308",
+     "500 aves de 1 día · 2.800 msnm",
+     "Fase: Preiniciación",
+     "Índice de manejo: 89 %",
+     "Proyección a 42 días: 2,10 kg por ave, 990 kg en pie",
+     "Conversión acumulada: 1,82 · Viabilidad: 94,3 %"
+    ]
+   }
+  },
+  {
+   "config": {
+    "id": "d-criolla",
+    "gen": "criolla",
+    "aves": 500,
+    "alt": 2800,
+    "todo": true
+   },
+   "esperado": {
+    "edad": 20.0,
+    "unidad": "semanas",
+    "indiceManejo": "100 %",
+    "sel": [
+     "a_fase",
+     "a_grano",
+     "a_pastoreo",
+     "a_racion",
+     "h_cama",
+     "h_rango",
+     "s_bio",
+     "s_desp",
+     "s_limp",
+     "s_reg",
+     "s_roed",
+     "t_luz",
+     "t_rango",
+     "t_vent",
+     "v_estres",
+     "v_gum1",
+     "v_marek",
+     "v_nb",
+     "v_nd1",
+     "v_nd2",
+     "v_pre",
+     "v_ref",
+     "v_vir",
+     "w_clor",
+     "w_lib",
+     "w_limp"
+    ],
+    "heroe": "63.132huevos",
+    "sub": "2.104 cubetas de 30 · 126 huevos por ave",
+    "vs": "99 % del estándar de la genética",
+    "titulo": "HUEVOS DEL LOTE HASTA LA SEMANA 72",
+    "kpis": [
+     [
+      "—",
+      "No llega al 50 % de postura"
+     ],
+     [
+      "46,0%",
+      "Pico esperado (sem. 32)"
+     ],
+     [
+      "50,1g",
+      "Peso medio del huevo"
+     ],
+     [
+      "3,08kg",
+      "Alimento por docena de huevos"
+     ],
+     [
+      "5,13",
+      "Conversión (kg alimento / kg huevo)"
+     ],
+     [
+      "455aves",
+      "Al final del ciclo (91,1 % viven)"
+     ],
+     [
+      "16.230kg",
+      "Alimento en postura (lote)"
+     ],
+     [
+      "3.165kg",
+      "Masa de huevo del lote"
+     ]
+    ],
+    "indice": "100 %",
+    "brechas": [],
+    "fin": [
+     [
+      "Sem. 72",
+      true
+     ],
+     [
+      "Sem. 80",
+      false
+     ],
+     [
+      "Sem. 90",
+      false
+     ],
+     [
+      "Sem. 100",
+      false
+     ]
+    ],
+    "eco": [
+     [
+      "Ingreso por huevos",
+      "—"
+     ],
+     [
+      "Costo del alimento",
+      "—"
+     ],
+     [
+      "Margen sobre alimento",
+      "—"
+     ]
+    ],
+    "lead": "Gallina criolla · 500 aves de 20 semanas · 2.800 msnm",
+    "resumen": [
+     "Appollo · Gallina criolla",
+     "500 aves de 20 semanas · 2.800 msnm",
+     "Fase: Desarrollo",
+     "Índice de manejo: 100 %",
+     "Proyección a la semana 72: 63.132 huevos (2.104 cubetas de 30), 126 por ave",
+     "Peso medio del huevo: 50,1 g · Alimento por docena: 3,08 kg"
+    ]
+   }
+  },
+  {
+   "config": {
+    "id": "d2-rhode-carne",
+    "gen": "rhode-island",
+    "obj": "carne",
+    "aves": 500,
+    "alt": 2800,
+    "todo": true
+   },
+   "esperado": {
+    "edad": 1.0,
+    "unidad": "dias",
+    "indiceManejo": "100 %",
+    "sel": [
+     "a_fase",
+     "a_grano",
+     "a_pastoreo",
+     "a_racion",
+     "b_gum",
+     "b_inc",
+     "b_nb",
+     "b_nd",
+     "b_nd2",
+     "b_vir",
+     "h_cama",
+     "h_rango",
+     "s_bio",
+     "s_limp",
+     "s_peso",
+     "s_reg",
+     "s_roed",
+     "t_luz",
+     "t_rango",
+     "t_vent",
+     "v_estres",
+     "v_llegada",
+     "w_clor",
+     "w_lib",
+     "w_limp"
+    ],
+    "heroe": "2,11kg",
+    "sub": "994 kg en pie · 676 kg de canal",
+    "vs": "94 % del estándar de la genética",
+    "titulo": "PESO VIVO POR AVE A LOS 112 DÍAS",
+    "kpis": [
+     [
+      "3,57",
+      "Conversión acumulada"
+     ],
+     [
+      "470aves",
+      "Para la venta (94,0 % viven)"
+     ],
+     [
+      "3.660kg",
+      "Alimento desde hoy (lote)"
+     ],
+     [
+      "3,65",
+      "Conversión desde hoy"
+     ],
+     [
+      "68%",
+      "Rendimiento a canal"
+     ],
+     [
+      "2,25kg",
+      "Peso estándar de la genética"
+     ]
+    ],
+    "indice": "100 %",
+    "brechas": [],
+    "fin": [
+     [
+      "84 días",
+      false
+     ],
+     [
+      "91 días",
+      false
+     ],
+     [
+      "98 días",
+      false
+     ],
+     [
+      "105 días",
+      false
+     ],
+     [
+      "112 días",
+      true
+     ],
+     [
+      "119 días",
+      false
+     ],
+     [
+      "126 días",
+      false
+     ],
+     [
+      "133 días",
+      false
+     ],
+     [
+      "140 días",
+      false
+     ],
+     [
+      "147 días",
+      false
+     ],
+     [
+      "154 días",
+      false
+     ],
+     [
+      "161 días",
+      false
+     ],
+     [
+      "168 días",
+      false
+     ]
+    ],
+    "eco": [
+     [
+      "Ingreso por venta en pie",
+      "—"
+     ],
+     [
+      "Costo del alimento",
+      "—"
+     ],
+     [
+      "Margen sobre alimento",
+      "—"
+     ]
+    ],
+    "lead": "Rhode Island Red · 500 aves de 1 día · 2.800 msnm",
+    "resumen": [
+     "Appollo · Rhode Island Red",
+     "500 aves de 1 día · 2.800 msnm",
+     "Fase: Cría",
+     "Índice de manejo: 100 %",
+     "Proyección a 112 días: 2,11 kg por ave, 994 kg en pie",
+     "Conversión acumulada: 3,57 · Viabilidad: 94,0 %"
+    ]
+   }
+  },
+  {
+   "config": {
+    "id": "e-lohmann-enf",
+    "gen": "lohmann-brown",
+    "edad": 30,
+    "unidad": "semanas",
+    "aves": 500,
+    "alt": 2800,
+    "todo": true,
+    "enf": "primera"
+   },
+   "esperado": {
+    "edad": 30.0,
+    "unidad": "semanas",
+    "enf": "coccidiosis",
+    "indiceManejo": "98 %",
+    "sel": [
+     "a_conchilla",
+     "a_fase",
+     "a_racion",
+     "h_cama",
+     "h_rango",
+     "q_amp",
+     "s_bio",
+     "s_desp",
+     "s_limp",
+     "s_reg",
+     "s_roed",
+     "t_luz",
+     "t_rango",
+     "t_vent",
+     "v_cor1",
+     "v_cor2",
+     "v_ea",
+     "v_estres",
+     "v_gum1",
+     "v_gum2",
+     "v_marek",
+     "v_nb1",
+     "v_nb2",
+     "v_oleo",
+     "v_ref",
+     "v_vir",
+     "w_clor",
+     "w_lib",
+     "w_limp"
+    ],
+    "heroe": "140.332huevos",
+    "sub": "4.678 cubetas de 30 · 281 huevos por ave",
+    "vs": "92 % del estándar de la genética",
+    "titulo": "HUEVOS DEL LOTE HASTA LA SEMANA 80",
+    "kpis": [
+     [
+      "87,7%",
+      "Postura esperada esta semana"
+     ],
+     [
+      "87,7%",
+      "Pico esperado (sem. 35)"
+     ],
+     [
+      "63,3g",
+      "Peso medio del huevo"
+     ],
+     [
+      "1,72kg",
+      "Alimento por docena de huevos"
+     ],
+     [
+      "2,26",
+      "Conversión (kg alimento / kg huevo)"
+     ],
+     [
+      "476aves",
+      "Al final del ciclo (95,2 % viven)"
+     ],
+     [
+      "20.102kg",
+      "Alimento en postura (lote)"
+     ],
+     [
+      "8.887kg",
+      "Masa de huevo del lote"
+     ]
+    ],
+    "indice": "98 %",
+    "brechas": [],
+    "fin": [
+     [
+      "Sem. 72",
+      false
+     ],
+     [
+      "Sem. 80",
+      true
+     ],
+     [
+      "Sem. 90",
+      false
+     ],
+     [
+      "Sem. 100",
+      false
+     ]
+    ],
+    "eco": [
+     [
+      "Ingreso por huevos",
+      "—"
+     ],
+     [
+      "Costo del alimento",
+      "—"
+     ],
+     [
+      "Margen sobre alimento",
+      "—"
+     ]
+    ],
+    "lead": "Lohmann Brown-Classic · 500 aves de 30 semanas · 2.800 msnm",
+    "resumen": [
+     "Appollo · Lohmann Brown-Classic",
+     "500 aves de 30 semanas · 2.800 msnm",
+     "Fase: Postura fase 1",
+     "Índice de manejo: 98 %",
+     "Proyección a la semana 80: 140.332 huevos (4.678 cubetas de 30), 281 por ave",
+     "Peso medio del huevo: 63,3 g · Alimento por docena: 1,72 kg"
+    ]
+   }
+  }
+ ]
+}
