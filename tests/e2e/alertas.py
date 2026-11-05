@@ -59,9 +59,24 @@ def main():
             def quieto():
                 pg.wait_for_function("document.getAnimations().every(a => a.playState !== 'running' || a.effect.getTiming().iterations === Infinity)", timeout=4000)
 
+            def esperar(f, ms=3000):
+                """Espera de verdad a que la condición asíncrona `f` (fuente de una función) devuelva algo verdadero.
+                (wait_for_function NO sirve aquí: si el predicado devuelve una Promesa, retorna en cuanto ésta se
+                resuelve, aunque sea a false, y deja pasar la lectura antes de que la app termine de escribir.)"""
+                ok = pg.evaluate("""async ([f, n]) => { const fn = (0, eval)(f);
+                  for (let i = 0; i < n; i++) { if (await fn()) return true; await new Promise(r => setTimeout(r, 25)); }
+                  return false; }""", [f, ms // 25])
+                if not ok: raise AssertionError("tiempo agotado esperando: " + f)
+
+            def inv_es(item, cant): esperar(f"() => DB.obtener('inventario', '{item}').then(i => i.cantidad === {cant})")
+
             def ir(h):
                 pg.evaluate(f"location.hash = '{h}'"); pg.wait_for_function(f"location.hash === '{h}'")
                 pg.wait_for_selector("#view .pantalla, #view .vista-error"); pg.wait_for_timeout(150)
+
+            try: esperar("() => Promise.resolve(false)", 200); espera_ok = False
+            except AssertionError: espera_ok = True
+            check("el helper esperar() espera de verdad (no retorna con una Promesa que da false)", espera_ok)
 
             # ---------- siembra ----------
             pg.evaluate("DB.guardar('granja', {id:'granja', nombre:'La Esperanza', tipo:'postura', altitud:2800, tema:'auto'})")
@@ -140,10 +155,10 @@ def main():
                 pg.wait_for_selector("#toast:not([hidden]) [data-accion=deshacer]")
             ir("#/inicio")
             registrar_kg(50)
-            pg.wait_for_function("id => DB.obtener('inventario', id).then(i => i.cantidad === 150)", arg=aid, timeout=3000)
+            inv_es(aid, 150)
             check("registrar 50 kg con 200 kg deja 150 kg", pg.evaluate(INV, aid)["cantidad"] == 150)
             pg.click("#toast [data-accion=deshacer]")
-            pg.wait_for_function("id => DB.obtener('inventario', id).then(i => i.cantidad === 200)", arg=aid, timeout=3000)
+            inv_es(aid, 200)
             check("Deshacer el registro devuelve el stock a 200 kg", pg.evaluate(INV, aid)["cantidad"] == 200 and len(pg.evaluate(REGS, "alimento")) == 0)
             pg.wait_for_selector("#toast", state="hidden", timeout=8000)
 
@@ -158,7 +173,7 @@ def main():
             check("edición guarda sacos con kgPorUnidad 40", it["unidad"] == "sacos" and it["kgPorUnidad"] == 40 and it["cantidad"] == 10, it)
             pg.wait_for_selector("#toast", state="hidden", timeout=8000)
             ir("#/inicio"); registrar_kg(50)
-            pg.wait_for_function("id => DB.obtener('inventario', id).then(i => i.cantidad === 8.75)", arg=aid, timeout=3000)
+            inv_es(aid, 8.75)
             check("50 kg bajan 1,25 sacos (de 10 a 8,75)", pg.evaluate(INV, aid)["cantidad"] == 8.75)
             pg.click("#toast [data-accion=deshacer]"); pg.wait_for_timeout(300)
             pg.wait_for_selector("#toast", state="hidden", timeout=8000)
@@ -199,7 +214,7 @@ def main():
             pg.wait_for_selector("#toast:not([hidden]) [data-accion=deshacer]")
             check("eliminar quita el ítem", pg.evaluate("DB.obtener('inventario', 'dec')") is None and pg.locator("#view [data-item=dec]").count() == 0)
             pg.click("#toast [data-accion=deshacer]"); pg.wait_for_selector("#view [data-item=dec]")
-            pg.wait_for_function("DB.obtener('inventario', 'dec').then(i => !!i)")
+            esperar("() => DB.obtener('inventario', 'dec').then(i => !!i)")
             check("Deshacer restaura el ítem", pg.evaluate("DB.obtener('inventario', 'dec')")["cantidad"] == 1.25)
 
             # ---------- 8. descontarAlimento robusto ----------
@@ -217,7 +232,6 @@ def main():
             def limpiar():
                 pg.evaluate("DB.listar('registros').then(rs => Promise.all(rs.filter(r => r.tipo === 'alimento').map(r => DB.borrar('registros', r.id))))")
                 pg.wait_for_selector("#toast", state="hidden", timeout=8000)
-            def esperar(f): pg.wait_for_function(f"({f})()", timeout=3000)
             def desc(v): esperar(f"() => DB.listar('registros').then(rs => rs.some(r => r.tipo === 'alimento' && r.datos.descontadoKg === {v}))")
             ir("#/inicio"); limpiar(); poner(20)
             registrar_kg(50)
