@@ -574,7 +574,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .plan-heroe-num { font-family: var(--f-titulo); font-size: 3rem; font-weight: 700; line-height: 1; letter-spacing: -.02em; overflow-wrap: anywhere; }
 .plan-heroe-num small { margin-left: 8px; font-family: var(--f-texto); font-size: 1.125rem; color: var(--secundario); letter-spacing: 0; }
 .plan-heroe-sub { font-size: 1.125rem; }
-.plan-vs { justify-self: start; margin-top: 4px; padding: 2px 12px; border-radius: 999px; background: var(--primario-suave); color: var(--primario); font-weight: 700; }
+.plan-vs { justify-self: start; margin-top: 4px; padding: 4px 12px; border-radius: var(--r-s); background: var(--primario-suave); color: var(--primario); font-weight: 700; }
 .plan-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .plan-kpi { display: grid; align-content: start; gap: 2px; min-width: 0; padding: 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); }
 .plan-kpi-v { font-family: var(--f-titulo); font-size: 1.6rem; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
@@ -585,7 +585,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .plan-brechas { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
 .plan-brechas li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--linea); }
 .plan-brecha-texto { display: grid; gap: 2px; min-width: 0; }
-.plan-brecha-n { font-weight: 700; overflow-wrap: anywhere; }
+.plan-brecha-n { font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
 .plan-brecha-c { color: var(--secundario); font-size: 1rem; }
 .plan-brecha-g { flex: none; color: var(--ok); font-weight: 700; white-space: nowrap; }
 .plan-precios { display: grid; gap: 12px; }

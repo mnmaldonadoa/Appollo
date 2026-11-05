@@ -1,6 +1,6 @@
 /* =========================================================================
    APPOLLO · Planificar: estado del planificador y reglas (sin DOM).
-   Copiado del planificador original (planificar.legacy.js) sin cambiar la lógica:
+   Copiado del planificador original (Appollo 1, IIFE de la interfaz) sin cambiar la lógica:
    mismas claves de almacenamiento (appollo.v1.estado, appollo.v1.precios), mismos
    valores de fábrica (BASE) y mismas llamadas a construirManejo / proyectar / brechas.
    ========================================================================= */

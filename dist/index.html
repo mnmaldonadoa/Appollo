@@ -518,6 +518,109 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .aj-acerca { text-align: center; color: var(--secundario); padding: 8px 0 16px; }
 .aj-oculto { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
+/* ---- Planificar (tarea 9) ---- */
+.plan-cab { display: flex; align-items: center; gap: 12px; }
+.plan-volver { flex: none; padding-inline: 16px; }
+.plan-pasos { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; }
+.plan-paso { flex: 1 1 auto; min-width: 0; }
+.plan-paso button { display: grid; align-content: center; gap: 6px; width: 100%; min-height: 56px; padding: 6px 2px; margin: 0;
+  background: none; border: 0; border-radius: var(--r-s); color: var(--secundario); font-size: 1rem; font-weight: 700; text-align: left; touch-action: manipulation; }
+.plan-paso button:disabled { cursor: default; }
+.plan-paso-nombre { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -.01em; }
+.plan-paso-hecho .paso-barra { background: var(--ok-viva); }
+.plan-paso-hecho button { color: var(--texto); }
+.plan-paso[aria-current="step"] button { color: var(--texto); }
+.plan-paso[aria-current="step"] .paso-barra { background: var(--huevo); }
+.plan-gen { gap: 8px; }
+.plan-datos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; padding: 8px 0; border-block: 1px dashed var(--linea-fuerte); }
+.plan-datos > span { display: grid; min-width: 0; }
+.plan-dt { color: var(--secundario); font-size: 1rem; }
+.plan-elegida { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: var(--r);
+  background: var(--primario-suave); color: var(--texto); }
+.plan-elegida > div { min-width: 0; }
+.plan-elegida .btn { flex: none; padding-inline: 16px; }
+.plan-fase { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--r-s); background: var(--huevo-suave); color: var(--texto); }
+.plan-fase .ic { color: var(--precaucion); }
+.plan-error:empty { display: none; }
+.plan-opcional { color: var(--secundario); font-weight: 400; }
+.plan-acciones { position: static; }
+.plan-acciones .btn { min-width: 0; }
+
+.plan-resumen, .plan-mejoras { display: grid; gap: 12px; }
+.plan-indice-fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.plan-indice-num { font-family: var(--f-titulo); font-size: 2.5rem; font-weight: 700; line-height: 1.05; }
+.plan-medidor { height: 12px; border-radius: 6px; background: var(--superficie-2); overflow: hidden; }
+.plan-medidor span { display: block; height: 100%; border-radius: 6px; background: var(--precaucion-viva); transition: width var(--dur) var(--curva); }
+.plan-medidor-bueno span { background: var(--ok-viva); }
+.plan-medidor-malo span { background: var(--alerta-viva); }
+.plan-saltos { display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 6px; scrollbar-width: none; }
+.plan-cat { display: grid; gap: 12px; scroll-margin-top: 12px; }
+.plan-cat-titulo { color: var(--texto); font-family: var(--f-titulo); font-size: 1.3rem; font-weight: 700; }
+.plan-cuenta { flex: none; color: var(--secundario); font-weight: 700; }
+.plan-cat-cuerpo { display: grid; gap: 12px; min-width: 0; }
+.plan-tabla { display: grid; gap: 0; margin: 0; }
+.plan-tabla > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--linea); }
+.plan-tabla dt { color: var(--secundario); }
+.plan-tabla dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.plan-items { display: grid; gap: 8px; }
+.plan-item { position: relative; display: flex; align-items: flex-start; gap: 12px; min-height: 56px; padding: 12px 14px; border-radius: var(--r);
+  background: var(--superficie); border: 2px solid var(--linea-fuerte); cursor: pointer; touch-action: manipulation; }
+.plan-item input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
+.plan-caja { flex: none; width: 30px; height: 30px; margin-top: 1px; border-radius: 8px; border: 2px solid var(--primario); background: var(--superficie);
+  display: grid; place-items: center; }
+.plan-item:has(input:checked) { border-color: var(--primario); background: var(--primario-suave); }
+.plan-item:has(input:checked) .plan-caja { background: var(--primario); }
+.plan-item:has(input:checked) .plan-caja::after { content: ""; width: 9px; height: 16px; margin-top: -4px; border: solid var(--sobre-primario); border-width: 0 3px 3px 0; transform: rotate(45deg); }
+.plan-item:has(input:focus-visible) { outline: 3px solid var(--huevo); outline-offset: 2px; }
+.plan-item-bloqueado { cursor: not-allowed; background: var(--superficie-2); border-style: dashed; }
+.plan-item-bloqueado .plan-caja { border-color: var(--linea-fuerte); background: var(--superficie-2); }
+.plan-item-texto { display: grid; gap: 4px; min-width: 0; }
+.plan-item-t { font-weight: 700; overflow-wrap: anywhere; }
+.plan-item-d { color: var(--secundario); font-size: 1rem; overflow-wrap: anywhere; }
+.plan-vac-edad { color: var(--primario); }
+.plan-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.plan-tag { padding: 1px 10px; border-radius: 999px; font-size: 1rem; font-weight: 700; line-height: 1.4; background: var(--superficie-2); color: var(--texto); overflow-wrap: anywhere; }
+.plan-tag-clave { background: var(--primario-suave); color: var(--primario); }
+.plan-tag-alto { background: color-mix(in srgb, var(--alerta-viva) 14%, var(--superficie)); color: var(--alerta); }
+.plan-tag-medio, .plan-tag-estado-ahora { background: var(--huevo-suave); color: var(--precaucion); }
+.plan-tag-ev { font-weight: 400; }
+.plan-signos { padding: 10px 14px; border-radius: var(--r-s); background: var(--superficie-2); }
+.plan-aviso { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: var(--r-s);
+  background: color-mix(in srgb, var(--alerta-viva) 12%, var(--superficie)); color: var(--texto); border: 2px solid var(--alerta-viva); }
+.plan-aviso > .ic { color: var(--alerta); margin-top: 2px; }
+.plan-aviso-suave { background: var(--superficie-2); border-color: var(--linea-fuerte); }
+.plan-aviso-suave > .ic { color: var(--primario); }
+
+.plan-heroe { display: grid; gap: 6px; }
+.plan-heroe-num { font-family: var(--f-titulo); font-size: 3rem; font-weight: 700; line-height: 1; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.plan-heroe-num small { margin-left: 8px; font-family: var(--f-texto); font-size: 1.125rem; color: var(--secundario); letter-spacing: 0; }
+.plan-heroe-sub { font-size: 1.125rem; }
+.plan-vs { justify-self: start; margin-top: 4px; padding: 4px 12px; border-radius: var(--r-s); background: var(--primario-suave); color: var(--primario); font-weight: 700; }
+.plan-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.plan-kpi { display: grid; align-content: start; gap: 2px; min-width: 0; padding: 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); }
+.plan-kpi-v { font-family: var(--f-titulo); font-size: 1.6rem; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
+.plan-kpi-v small { margin-left: 4px; font-family: var(--f-texto); font-size: 1rem; color: var(--secundario); }
+.plan-kpi-l { color: var(--secundario); font-size: 1rem; line-height: 1.3; }
+.plan-grafico { display: grid; gap: 8px; }
+.plan-sub { font-family: var(--f-texto); font-size: 1.125rem; font-weight: 700; }
+.plan-brechas { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.plan-brechas li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--linea); }
+.plan-brecha-texto { display: grid; gap: 2px; min-width: 0; }
+.plan-brecha-n { font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+.plan-brecha-c { color: var(--secundario); font-size: 1rem; }
+.plan-brecha-g { flex: none; color: var(--ok); font-weight: 700; white-space: nowrap; }
+.plan-precios { display: grid; gap: 12px; }
+.plan-eco { display: grid; gap: 0; }
+.plan-eco > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--linea); }
+.plan-eco > div > span:last-child { font-weight: 700; white-space: nowrap; }
+.plan-eco-total { font-weight: 700; }
+.plan-pos { color: var(--ok); }
+.plan-neg { color: var(--alerta); }
+.plan-metodo { padding: 0 16px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); }
+.plan-metodo summary { display: flex; align-items: center; min-height: 56px; font-weight: 700; color: var(--primario); cursor: pointer; }
+.plan-metodo ul { margin: 0 0 16px; padding-left: 20px; display: grid; gap: 8px; color: var(--secundario); }
+.plan-final { margin-top: 8px; }
+
 </style>
 </head>
 <body>
@@ -2109,9 +2212,10 @@ function Esqueleto(n) {
 </script>
 <script>
 /* Appollo · Gráfico de líneas en SVG: real (verde, continua) contra estándar (cielo, discontinua).
-   Tolera series vacías, de un punto, con nulos o de distinto largo sin producir NaN. */
+   Tolera series vacías, de un punto, con nulos o de distinto largo sin producir NaN.
+   leyendaReal / leyendaEstandar (opcionales) cambian los textos de la leyenda. */
 
-function Grafico({ serieReal, serieEstandar, etiquetas } = {}) {
+function Grafico({ serieReal, serieEstandar, etiquetas, leyendaReal, leyendaEstandar } = {}) {
   const W = 320, H = 150, PX = 10, PY = 14;
   const lista = s => (Array.isArray(s) ? s.map(v => (v === null || v === '' || v === undefined ? NaN : Number(v))) : []);
   const real = lista(serieReal), est = lista(serieEstandar);
@@ -2158,7 +2262,7 @@ function Grafico({ serieReal, serieEstandar, etiquetas } = {}) {
   return `<figure class="grafico${hayDatos ? '' : ' grafico-vacio'}" role="img" aria-label="${esc(resumen)}">
   ${svg}${hayDatos ? '' : `<p class="grafico-aviso">Aún no hay datos para graficar</p>`}
   ${ejes}
-  <figcaption class="grafico-leyenda"><span class="ley ley-real">Real</span><span class="ley ley-estandar">Estándar</span></figcaption>
+  <figcaption class="grafico-leyenda"><span class="ley ley-real">${esc(leyendaReal || 'Real')}</span><span class="ley ley-estandar">${esc(leyendaEstandar || 'Estándar')}</span></figcaption>
 </figure>`;
 }
 
@@ -3332,7 +3436,20 @@ const NuevoLote = (function () {
   }
   function error(msg) { const p = $v('.nl-error'); if (p) { p.textContent = msg; p.hidden = false; p.scrollIntoView({ block: 'nearest' }); } }
 
-  VISTAS.nuevoLote = async function () { if (!st) st = nuevo(); return html(); };
+  /* App.estado.prefillLote = {genetica, aves, altitud, edadDias} (lo deja "Crear lote con este plan"):
+     se usa una sola vez y abre el asistente en el paso 2 con todo lleno. */
+  function precargar() {
+    const p = App.estado.prefillLote;
+    App.estado.prefillLote = null;
+    if (!p || !genDe(p.genetica)) return false;
+    st = Object.assign(nuevo(), { paso: 2, gid: p.genetica, modo: 'edad', unidad: 'dias' });
+    if (Number.isFinite(numero(p.aves))) st.aves = String(p.aves);
+    if (Number.isFinite(numero(p.edadDias))) st.edad = String(p.edadDias);
+    if (Number.isFinite(numero(p.altitud))) st.altitud = String(p.altitud);
+    return true;
+  }
+
+  VISTAS.nuevoLote = async function () { if (!precargar() && !st) st = nuevo(); return html(); };
   VISTAS.nuevoLote.crear = crear;
 
   ACCIONES['nl-genetica'] = el => { st.gid = el.dataset.id; st.paso = 2; pintar(true); };
@@ -3361,6 +3478,644 @@ const NuevoLote = (function () {
   };
 
   return { crear, validar, maxDias, planVacunas };
+})();
+
+</script>
+<script>
+/* =========================================================================
+   APPOLLO · Planificar: estado del planificador y reglas (sin DOM).
+   Copiado del planificador original (Appollo 1, IIFE de la interfaz) sin cambiar la lógica:
+   mismas claves de almacenamiento (appollo.v1.estado, appollo.v1.precios), mismos
+   valores de fábrica (BASE) y mismas llamadas a construirManejo / proyectar / brechas.
+   ========================================================================= */
+const PlanEstado = (function () {
+  'use strict';
+  const LS = {
+    get(k, def) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } }
+  };
+  const K_ESTADO = 'appollo.v1.estado', K_PRECIOS = 'appollo.v1.precios';
+  const BASE = { gid: null, obj: 'huevos', edad: null, unidad: 'semanas', aves: 100, alt: 2800, real: null, fin: null, sel: [], enf: null, filtro: 'todas' };
+  const S = Object.assign({}, BASE, LS.get(K_ESTADO, {}));
+  if (!Array.isArray(S.sel)) S.sel = [];
+  const precios = Object.assign({ cubeta: '', kgVivo: '', kgAlim: '' }, LS.get(K_PRECIOS, {}));
+  const guardar = () => LS.set(K_ESTADO, S);
+  const guardarPrecios = () => LS.set(K_PRECIOS, precios);
+
+  const gen = () => GENETICAS.find(g => g.id === S.gid);
+  const modo = () => { const g = gen(); return g ? modoDe(g, S.obj) : 'huevos'; };
+  const dias = () => { const e = Number(S.edad); if (!isFinite(e)) return NaN; return Math.round(S.unidad === 'semanas' ? e * 7 : e); };
+  const plural = (n, s, p) => `${fmt(n, n % 1 ? 1 : 0)} ${n === 1 ? s : p}`;
+  const edadTxt = () => S.unidad === 'semanas' ? plural(Number(S.edad), 'semana', 'semanas') : plural(Number(S.edad), 'día', 'días');
+  const edadCorta = d => d <= 56 ? `Día ${d}` : `Sem. ${Math.round(d / 7)}`;
+
+  function maxDias() {
+    const g = gen(); if (!g) return 0;
+    return modo() === 'huevos' ? 693 : g.carne.rango[1] - 1;
+  }
+  function errorEdad() {
+    const d = dias();
+    if (S.edad === null || S.edad === '' || !isFinite(d)) return 'Escribe la edad de las aves.';
+    if (d < 0) return 'La edad no puede ser negativa.';
+    if (d > maxDias()) return modo() === 'huevos' ? 'Para proyectar, la edad debe ser menor a 99 semanas.' : `La edad supera la edad máxima de venta (${gen().carne.rango[1]} días).`;
+    return '';
+  }
+  const avesOk = () => Number.isFinite(S.aves) && S.aves >= 1 && S.aves <= 1000000;
+  const loteValido = () => !!gen() && !errorEdad() && avesOk();
+
+  function opcionesFin() {
+    const g = gen(), d = dias();
+    if (modo() === 'huevos') {
+      const o = [72, 80, 90, 100].map(w => w * 7).filter(x => x > d + 6);
+      return o.length ? o : [700];
+    }
+    const o = [];
+    for (let x = g.carne.rango[0]; x <= g.carne.rango[1]; x += 7) if (x > d) o.push(x);
+    return o.length ? o : [g.carne.rango[1]];
+  }
+  function dFin() {
+    const g = gen(), ops = opcionesFin();
+    const def = modo() === 'huevos' ? g.postura.fin * 7 : g.carne.venta;
+    if (S.fin && ops.includes(S.fin)) return S.fin;
+    if (ops.includes(def)) return def;
+    return ops[0];
+  }
+  function realVisible() {
+    const g = gen(), d = dias();
+    if (modo() === 'huevos') return d >= (g.postura.w50 - 1) * 7;
+    return d >= 3;
+  }
+  function estado() {
+    const g = gen();
+    const real = realVisible() && S.real !== null && S.real !== '' && isFinite(Number(S.real)) ? Number(S.real) : null;
+    return { g, modo: modo(), dias: dias(), dFin: dFin(), aves: Math.round(S.aves), alt: Number(S.alt) || 0, enf: S.enf, real };
+  }
+  const selSet = () => new Set(S.sel);
+  const enPostura = st => st.modo === 'huevos' && st.dias / 7 >= st.g.postura.w50 - 2;
+
+  /* Paso al que se puede llegar: sin genética no hay lote; sin lote válido no hay manejo ni proyección. */
+  const PASOS = ['genetica', 'lote', 'manejo', 'proyeccion'];
+  function pasoPermitido(p) {
+    let r = PASOS.includes(p) ? p : 'genetica';
+    if (r !== 'genetica' && !gen()) r = 'genetica';
+    if ((r === 'manejo' || r === 'proyeccion') && !loteValido()) r = 'lote';
+    return r;
+  }
+
+  /* ---------------------------- Acciones de estado ---------------------------- */
+  function elegirGenetica(id) {
+    if (S.gid === id) return;
+    const g = GENETICAS.find(x => x.id === id); if (!g) return;
+    Object.assign(S, { gid: g.id, obj: 'huevos', sel: [], enf: null, fin: null, real: null });
+    if (modoDe(g, S.obj) === 'carne') Object.assign(S, { unidad: 'dias', edad: 1 });
+    else Object.assign(S, { unidad: 'semanas', edad: 20 });
+    guardar();
+  }
+  function elegirObjetivo(v) {
+    if (S.obj === v) return false;
+    S.obj = v;
+    Object.assign(S, { sel: [], enf: null, fin: null, real: null });
+    Object.assign(S, S.obj === 'carne' ? { unidad: 'dias', edad: 1 } : { unidad: 'semanas', edad: 20 });
+    guardar(); return true;
+  }
+  function elegirUnidad(u) {
+    if (u === S.unidad) return false;
+    const e = Number(S.edad);
+    if (isFinite(e)) S.edad = u === 'dias' ? Math.round(e * 7) : Math.round(e / 7 * 10) / 10;
+    S.unidad = u; guardar(); return true;
+  }
+  /* Botones − / + : mismos pasos que el original. Devuelve el valor nuevo. */
+  function paso(campo, signo) {
+    let v;
+    if (campo === 'edad') {
+      const e = Number(S.edad) || 0;
+      v = S.edad = Math.max(0, Math.round((e + signo) * 10) / 10);
+    } else {
+      const a = Number(S.aves) || 0;
+      const p = a >= 100 ? 10 : a >= 20 ? 5 : 1;
+      v = S.aves = Math.max(1, a + signo * p);
+    }
+    S.fin = null; guardar(); return v;
+  }
+  /* Lo que escribe la persona en los campos del lote (mismas reglas que el original). */
+  function escribir(campo, valor) {
+    if (campo === 'edad') { S.edad = valor === '' ? null : Number(valor); S.fin = null; }
+    else if (campo === 'aves') S.aves = valor === '' ? NaN : Math.round(Number(valor));
+    else if (campo === 'alt') S.alt = Math.max(0, Math.min(4500, Number(valor) || 0));
+    else if (campo === 'real') S.real = valor === '' ? null : Number(valor);
+    guardar();
+  }
+  function marcar(id, si) {
+    const s = selSet(); if (si) s.add(id); else s.delete(id);
+    S.sel = [...s]; guardar();
+  }
+  function marcarTodo() {
+    const st = estado(), M = construirManejo(st);
+    const F = factores(st, M, selSet());
+    if (F.indice >= 100) { S.sel = []; guardar(); return; }
+    const s = selSet();
+    for (const c of M.cats) if (c.items) for (const it of c.items) s.add(it.id);
+    const enf = ENFERMEDADES.find(e => e.id === st.enf);
+    if (enf) {
+      enf.caseros.filter(x => /comprobad/i.test(x.ev) && (!x.solo || x.solo === st.modo)).forEach(x => s.add(x.id));
+      const q = enf.quimicos.filter(x => !(x.noPostura && enPostura(st))).sort((a, b) => b.mit - a.mit)[0];
+      if (q) s.add(q.id);
+    }
+    S.sel = [...s]; guardar();
+  }
+
+  /* ------------------------------ Cálculo ------------------------------ */
+  function calcular() {
+    const st = estado(), M = construirManejo(st), sel = selSet();
+    const r = proyectar(st, M, sel);
+    const Fstd = { f: 1, mortExtra: 0, shift: 0 };
+    const stStd = Object.assign({}, st, { g: Object.assign({}, st.g, { campo: 1 }), real: null });
+    const ref = st.modo === 'huevos' ? simHuevos(stStd, Fstd) : simCarne(stStd, Fstd);
+    const br = brechas(st, M, sel, r);
+    return { st, M, r, ref, br };
+  }
+
+  function textoResumen() {
+    const { st, r } = calcular();
+    const h = r.tipo === 'huevos';
+    const L = [`Appollo · ${st.g.nombre}`, `${fmt(st.aves)} aves de ${edadTxt()} · ${fmt(st.alt)} msnm`, `Fase: ${fase(st.g, st.modo, st.dias).n}`, `Índice de manejo: ${r.F.indice} %`];
+    if (h) L.push(`Proyección a la semana ${Math.round(st.dFin / 7)}: ${fmt(r.huevos)} huevos (${fmt(r.cubetas)} cubetas de 30), ${fmt(r.huevosAve)} por ave`, `Peso medio del huevo: ${fmt(r.pesoHuevo, 1)} g · Alimento por docena: ${fmt(r.kgDocena, 2)} kg`);
+    else L.push(`Proyección a ${st.dFin} días: ${fmt(r.pesoFin / 1000, 2)} kg por ave, ${fmt(r.kgVivo)} kg en pie`, `Conversión acumulada: ${fmt(r.caAcum, 2)} · Viabilidad: ${fmt(r.viab, 1)} %`);
+    L.push(`Fecha: ${new Date().toLocaleDateString('es-EC')}`);
+    return L.join('\n');
+  }
+
+  /* Datos para "Crear lote con este plan" (los consume una vez la vista Nuevo lote). */
+  function datosLote() {
+    if (!loteValido()) return null;
+    return { genetica: S.gid, aves: Math.round(S.aves), altitud: Number(S.alt) || 0, edadDias: dias() };
+  }
+
+  return { S, BASE, precios, guardar, guardarPrecios, gen, modo, dias, edadTxt, edadCorta, maxDias, errorEdad, avesOk, loteValido,
+    opcionesFin, dFin, realVisible, estado, selSet, enPostura, PASOS, pasoPermitido, elegirGenetica, elegirObjetivo, elegirUnidad,
+    paso, escribir, marcar, marcarTodo, calcular, textoResumen, datosLote };
+})();
+
+</script>
+<script>
+/* =========================================================================
+   APPOLLO · Planificar, paso 3: recomendaciones de manejo.
+   Categorías de construirManejo(st), índice de manejo de factores(), marcar todo,
+   selector de problema sanitario con remedios caseros y control químico (tiempo de retiro;
+   los tratamientos no aptos en postura quedan bloqueados). Misma lógica que el original.
+   ========================================================================= */
+var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
+
+const PlanManejo = (function () {
+  'use strict';
+  const P = PlanEstado;
+  const $v = s => document.querySelector('#view ' + s);
+
+  function nivel(it) {
+    const p = it.prod + 1.5 * it.mort;
+    if (p >= 9) return ['alto', 'Impacto alto'];
+    if (p >= 4) return ['medio', 'Impacto medio'];
+    return ['bajo', 'Impacto bajo'];
+  }
+  const tag = (clase, texto) => `<span class="plan-tag plan-tag-${clase}">${esc(texto)}</span>`;
+  /* `titulo` llega ya escapado (lo arma catHTML). */
+  function itemHTML(it, sel, extra = '', bloqueado = false, titulo = null) {
+    const [c, l] = it.prod !== undefined ? nivel(it) : ['', ''];
+    return `<label class="plan-item${bloqueado ? ' plan-item-bloqueado' : ''}"><input type="checkbox" data-sel="${esc(it.id)}" ${sel.has(it.id) && !bloqueado ? 'checked' : ''} ${bloqueado ? 'disabled' : ''}>
+      <span class="plan-caja" aria-hidden="true"></span>
+      <span class="plan-item-texto"><span class="plan-item-t">${titulo || esc(it.n)}</span>${it.det ? `<span class="plan-item-d">${esc(it.det)}</span>` : ''}
+      <span class="plan-tags">${it.clave ? tag('clave', 'Esencial') : ''}${c ? tag(c, l) : ''}${extra}</span></span></label>`;
+  }
+  function cuenta(c, sel, st) {
+    if (c.sanidad) {
+      const enf = ENFERMEDADES.find(e => e.id === st.enf);
+      const lista = c.id === 'casero' ? (enf ? enf.caseros.filter(x => !x.solo || x.solo === st.modo) : PREVENTIVOS_CASEROS) : (enf ? enf.quimicos : []);
+      if (!lista.length) return '';
+      return `${lista.filter(x => sel.has(x.id)).length}/${lista.length}`;
+    }
+    return `${c.items.filter(x => sel.has(x.id)).length}/${c.items.length}`;
+  }
+  const aviso = (texto, suave) => `<div class="plan-aviso${suave ? ' plan-aviso-suave' : ''}">${icono(suave ? 'info' : 'aviso')}<span>${texto}</span></div>`;
+  const nota = t => `<p class="reg-ayuda">${esc(t)}</p>`;
+
+  function catHTML(c, st, sel) {
+    let body = '';
+    if (c.filas) body += `<dl class="plan-tabla">${c.filas.map(f => `<div><dt>${esc(f[0])}</dt><dd>${esc(f[1])}</dd></div>`).join('')}</dl>`;
+    if (c.id === 'vac') {
+      body += `<div class="plan-items">${c.items.map(it => {
+        const et = { pasada: ['pasada', 'Edad pasada: marca si se aplicó'], ahora: ['ahora', 'Toca esta semana'], proxima: ['proxima', 'Próxima'], vigente: ['vigente', 'En curso'] }[it.estado] || ['proxima', ''];
+        return itemHTML(it, sel, et[1] ? tag('estado-' + et[0], et[1]) : '', false, `<span class="plan-vac-edad">${esc(it.repite ? 'Desde sem. 20' : P.edadCorta(it.edad))}</span> · ${esc(it.n)}`);
+      }).join('')}</div>`;
+    } else if (c.id === 'casero') {
+      const enf = ENFERMEDADES.find(e => e.id === st.enf);
+      body += `<div class="reg-campo"><label class="reg-etiqueta" for="plan-enf">¿Hay algún problema sanitario en el lote?</label>
+        <select id="plan-enf" class="reg-select"><option value="">Ninguno, el lote está sano</option>
+        ${c.enfermedades.map(e => `<option value="${esc(e.id)}" ${st.enf === e.id ? 'selected' : ''}>${esc(e.n)}</option>`).join('')}</select></div>`;
+      if (enf) {
+        body += `<p class="plan-signos"><b>Signos:</b> ${esc(enf.signos)}</p>`;
+        if (enf.alerta) body += aviso(esc(enf.alerta));
+        const cas = enf.caseros.filter(x => !x.solo || x.solo === st.modo);
+        if (cas.length) body += `<div class="plan-items">${cas.map(it => itemHTML(it, sel, tag('ev', it.ev))).join('')}</div>`;
+        else body += nota('No hay un remedio casero eficaz para este problema.');
+        if (enf.nota) body += nota(enf.nota);
+      } else {
+        body += nota('Opcionales y de apoyo. No reemplazan las vacunas ni la bioseguridad.') +
+          `<div class="plan-items">${PREVENTIVOS_CASEROS.map(it => itemHTML(it, sel, tag('ev', it.ev))).join('')}</div>`;
+      }
+    } else if (c.id === 'quim') {
+      const enf = ENFERMEDADES.find(e => e.id === st.enf);
+      const enPostura = P.enPostura(st);
+      if (!enf) {
+        body += aviso('Sin un problema diagnosticado no se recomienda medicar. Los antibióticos preventivos crean resistencia y dejan residuos en huevos y carne. Si aparece un problema, elígelo en <b>Remedios caseros</b>.', true);
+      } else if (!enf.quimicos.length) {
+        body += enf.alerta ? aviso(`No existe tratamiento. ${esc(enf.alerta)}`) : nota(`No hay tratamiento químico eficaz. ${enf.nota || ''}`);
+      } else {
+        body += aviso('Úsalos solo con diagnóstico y receta de un médico veterinario. Respeta el tiempo de retiro: no vendas ni consumas huevos o carne durante ese período. Dosis de referencia; confirma siempre en la etiqueta.');
+        body += `<div class="plan-items">${enf.quimicos.map(it => {
+          const bloq = it.noPostura && enPostura;
+          return itemHTML(it, sel, `${bloq ? tag('alto', 'No apto en postura') : ''}${tag('ev', 'Retiro: ' + it.retiro)}`, bloq);
+        }).join('')}</div>`;
+        if (enf.nota) body += nota(enf.nota);
+      }
+    } else if (c.items && c.items.length) {
+      body += `<div class="plan-items">${c.items.map(it => itemHTML(it, sel)).join('')}</div>`;
+    }
+    if (c.notas) body += c.notas.map(nota).join('');
+    const n = cuenta(c, sel, st);
+    return `<section class="tarjeta plan-cat" id="cat-${esc(c.id)}">
+      <header class="tarjeta-cab"><span class="tarjeta-icono">${icono(c.icono)}</span><h2 class="tarjeta-titulo plan-cat-titulo">${esc(c.n)}</h2><span class="plan-cuenta num" data-cuenta="${esc(c.id)}">${n}</span></header>
+      <div class="plan-cat-cuerpo">${body}</div></section>`;
+  }
+
+  const medidor = ind => `<div class="plan-medidor${ind >= 85 ? ' plan-medidor-bueno' : ind < 50 ? ' plan-medidor-malo' : ''}" aria-hidden="true"><span style="width:${ind}%"></span></div>`;
+
+  function html() {
+    const st = P.estado(), M = construirManejo(st), sel = P.selSet();
+    const F = factores(st, M, sel);
+    return `<h1>Recomendaciones de manejo</h1>
+  <p class="pantalla-texto">${esc(st.g.nombre)} de ${esc(P.edadTxt())} · <b>${esc(M.fase.n)}</b>. Marca lo que vas a aplicar: la proyección cambia con cada elección.</p>
+  <div class="tarjeta plan-resumen">
+    <div class="plan-indice-fila"><div><p class="eyebrow">Índice de manejo</p><p class="plan-indice-num num" id="plan-indice">${F.indice} %</p></div>
+      ${Boton({ texto: F.indice >= 100 ? 'Desmarcar todo' : 'Marcar lo recomendado', variante: 'secundario', accion: 'plan-todo' })}</div>
+    ${medidor(F.indice)}
+  </div>
+  <nav class="plan-saltos" aria-label="Secciones">${M.cats.map(c => `<button type="button" class="selector-btn" data-accion="plan-cat" data-v="${esc(c.id)}">${esc(c.n)}</button>`).join('')}</nav>
+  ${M.cats.map(c => catHTML(c, st, sel)).join('')}
+  <div class="reg-acciones plan-acciones">${Boton({ texto: 'Atrás', icono: 'atras', variante: 'secundario', accion: 'plan-ir', datos: { paso: 'lote' } })}${
+    Boton({ texto: 'Ver proyección', icono: 'sig', variante: 'primario', accion: 'plan-ir', datos: { paso: 'proyeccion' } })}</div>`;
+  }
+
+  /* Al marcar o desmarcar: índice, medidor, botón y cuentas sin volver a dibujar (como vivoManejo). */
+  function vivo() {
+    const st = P.estado(), M = construirManejo(st), sel = P.selSet();
+    const F = factores(st, M, sel);
+    $v('#plan-indice').textContent = F.indice + ' %';
+    const m = $v('.plan-resumen .plan-medidor');
+    if (m) m.outerHTML = medidor(F.indice);
+    const b = $v('[data-accion="plan-todo"] .btn-texto');
+    if (b) b.textContent = F.indice >= 100 ? 'Desmarcar todo' : 'Marcar lo recomendado';
+    for (const c of M.cats) { const el = $v(`[data-cuenta="${c.id}"]`); if (el) el.textContent = cuenta(c, sel, st); }
+  }
+
+  function montar(raiz) {
+    raiz.addEventListener('change', e => {
+      const t = e.target;
+      if (t.matches('input[data-sel]')) { if (t.disabled) return; P.marcar(t.dataset.sel, t.checked); vivo(); }
+      else if (t.id === 'plan-enf') { P.S.enf = t.value || null; P.guardar(); App.refrescar(); }
+    });
+  }
+
+  ACCIONES['plan-todo'] = () => { P.marcarTodo(); App.refrescar(); };
+  ACCIONES['plan-cat'] = el => {
+    const c = document.getElementById('cat-' + el.dataset.v);
+    if (c) c.scrollIntoView({ behavior: reducirMovimiento() ? 'auto' : 'smooth', block: 'start' });
+  };
+
+  return { html, montar };
+})();
+
+</script>
+<script>
+/* =========================================================================
+   APPOLLO · Planificar, paso 4: proyección.
+   Cifras de proyectar() con los mismos textos y redondeos del original, gráfico del
+   estándar contra la proyección, "lo que más sumaría" (brechas), ingresos y margen con
+   los precios de appollo.v1.precios, copiar el resumen y "Crear lote con este plan".
+   ========================================================================= */
+var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
+
+const PlanProyeccion = (function () {
+  'use strict';
+  const P = PlanEstado;
+  const $v = s => document.querySelector('#view ' + s);
+
+  /* Serie para Grafico: estándar desde el inicio del eje y proyección desde hoy (mismo eje que el original). */
+  function grafico(st, r) {
+    const est = [], real = [], et = [];
+    if (r.tipo === 'huevos') {
+      const w0 = st.dias / 7, p = st.g.postura;
+      const x0 = w0 < 16 ? 0 : Math.max(16, Math.floor(w0) - 6);
+      for (let w = x0; w < w0; w++) { est.push(hdStd(p, w)); real.push(null); et.push('Sem. ' + fmt(w)); }
+      for (const q of r.serie) { est.push(hdStd(p, q.w)); real.push(q.hd); et.push('Sem. ' + fmt(q.w, q.w % 1 ? 1 : 0)); }
+    } else {
+      const c = st.g.carne, desde = {};
+      for (const q of r.serie) desde[q.d] = q.p;
+      for (let d = 0; d <= st.dFin; d++) { est.push(pesoStd(c, d) / 1000); real.push(d in desde ? desde[d] / 1000 : null); et.push('Día ' + d); }
+    }
+    const titulo = r.tipo === 'huevos' ? '% de postura por semana' : 'Peso por ave (kg) por día';
+    return `<article class="tarjeta plan-grafico"><header class="tarjeta-cab"><h2 class="tarjeta-titulo">${titulo}</h2></header>${
+      Grafico({ serieReal: real, serieEstandar: est, etiquetas: et, leyendaReal: 'Tu lote (proyección)', leyendaEstandar: 'Estándar ' + st.g.nombre })}</article>`;
+  }
+
+  function ecoHTML(r) {
+    const precios = P.precios, h = r.tipo === 'huevos';
+    const pv = parseFloat(String(h ? precios.cubeta : precios.kgVivo).replace(',', '.'));
+    const pa = parseFloat(String(precios.kgAlim).replace(',', '.'));
+    const ing = isFinite(pv) ? (h ? r.cubetas * pv : r.kgVivo * pv) : NaN;
+    const cos = isFinite(pa) ? r.alimento * pa : NaN;
+    const mar = ing - cos;
+    const usd = x => isFinite(x) ? '$ ' + fmt(x, 2) : '—';
+    return `<div><span>Ingreso por ${h ? 'huevos' : 'venta en pie'}</span><span class="num">${usd(ing)}</span></div>
+      <div><span>Costo del alimento${h && r.alimRecria > 0 ? ' (con recría)' : ''}</span><span class="num">${usd(cos)}</span></div>
+      <div class="plan-eco-total"><span>Margen sobre alimento</span><span class="num${isFinite(mar) ? (mar >= 0 ? ' plan-pos' : ' plan-neg') : ''}">${usd(mar)}</span></div>`;
+  }
+
+  function html() {
+    const { st, r, ref, br } = P.calcular();
+    const h = r.tipo === 'huevos';
+    const pct = h ? (ref.huevos ? 100 * r.huevos / ref.huevos : 0) : 100 * r.pesoFin / ref.pesoFin;
+    const ops = P.opcionesFin();
+    let heroe;
+    const kpis = [];
+    if (h) {
+      heroe = `<p class="eyebrow plan-heroe-titulo">Huevos del lote hasta la semana ${Math.round(st.dFin / 7)}</p>
+        <p class="plan-heroe-num num">${fmt(r.huevos)}<small>huevos</small></p>
+        <p class="plan-heroe-sub"><b>${fmt(r.cubetas)}</b> cubetas de 30 · ${fmt(r.huevosAve)} huevos por ave</p>`;
+      if (r.hdHoy >= 5) kpis.push([fmt(r.hdHoy, 1), '%', 'Postura esperada esta semana']);
+      else kpis.push([r.w50 ? 'Sem. ' + fmt(r.w50, 0) : '—', '', r.w50 ? 'Llega al 50 % de postura' : 'No llega al 50 % de postura']);
+      kpis.push([fmt(r.pico, 1), '%', `Pico esperado (sem. ${fmt(r.wPico, 0)})`]);
+      kpis.push([fmt(r.pesoHuevo, 1), 'g', 'Peso medio del huevo']);
+      kpis.push([fmt(r.kgDocena, 2), 'kg', 'Alimento por docena de huevos']);
+      kpis.push([fmt(r.conversion, 2), '', 'Conversión (kg alimento / kg huevo)']);
+      kpis.push([fmt(r.vivasFin), 'aves', `Al final del ciclo (${fmt(r.viab, 1)} % viven)`]);
+      kpis.push([fmt(r.alimento - r.alimRecria), 'kg', 'Alimento en postura (lote)']);
+      if (r.alimRecria > 0) kpis.push([fmt(r.alimRecria), 'kg', 'Alimento de recría (lote)']);
+      else kpis.push([fmt(r.masaKg), 'kg', 'Masa de huevo del lote']);
+    } else {
+      heroe = `<p class="eyebrow plan-heroe-titulo">Peso vivo por ave a los ${st.dFin} días</p>
+        <p class="plan-heroe-num num">${fmt(r.pesoFin / 1000, 2)}<small>kg</small></p>
+        <p class="plan-heroe-sub"><b>${fmt(r.kgVivo)}</b> kg en pie · ${fmt(r.kgCanal)} kg de canal</p>`;
+      kpis.push([fmt(r.caAcum, 2), '', 'Conversión acumulada']);
+      kpis.push([fmt(r.vivasFin), 'aves', `Para la venta (${fmt(r.viab, 1)} % viven)`]);
+      kpis.push([fmt(r.alimento), 'kg', 'Alimento desde hoy (lote)']);
+      kpis.push([fmt(r.caPeriodo, 2), '', 'Conversión desde hoy']);
+      if (esBroiler(st.g)) kpis.push([fmt(r.iep), '', 'Índice de eficiencia productiva (IEP)']);
+      else kpis.push([fmt(st.g.carne.rend), '%', 'Rendimiento a canal']);
+      kpis.push([fmt(r.pesoStdFin / 1000, 2), 'kg', 'Peso estándar de la genética']);
+    }
+    const F = r.F;
+    const avisos = [];
+    if (F.altPeso > 0.5) avisos.push(h ? `Altitud de ${fmt(st.alt)} m: la proyección descuenta ${fmt(F.altPeso, 1)} % de producción.` : `Altitud de ${fmt(st.alt)} m: la proyección descuenta ${fmt(F.altPeso, 1)} % del crecimiento${F.altMort > 0.1 ? ` y suma ${fmt(F.altMort, 1)} puntos de mortalidad por ascitis` : ''}.`);
+    if (F.enf) avisos.push(`${F.enf.n}: ${F.mit > 0 ? `con el tratamiento elegido se recupera cerca del ${fmt(F.mit * 100)} % de la pérdida.` : 'sin tratamiento, la pérdida se aplica completa.'}`);
+    if (st.real != null) avisos.push(h ? `La proyección parte de tu ${fmt(st.real, 1)} % de postura actual.` : `La proyección parte de tu peso actual de ${fmt(st.real)} g.`);
+    const unidadGana = h ? 'huevos' : 'kg';
+    const ind = F.indice;
+    const precio = (id, etiqueta, valor, ej) => `<div class="reg-campo"><label class="reg-etiqueta" for="${id}">${etiqueta}</label>
+      <input class="reg-texto num" id="${id}" type="number" inputmode="decimal" step="0.01" min="0" placeholder="${ej}" value="${esc(valor)}"></div>`;
+    return `<h1>Proyección de ${h ? 'huevos' : 'carne'}</h1>
+  <p class="pantalla-texto plan-lead">${esc(st.g.nombre)} · ${fmt(st.aves)} aves de ${esc(P.edadTxt())} · ${fmt(st.alt)} msnm</p>
+  <div class="reg-campo"><p class="reg-etiqueta" id="plan-lbl-fin">${h ? 'Proyectar hasta la semana' : 'Edad de venta'}</p>
+    <div class="nl-presets" role="group" aria-labelledby="plan-lbl-fin">${ops.map(o =>
+      `<button type="button" class="segmento-btn" data-accion="plan-fin" data-v="${o}" aria-pressed="${o === st.dFin}">${h ? 'Sem. ' + o / 7 : o + ' días'}</button>`).join('')}</div></div>
+  <article class="tarjeta tarjeta-verde plan-heroe">${heroe}<p class="plan-vs">${fmt(pct)} % del estándar de la genética</p></article>
+  <div class="plan-kpis">${kpis.map(k => `<div class="plan-kpi"><span class="plan-kpi-v num">${esc(k[0])}${k[1] ? `<small>${esc(k[1])}</small>` : ''}</span><span class="plan-kpi-l">${esc(k[2])}</span></div>`).join('')}</div>
+  ${grafico(st, r)}
+  <article class="tarjeta plan-mejoras">
+    <div class="plan-indice-fila"><div><p class="eyebrow">Índice de manejo</p><p class="plan-indice-num num plan-indice-proy">${ind} %</p></div>
+      ${Boton({ texto: 'Ajustar manejo', variante: 'secundario', accion: 'plan-ir', datos: { paso: 'manejo' } })}</div>
+    <div class="plan-medidor${ind >= 85 ? ' plan-medidor-bueno' : ind < 50 ? ' plan-medidor-malo' : ''}" aria-hidden="true"><span style="width:${ind}%"></span></div>
+    ${br.length ? `<h2 class="plan-sub">Lo que más sumaría a tu ${h ? 'producción' : 'lote'}</h2>
+      <ul class="plan-brechas">${br.slice(0, 5).map(b => `<li><span class="plan-brecha-texto"><span class="plan-brecha-n">${esc(b.n)}</span><span class="plan-brecha-c">${esc(b.cat)}</span></span><span class="plan-brecha-g num">+${fmt(b.gana, 0)} ${unidadGana}</span></li>`).join('')}</ul>`
+      : `<p class="reg-ayuda">Aplicas todas las prácticas recomendadas para esta fase.</p>`}
+  </article>
+  ${avisos.length ? `<div class="plan-aviso plan-aviso-suave">${icono('info')}<span>${avisos.map(esc).join('<br>')}</span></div>` : ''}
+  <article class="tarjeta plan-precios">
+    <header class="tarjeta-cab"><h2 class="tarjeta-titulo">Ingresos y margen</h2></header>
+    <p class="reg-ayuda">Escribe tus precios en dólares para ver el margen sobre el alimento.</p>
+    ${h ? precio('plan-p-cubeta', 'Precio de la cubeta de 30', P.precios.cubeta, 'Ej.: 3,60') : precio('plan-p-kg', 'Precio del kg en pie', P.precios.kgVivo, 'Ej.: 1,90')}
+    ${precio('plan-p-alim', 'Costo del kg de alimento', P.precios.kgAlim, 'Ej.: 0,62')}
+    <div class="plan-eco" id="plan-eco">${ecoHTML(r)}</div>
+    <p class="reg-ayuda">No incluye compra de aves, mano de obra, energía ni medicamentos.</p>
+  </article>
+  <details class="plan-metodo"><summary>¿Cómo se calcula?</summary>
+    <ul>
+      <li>La curva parte del estándar publicado: ${esc(st.g.fuente)}.</li>
+      <li>Se aplica un ajuste de campo del ${fmt((st.g.campo || 1) * 100)} % por la diferencia entre las condiciones de prueba de la casa genética y una granja típica.</li>
+      <li>Cada práctica que no marcas descuenta producción y suma mortalidad según su importancia. Son coeficientes de referencia de la literatura técnica, no mediciones de tu granja.</li>
+      <li>La altitud reduce el crecimiento del pollo de engorde y desde los 2.000 m suma riesgo de ascitis.</li>
+      <li>Si escribes un dato real (postura o peso de hoy), la proyección parte de él y en unas 4 semanas se acerca al nivel que permite el manejo elegido.</li>
+      <li>Úsala para planificar y compárala cada semana con tus registros.</li>
+    </ul></details>
+  <div class="rep-acciones plan-acciones plan-final">
+    ${Boton({ texto: 'Copiar resumen', icono: 'copiar', variante: 'secundario', accion: 'plan-copiar', clase: 'btn-ancho' })}
+    <div class="rep-copia plan-copia" hidden><label class="reg-etiqueta" for="plan-copia-texto">Selecciona y copia el resumen</label><textarea class="reg-texto rep-texto" id="plan-copia-texto" rows="7" readonly></textarea></div>
+    ${Boton({ texto: 'Crear lote con este plan', icono: 'mas', variante: 'primario', accion: 'plan-crear-lote', clase: 'btn-ancho btn-grande' })}
+    ${Boton({ texto: 'Atrás', icono: 'atras', variante: 'secundario', accion: 'plan-ir', datos: { paso: 'manejo' }, clase: 'btn-ancho' })}
+  </div>`;
+  }
+
+  function montar(raiz) {
+    raiz.addEventListener('input', e => {
+      const t = e.target, k = { 'plan-p-cubeta': 'cubeta', 'plan-p-kg': 'kgVivo', 'plan-p-alim': 'kgAlim' }[t.id];
+      if (!k) return;
+      P.precios[k] = t.value; P.guardarPrecios();
+      const { r } = P.calcular(); $v('#plan-eco').innerHTML = ecoHTML(r);
+    });
+  }
+
+  /* Portapapeles; si falla, textarea oculto + execCommand; si tampoco, caja visible para copiar a mano. */
+  async function copiar(texto) {
+    try { await navigator.clipboard.writeText(texto); return true; } catch (e) { /* respaldo */ }
+    const ta = document.createElement('textarea');
+    ta.value = texto; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+    document.body.appendChild(ta);
+    let ok = false;
+    try { ta.focus(); ta.select(); ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove();
+    return ok;
+  }
+
+  ACCIONES['plan-fin'] = el => { P.S.fin = Number(el.dataset.v); P.guardar(); App.refrescar(); };
+  ACCIONES['plan-copiar'] = async () => {
+    if (!P.loteValido()) return;
+    const txt = P.textoResumen();
+    if (await copiar(txt)) { App.toast('Resumen copiado'); return; }
+    const caja = $v('.plan-copia'), ta = $v('#plan-copia-texto');
+    if (!caja || !ta) return;
+    caja.hidden = false; ta.value = txt;
+    ta.scrollIntoView({ block: 'center' }); ta.focus(); ta.select();
+    App.toast('Copia el texto de la caja');
+  };
+  ACCIONES['plan-crear-lote'] = () => {
+    const d = P.datosLote();
+    if (!d) { App.ir('#/plan/lote'); return; }
+    App.estado.prefillLote = d;
+    App.ir('#/nuevo-lote');
+  };
+
+  return { html, montar };
+})();
+
+</script>
+<script>
+/* =========================================================================
+   APPOLLO · Planificar (#/plan/genetica|lote|manejo|proyeccion).
+   Enrutador de pasos, encabezado (Atrás + indicador de 4 pasos) y los pasos
+   1 · Genética y 2 · Lote. Manejo y Proyección viven en planManejo.js y planProyeccion.js;
+   el estado y las reglas, en planEstado.js (copiados del planificador original).
+   ========================================================================= */
+var VISTAS = window.VISTAS || (window.VISTAS = {});
+var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
+
+(function () {
+  'use strict';
+  const P = PlanEstado, S = P.S;
+  const NOMBRES = { genetica: 'Genética', lote: 'Lote', manejo: 'Manejo', proyeccion: 'Proyección' };
+  const ATRAS = { lote: 'genetica', manejo: 'lote', proyeccion: 'manejo' };
+  const $v = s => document.querySelector('#view ' + s);
+  const apagado = (html, off) => (off ? html.replace('<button ', '<button disabled ') : html);
+
+  /* ------------------------------ Encabezado ------------------------------ */
+  function cabecera(paso) {
+    const i = P.PASOS.indexOf(paso);
+    const puede = k => k === 'genetica' || (k === 'lote' && P.gen()) || ((k === 'manejo' || k === 'proyeccion') && P.loteValido());
+    const volver = ATRAS[paso]
+      ? Boton({ texto: 'Atrás', icono: 'atras', variante: 'secundario', accion: 'plan-ir', datos: { paso: ATRAS[paso] }, clase: 'plan-volver' })
+      : Boton({ texto: 'Atrás', icono: 'atras', variante: 'secundario', accion: 'ir', datos: { ruta: '#/mas' }, clase: 'plan-volver' });
+    return `<div class="plan-cab">${volver}<p class="eyebrow">Planificar · Paso ${i + 1} de 4</p></div>
+  <ol class="plan-pasos" aria-label="Pasos">${P.PASOS.map((k, j) => `<li class="plan-paso${j < i ? ' plan-paso-hecho' : ''}"${j === i ? ' aria-current="step"' : ''}>
+    <button type="button" data-accion="plan-ir" data-paso="${k}"${puede(k) ? '' : ' disabled'}><span class="paso-barra" aria-hidden="true"></span><span class="plan-paso-nombre">${NOMBRES[k]}</span></button></li>`).join('')}</ol>`;
+  }
+
+  /* ============================ 1 · GENÉTICA ============================ */
+  const FILTROS = [['todas', 'Todas'], ['postura', 'Postura'], ['carne', 'Carne'], ['doble', 'Doble propósito'], ['criolla', 'Criolla']];
+  function listaGen() {
+    return GENETICAS.filter(g => S.filtro === 'todas' || g.tipo === S.filtro).map(g => `
+    <button type="button" class="gen-opcion plan-gen" data-accion="plan-genetica" data-id="${esc(g.id)}" aria-pressed="${S.gid === g.id}">
+      <span class="gen-cab"><b class="gen-nombre">${esc(g.nombre)}</b><span class="gen-tipo gen-tipo-${esc(g.tipo)}">${esc(TIPOS[g.tipo].corto)}</span></span>
+      <span class="gen-desc">${esc(g.desc)}</span>
+      <span class="plan-datos">${g.datos.map(d => `<span><span class="plan-dt">${esc(d[0])}</span><b class="num">${esc(d[1])}</b></span>`).join('')}</span>
+      <span class="gen-desc">${esc(g.rasgo)} · ${esc(g.origen)}</span>
+    </button>`).join('');
+  }
+  function pasoGenetica() {
+    return `<h1>¿Qué gallinas vas a manejar?</h1>
+  <p class="pantalla-texto">Elige la genética. Cada línea tiene su propio estándar de producción y sus recomendaciones.</p>
+  <div class="segmento" role="group" aria-label="Filtrar por tipo">${FILTROS.map(f =>
+    `<button type="button" class="segmento-btn" data-accion="plan-filtro" data-v="${f[0]}" aria-pressed="${S.filtro === f[0]}">${f[1]}</button>`).join('')}</div>
+  <div class="gen-lista">${listaGen()}</div>`;
+  }
+
+  /* ============================== 2 · LOTE ============================== */
+  function presetsEdad() {
+    const g = P.gen();
+    if (P.modo() === 'huevos') return [[1, 'dias', '1 día'], [4, 'semanas', '4 sem'], [10, 'semanas', '10 sem'], [17, 'semanas', '17 sem'], [25, 'semanas', '25 sem'], [40, 'semanas', '40 sem'], [60, 'semanas', '60 sem']];
+    if (esBroiler(g)) return [1, 7, 14, 21, 28, 35].map(d => [d, 'dias', d === 1 ? '1 día' : `${d} días`]);
+    if (g.id === 'campero') return [1, 14, 28, 42, 56].map(d => [d, 'dias', d === 1 ? '1 día' : `${d} días`]);
+    return [[1, 'dias', '1 día'], [4, 'semanas', '4 sem'], [8, 'semanas', '8 sem'], [12, 'semanas', '12 sem'], [16, 'semanas', '16 sem']];
+  }
+  const pasador = (c, valor, etiqueta, modoTeclado) => `<div class="contador">
+    <button type="button" class="contador-btn contador-menos" data-accion="plan-menos" data-c="${c}" aria-label="Restar"><span aria-hidden="true">−</span></button>
+    <input class="contador-valor num" id="plan-${c}" type="number" inputmode="${modoTeclado}" min="${c === 'edad' ? 0 : 1}" step="any" value="${esc(valor)}" aria-label="${etiqueta}" aria-describedby="plan-err-${c}">
+    <button type="button" class="contador-btn contador-mas" data-accion="plan-mas" data-c="${c}" aria-label="Sumar"><span aria-hidden="true">+</span></button></div>`;
+  function pasoLote() {
+    const g = P.gen(), dual = g.tipo === 'doble' || g.tipo === 'criolla';
+    const alts = [[100, 'Costa'], [400, 'Amazonía'], [1800, 'Valle'], [2800, 'Sierra']];
+    const seg = (accion, actual, ops, etiqueta) => `<div class="segmento" role="group" aria-label="${etiqueta}">${ops.map(([v, t]) =>
+      `<button type="button" class="segmento-btn" data-accion="${accion}" data-v="${v}" aria-pressed="${actual === v}">${t}</button>`).join('')}</div>`;
+    return `<h1>Datos del lote</h1>
+  <p class="pantalla-texto">Con la edad, el número de aves y la altitud se ajustan las recomendaciones y la proyección.</p>
+  <div class="plan-elegida"><div><b class="gen-nombre">${esc(g.nombre)}</b><p class="gen-desc">${esc(g.rasgo)} · ${esc(TIPOS[g.tipo].nombre)}</p></div>
+    ${Boton({ texto: 'Cambiar', variante: 'secundario', accion: 'plan-ir', datos: { paso: 'genetica' } })}</div>
+  ${dual ? `<div class="reg-campo"><p class="reg-etiqueta">¿Para qué las crías?</p>${seg('plan-obj', S.obj, [['huevos', 'Huevos'], ['carne', 'Carne']], '¿Para qué las crías?')}</div>` : ''}
+  <div class="reg-campo"><label class="reg-etiqueta" for="plan-edad">Edad de las aves</label>
+    ${seg('plan-unidad', S.unidad, [['dias', 'Días'], ['semanas', 'Semanas']], 'Unidad de edad')}
+    ${pasador('edad', S.edad === null || S.edad === undefined ? '' : S.edad, 'Edad de las aves', 'decimal')}
+    <div class="nl-presets" role="group" aria-label="Edades frecuentes">${presetsEdad().map(p =>
+      `<button type="button" class="segmento-btn" data-accion="plan-preset" data-v="${p[0]}" data-u="${p[1]}">${p[2]}</button>`).join('')}</div>
+    <div id="plan-fase-vivo"></div>
+    <p class="reg-error plan-error" id="plan-err-edad" role="alert"></p></div>
+  <div class="reg-campo"><label class="reg-etiqueta" for="plan-aves">Número de aves vivas</label>
+    ${pasador('aves', Number.isFinite(S.aves) ? S.aves : '', 'Número de aves vivas', 'numeric')}
+    <p class="reg-error plan-error" id="plan-err-aves" role="alert"></p></div>
+  <div class="reg-campo"><label class="reg-etiqueta" for="plan-alt">Altitud de la granja (msnm)</label>
+    <input class="reg-texto num" id="plan-alt" type="number" inputmode="numeric" min="0" max="4500" step="50" value="${esc(S.alt)}">
+    <div class="nl-presets" role="group" aria-label="Zonas">${alts.map(a =>
+      `<button type="button" class="segmento-btn" data-accion="plan-alt" data-v="${a[0]}" aria-pressed="${Number(S.alt) === a[0]}">${a[1]} · ${fmt(a[0])} m</button>`).join('')}</div>
+    <p class="reg-ayuda" id="plan-ayuda-alt"></p></div>
+  <div id="plan-real-vivo"></div>
+  <div class="reg-acciones plan-acciones">${Boton({ texto: 'Atrás', icono: 'atras', variante: 'secundario', accion: 'plan-ir', datos: { paso: 'genetica' } })}${
+    apagado(Boton({ texto: 'Ver recomendaciones', icono: 'sig', variante: 'primario', accion: 'plan-siguiente' }), !P.loteValido())}</div>`;
+  }
+
+  /* Partes del paso Lote que cambian mientras se escribe (como vivoLote del original). */
+  function vivoLote() {
+    const g = P.gen(); if (!g || !$v('#plan-edad')) return;
+    const err = P.errorEdad();
+    $v('#plan-err-edad').textContent = err;
+    $v('#plan-err-aves').textContent = P.avesOk() ? '' : 'Escribe cuántas aves tienes: de 1 a 1.000.000.';
+    const f = $v('#plan-fase-vivo');
+    if (err) f.innerHTML = '';
+    else { const ph = fase(g, P.modo(), P.dias()); f.innerHTML = `<p class="plan-fase">${icono('huevo')}<span>Fase: <b>${esc(ph.n)}</b> · ${esc(ph.r)}</span></p>`; }
+    const alt = Number(S.alt) || 0;
+    $v('#plan-ayuda-alt').textContent = P.modo() === 'carne' && esBroiler(g) && alt >= 2000 ? 'Sobre 2.000 m el pollo de engorde crece menos y tiene más riesgo de ascitis. La app lo incluye en la proyección.'
+      : alt >= 2000 ? 'En zona alta las noches son frías: la app ajusta las recomendaciones de temperatura.' : 'La altitud ajusta temperatura, densidad y riesgo de ascitis.';
+    document.querySelectorAll('#view [data-accion="plan-alt"]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.v) === S.alt)));
+    const rv = $v('#plan-real-vivo');
+    if (!err && P.realVisible()) {
+      const h = P.modo() === 'huevos';
+      if (rv.dataset.tipo !== (h ? 'h' : 'c')) {
+        rv.dataset.tipo = h ? 'h' : 'c';
+        rv.innerHTML = `<div class="reg-campo"><label class="reg-etiqueta" for="plan-real">${h ? '% de postura actual' : 'Peso promedio actual (g)'} <span class="plan-opcional">· opcional</span></label>
+          <input class="reg-texto num" id="plan-real" type="number" inputmode="decimal" min="0" step="${h ? '0.1' : '1'}" placeholder="${h ? 'Ej.: 88' : 'Ej.: 1250'}" value="${esc(S.real === null ? '' : S.real)}">
+          <p class="reg-ayuda">${h ? 'Huevos recogidos ayer ÷ aves vivas × 100.' : 'Pesa 1 de cada 20 aves y saca el promedio.'} Con este dato la proyección parte de lo que hoy produce tu lote.</p></div>`;
+      }
+    } else { rv.innerHTML = ''; delete rv.dataset.tipo; }
+    const btn = $v('[data-accion="plan-siguiente"]'); if (btn) btn.disabled = !P.loteValido();
+  }
+
+  /* ============================== Vista ============================== */
+  VISTAS.planificar = async function (params) {
+    const pedido = (params && params.paso) || 'genetica', paso = P.pasoPermitido(pedido);
+    if (paso !== pedido || location.hash !== '#/plan/' + paso) history.replaceState(null, '', '#/plan/' + paso);
+    const cuerpo = paso === 'genetica' ? pasoGenetica() : paso === 'lote' ? pasoLote() : paso === 'manejo' ? PlanManejo.html() : PlanProyeccion.html();
+    return `<section class="pantalla planificar" data-paso="${paso}">${cabecera(paso)}${cuerpo}</section>`;
+  };
+  VISTAS.planificar.montar = function (raiz) {
+    const sec = raiz.querySelector('.planificar'); if (!sec) return;
+    const paso = sec.dataset.paso;
+    if (paso === 'lote') {
+      vivoLote();
+      raiz.addEventListener('input', e => {
+        const id = e.target.id;
+        if (id === 'plan-edad' || id === 'plan-aves' || id === 'plan-alt' || id === 'plan-real') { P.escribir(id.slice(5), e.target.value); if (id !== 'plan-real') vivoLote(); }
+      });
+    } else if (paso === 'manejo') PlanManejo.montar(raiz);
+    else if (paso === 'proyeccion') PlanProyeccion.montar(raiz);
+  };
+
+  /* ------------------------------ Acciones ------------------------------ */
+  ACCIONES['plan-ir'] = el => App.ir('#/plan/' + el.dataset.paso);
+  ACCIONES['plan-filtro'] = el => { S.filtro = el.dataset.v; P.guardar(); App.refrescar(); };
+  ACCIONES['plan-genetica'] = el => { P.elegirGenetica(el.dataset.id); App.ir('#/plan/lote'); };
+  ACCIONES['plan-obj'] = el => { if (P.elegirObjetivo(el.dataset.v)) App.refrescar(); };
+  ACCIONES['plan-unidad'] = el => { if (P.elegirUnidad(el.dataset.v)) App.refrescar(); };
+  ACCIONES['plan-preset'] = el => { S.edad = Number(el.dataset.v); S.unidad = el.dataset.u; S.fin = null; P.guardar(); App.refrescar(); };
+  ACCIONES['plan-alt'] = el => { S.alt = Number(el.dataset.v); P.guardar(); const i = $v('#plan-alt'); if (i) i.value = S.alt; vivoLote(); };
+  const pasoBtn = (el, signo) => { const v = P.paso(el.dataset.c, signo); const i = $v('#plan-' + el.dataset.c); if (i) i.value = v; vivoLote(); };
+  ACCIONES['plan-mas'] = el => pasoBtn(el, 1);
+  ACCIONES['plan-menos'] = el => pasoBtn(el, -1);
+  ACCIONES['plan-siguiente'] = () => { if (P.loteValido()) App.ir('#/plan/manejo'); else vivoLote(); };
 })();
 
 </script>
