@@ -121,11 +121,11 @@ const PlanManejo = (function () {
     raiz.addEventListener('change', e => {
       const t = e.target;
       if (t.matches('input[data-sel]')) { if (t.disabled) return; P.marcar(t.dataset.sel, t.checked); vivo(); }
-      else if (t.id === 'plan-enf') { P.S.enf = t.value || null; P.guardar(); App.refrescar(); }
+      else if (t.id === 'plan-enf') { P.S.enf = t.value || null; P.guardar(); P.refrescar(t); }
     });
   }
 
-  ACCIONES['plan-todo'] = () => { P.marcarTodo(); App.refrescar(); };
+  ACCIONES['plan-todo'] = el => { P.marcarTodo(); P.refrescar(el); };
   ACCIONES['plan-cat'] = el => {
     const c = document.getElementById('cat-' + el.dataset.v);
     if (c) c.scrollIntoView({ behavior: reducirMovimiento() ? 'auto' : 'smooth', block: 'start' });

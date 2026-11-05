@@ -136,11 +136,11 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
 
   /* ------------------------------ Acciones ------------------------------ */
   ACCIONES['plan-ir'] = el => App.ir('#/plan/' + el.dataset.paso);
-  ACCIONES['plan-filtro'] = el => { S.filtro = el.dataset.v; P.guardar(); App.refrescar(); };
+  ACCIONES['plan-filtro'] = el => { S.filtro = el.dataset.v; P.guardar(); P.refrescar(el); };
   ACCIONES['plan-genetica'] = el => { P.elegirGenetica(el.dataset.id); App.ir('#/plan/lote'); };
-  ACCIONES['plan-obj'] = el => { if (P.elegirObjetivo(el.dataset.v)) App.refrescar(); };
-  ACCIONES['plan-unidad'] = el => { if (P.elegirUnidad(el.dataset.v)) App.refrescar(); };
-  ACCIONES['plan-preset'] = el => { S.edad = Number(el.dataset.v); S.unidad = el.dataset.u; S.fin = null; P.guardar(); App.refrescar(); };
+  ACCIONES['plan-obj'] = el => { if (P.elegirObjetivo(el.dataset.v)) P.refrescar(el); };
+  ACCIONES['plan-unidad'] = el => { if (P.elegirUnidad(el.dataset.v)) P.refrescar(el); };
+  ACCIONES['plan-preset'] = el => { S.edad = Number(el.dataset.v); S.unidad = el.dataset.u; S.fin = null; P.guardar(); P.refrescar(el); };
   ACCIONES['plan-alt'] = el => { S.alt = Number(el.dataset.v); P.guardar(); const i = $v('#plan-alt'); if (i) i.value = S.alt; vivoLote(); };
   const pasoBtn = (el, signo) => { const v = P.paso(el.dataset.c, signo); const i = $v('#plan-' + el.dataset.c); if (i) i.value = v; vivoLote(); };
   ACCIONES['plan-mas'] = el => pasoBtn(el, 1);

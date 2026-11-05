@@ -3654,7 +3654,21 @@ const PlanEstado = (function () {
     return { genetica: S.gid, aves: Math.round(S.aves), altitud: Number(S.alt) || 0, edadDias: dias() };
   }
 
-  return { S, BASE, precios, guardar, guardarPrecios, gen, modo, dias, edadTxt, edadCorta, maxDias, errorEdad, avesOk, loteValido,
+  /* Vuelve a dibujar el paso y devuelve el foco al mismo control (mismo data-accion y data-v / data-u,
+     o el mismo id para el selector de enfermedad): sin esto el foco del teclado caería en <body>. */
+  async function refrescar(el) {
+    let sel = null;
+    if (el && el.id) sel = '#' + CSS.escape(el.id);
+    else if (el && el.dataset && el.dataset.accion) {
+      sel = `[data-accion="${CSS.escape(el.dataset.accion)}"]`;
+      for (const k of ['v', 'u']) if (el.dataset[k] !== undefined) sel += `[data-${k}="${CSS.escape(el.dataset[k])}"]`;
+    }
+    await App.refrescar();
+    const nuevo = sel && document.querySelector('#view ' + sel);
+    if (nuevo) { try { nuevo.focus({ preventScroll: true }); } catch (e) { /* sin foco */ } }
+  }
+
+  return { S, BASE, refrescar, precios, guardar, guardarPrecios, gen, modo, dias, edadTxt, edadCorta, maxDias, errorEdad, avesOk, loteValido,
     opcionesFin, dFin, realVisible, estado, selSet, enPostura, PASOS, pasoPermitido, elegirGenetica, elegirObjetivo, elegirUnidad,
     paso, escribir, marcar, marcarTodo, calcular, textoResumen, datosLote };
 })();
@@ -3784,11 +3798,11 @@ const PlanManejo = (function () {
     raiz.addEventListener('change', e => {
       const t = e.target;
       if (t.matches('input[data-sel]')) { if (t.disabled) return; P.marcar(t.dataset.sel, t.checked); vivo(); }
-      else if (t.id === 'plan-enf') { P.S.enf = t.value || null; P.guardar(); App.refrescar(); }
+      else if (t.id === 'plan-enf') { P.S.enf = t.value || null; P.guardar(); P.refrescar(t); }
     });
   }
 
-  ACCIONES['plan-todo'] = () => { P.marcarTodo(); App.refrescar(); };
+  ACCIONES['plan-todo'] = el => { P.marcarTodo(); P.refrescar(el); };
   ACCIONES['plan-cat'] = el => {
     const c = document.getElementById('cat-' + el.dataset.v);
     if (c) c.scrollIntoView({ behavior: reducirMovimiento() ? 'auto' : 'smooth', block: 'start' });
@@ -3948,7 +3962,7 @@ const PlanProyeccion = (function () {
     return ok;
   }
 
-  ACCIONES['plan-fin'] = el => { P.S.fin = Number(el.dataset.v); P.guardar(); App.refrescar(); };
+  ACCIONES['plan-fin'] = el => { P.S.fin = Number(el.dataset.v); P.guardar(); P.refrescar(el); };
   ACCIONES['plan-copiar'] = async () => {
     if (!P.loteValido()) return;
     const txt = P.textoResumen();
@@ -4109,11 +4123,11 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
 
   /* ------------------------------ Acciones ------------------------------ */
   ACCIONES['plan-ir'] = el => App.ir('#/plan/' + el.dataset.paso);
-  ACCIONES['plan-filtro'] = el => { S.filtro = el.dataset.v; P.guardar(); App.refrescar(); };
+  ACCIONES['plan-filtro'] = el => { S.filtro = el.dataset.v; P.guardar(); P.refrescar(el); };
   ACCIONES['plan-genetica'] = el => { P.elegirGenetica(el.dataset.id); App.ir('#/plan/lote'); };
-  ACCIONES['plan-obj'] = el => { if (P.elegirObjetivo(el.dataset.v)) App.refrescar(); };
-  ACCIONES['plan-unidad'] = el => { if (P.elegirUnidad(el.dataset.v)) App.refrescar(); };
-  ACCIONES['plan-preset'] = el => { S.edad = Number(el.dataset.v); S.unidad = el.dataset.u; S.fin = null; P.guardar(); App.refrescar(); };
+  ACCIONES['plan-obj'] = el => { if (P.elegirObjetivo(el.dataset.v)) P.refrescar(el); };
+  ACCIONES['plan-unidad'] = el => { if (P.elegirUnidad(el.dataset.v)) P.refrescar(el); };
+  ACCIONES['plan-preset'] = el => { S.edad = Number(el.dataset.v); S.unidad = el.dataset.u; S.fin = null; P.guardar(); P.refrescar(el); };
   ACCIONES['plan-alt'] = el => { S.alt = Number(el.dataset.v); P.guardar(); const i = $v('#plan-alt'); if (i) i.value = S.alt; vivoLote(); };
   const pasoBtn = (el, signo) => { const v = P.paso(el.dataset.c, signo); const i = $v('#plan-' + el.dataset.c); if (i) i.value = v; vivoLote(); };
   ACCIONES['plan-mas'] = el => pasoBtn(el, 1);

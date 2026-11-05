@@ -167,7 +167,21 @@ const PlanEstado = (function () {
     return { genetica: S.gid, aves: Math.round(S.aves), altitud: Number(S.alt) || 0, edadDias: dias() };
   }
 
-  return { S, BASE, precios, guardar, guardarPrecios, gen, modo, dias, edadTxt, edadCorta, maxDias, errorEdad, avesOk, loteValido,
+  /* Vuelve a dibujar el paso y devuelve el foco al mismo control (mismo data-accion y data-v / data-u,
+     o el mismo id para el selector de enfermedad): sin esto el foco del teclado caería en <body>. */
+  async function refrescar(el) {
+    let sel = null;
+    if (el && el.id) sel = '#' + CSS.escape(el.id);
+    else if (el && el.dataset && el.dataset.accion) {
+      sel = `[data-accion="${CSS.escape(el.dataset.accion)}"]`;
+      for (const k of ['v', 'u']) if (el.dataset[k] !== undefined) sel += `[data-${k}="${CSS.escape(el.dataset[k])}"]`;
+    }
+    await App.refrescar();
+    const nuevo = sel && document.querySelector('#view ' + sel);
+    if (nuevo) { try { nuevo.focus({ preventScroll: true }); } catch (e) { /* sin foco */ } }
+  }
+
+  return { S, BASE, refrescar, precios, guardar, guardarPrecios, gen, modo, dias, edadTxt, edadCorta, maxDias, errorEdad, avesOk, loteValido,
     opcionesFin, dFin, realVisible, estado, selSet, enPostura, PASOS, pasoPermitido, elegirGenetica, elegirObjetivo, elegirUnidad,
     paso, escribir, marcar, marcarTodo, calcular, textoResumen, datosLote };
 })();

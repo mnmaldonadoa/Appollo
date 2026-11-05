@@ -147,7 +147,7 @@ const PlanProyeccion = (function () {
     return ok;
   }
 
-  ACCIONES['plan-fin'] = el => { P.S.fin = Number(el.dataset.v); P.guardar(); App.refrescar(); };
+  ACCIONES['plan-fin'] = el => { P.S.fin = Number(el.dataset.v); P.guardar(); P.refrescar(el); };
   ACCIONES['plan-copiar'] = async () => {
     if (!P.loteValido()) return;
     const txt = P.textoResumen();
