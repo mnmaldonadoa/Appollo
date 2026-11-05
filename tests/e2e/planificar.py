@@ -275,7 +275,8 @@ def main():
             check("la práctica bloqueada no se puede marcar", sel(pg) == antes and not pg.is_checked("#view input[data-sel=q_tol]"), sel(pg))
             pg.click("#view [data-accion=plan-todo]"); pg.wait_for_timeout(100)
             check("marcar todo no incluye la bloqueada", "q_tol" not in sel(pg) and "q_amp" in sel(pg), sel(pg))
-            check("botón cambia a Desmarcar todo", "Desmarcar todo" in pg.inner_text("#view [data-accion=plan-todo]"))
+            check("con 98 % (la bloqueada no cuenta) el botón sigue en 'Marcar lo recomendado', como el original",
+                  norm(pg.inner_text("#plan-indice")) == "98%" and "Marcar lo recomendado" in pg.inner_text("#view [data-accion=plan-todo]"))
             medir(pg, "manejo con enfermedad")
             ctx.close()
 
@@ -318,7 +319,12 @@ def main():
             paso(pg, "genetica")
             lote(pg, {"gen": "cobb500", "aves": 500, "alt": 2800}); a_manejo(pg)
             pg.click("#view [data-accion=plan-todo]"); pg.wait_for_timeout(100)
+            check("al 100 % el botón cambia a Desmarcar todo", norm(pg.inner_text("#plan-indice")) == "100%"
+                  and "Desmarcar todo" in pg.inner_text("#view [data-accion=plan-todo]"))
             medir(pg, "manejo oscuro")
+            pg.click("#view [data-accion=plan-todo]"); pg.wait_for_timeout(100)
+            check("Desmarcar todo deja 0 %", norm(pg.inner_text("#plan-indice")) == "0%" and sel(pg) == [])
+            pg.click("#view [data-accion=plan-todo]"); pg.wait_for_timeout(100)
             a_proy(pg)
             medir(pg, "proyección oscuro")
             pg.screenshot(path=str(SDD / "t9-proyeccion-oscuro.png"))

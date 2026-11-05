@@ -1,7 +1,8 @@
 /* Appollo · Gráfico de líneas en SVG: real (verde, continua) contra estándar (cielo, discontinua).
-   Tolera series vacías, de un punto, con nulos o de distinto largo sin producir NaN. */
+   Tolera series vacías, de un punto, con nulos o de distinto largo sin producir NaN.
+   leyendaReal / leyendaEstandar (opcionales) cambian los textos de la leyenda. */
 
-function Grafico({ serieReal, serieEstandar, etiquetas } = {}) {
+function Grafico({ serieReal, serieEstandar, etiquetas, leyendaReal, leyendaEstandar } = {}) {
   const W = 320, H = 150, PX = 10, PY = 14;
   const lista = s => (Array.isArray(s) ? s.map(v => (v === null || v === '' || v === undefined ? NaN : Number(v))) : []);
   const real = lista(serieReal), est = lista(serieEstandar);
@@ -48,6 +49,6 @@ function Grafico({ serieReal, serieEstandar, etiquetas } = {}) {
   return `<figure class="grafico${hayDatos ? '' : ' grafico-vacio'}" role="img" aria-label="${esc(resumen)}">
   ${svg}${hayDatos ? '' : `<p class="grafico-aviso">Aún no hay datos para graficar</p>`}
   ${ejes}
-  <figcaption class="grafico-leyenda"><span class="ley ley-real">Real</span><span class="ley ley-estandar">Estándar</span></figcaption>
+  <figcaption class="grafico-leyenda"><span class="ley ley-real">${esc(leyendaReal || 'Real')}</span><span class="ley ley-estandar">${esc(leyendaEstandar || 'Estándar')}</span></figcaption>
 </figure>`;
 }

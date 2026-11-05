@@ -191,7 +191,20 @@ const NuevoLote = (function () {
   }
   function error(msg) { const p = $v('.nl-error'); if (p) { p.textContent = msg; p.hidden = false; p.scrollIntoView({ block: 'nearest' }); } }
 
-  VISTAS.nuevoLote = async function () { if (!st) st = nuevo(); return html(); };
+  /* App.estado.prefillLote = {genetica, aves, altitud, edadDias} (lo deja "Crear lote con este plan"):
+     se usa una sola vez y abre el asistente en el paso 2 con todo lleno. */
+  function precargar() {
+    const p = App.estado.prefillLote;
+    App.estado.prefillLote = null;
+    if (!p || !genDe(p.genetica)) return false;
+    st = Object.assign(nuevo(), { paso: 2, gid: p.genetica, modo: 'edad', unidad: 'dias' });
+    if (Number.isFinite(numero(p.aves))) st.aves = String(p.aves);
+    if (Number.isFinite(numero(p.edadDias))) st.edad = String(p.edadDias);
+    if (Number.isFinite(numero(p.altitud))) st.altitud = String(p.altitud);
+    return true;
+  }
+
+  VISTAS.nuevoLote = async function () { if (!precargar() && !st) st = nuevo(); return html(); };
   VISTAS.nuevoLote.crear = crear;
 
   ACCIONES['nl-genetica'] = el => { st.gid = el.dataset.id; st.paso = 2; pintar(true); };
