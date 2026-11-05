@@ -60,7 +60,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   VISTAS.detalleLote = async function (params) {
     const l = await DB.obtener('lotes', params.id);
     if (!l) {
-      return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${icono('aviso')}</div>
+      return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${ilustracion('campo')}</div>
   <h1>Este lote no existe</h1><p class="pantalla-texto">Quizá fue borrado o el enlace está mal.</p>
   ${Boton({ texto: 'Ver mis lotes', icono: 'lotes', variante: 'primario', accion: 'ir', datos: { ruta: '#/lotes' }, clase: 'btn-ancho' })}</section>`;
     }

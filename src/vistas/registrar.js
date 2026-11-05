@@ -42,7 +42,7 @@ const Registrar = (function () {
     Boton({ texto: t.texto, icono: t.icono, variante: 'secundario', accion: 'reg-tipo', datos: { tipo: t.id } })).join('')}</div>`;
 
   const htmlSinLotes = () => `<div class="reg-vacio">
-  <div class="vacia-ilustracion" aria-hidden="true">${icono('gallina')}</div>
+  <div class="vacia-ilustracion" aria-hidden="true">${ilustracion('gallina')}</div>
   <p class="reg-vacio-titulo">Primero crea un lote</p>
   <p>Para registrar necesitas al menos un lote de aves activo.</p>
   ${Boton({ texto: 'Crear lote', icono: 'mas', variante: 'primario', accion: 'ir', datos: { ruta: '#/nuevo-lote' }, clase: 'btn-ancho' })}

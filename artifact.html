@@ -20,9 +20,13 @@
   --dur: 220ms;
   --curva: cubic-bezier(.2, .7, .2, 1);
   --rebote: cubic-bezier(.34, 1.4, .5, 1);
-  --r-s: 12px;
-  --r: 18px;
-  --r-l: 26px;
+  --r-s: 14px;
+  --r: 20px;
+  --r-l: 24px;
+  /* escala de espacio (4/8) */
+  --e1: 4px; --e2: 8px; --e3: 12px; --e4: 16px; --e5: 24px; --e6: 32px; --e7: 48px;
+  --presion: .97;               /* escala al tocar; 1 con movimiento reducido */
+  --t-toque: 120ms;
 }
 
 /* ---------- Tema claro (por defecto) ---------- */
@@ -49,8 +53,13 @@
   --precaucion-viva: #C77C0E;
   --ok-viva: #3D8A4A;
   --velo: rgba(43, 33, 24, .52);
-  --sombra: 0 1px 0 rgba(93, 78, 63, .08), 0 8px 22px -12px rgba(93, 78, 63, .35);
-  --sombra-alta: 0 -10px 40px -10px rgba(43, 33, 24, .35);
+  /* Elevación (sombras con tinte tierra, nunca gris): 1 filas, 2 tarjetas, 3 barra/toast, 4 hoja */
+  --sombra-1: 0 1px 2px rgba(112, 72, 30, .10), 0 3px 8px -4px rgba(112, 72, 30, .18);
+  --sombra: 0 1px 2px rgba(112, 72, 30, .08), 0 8px 18px -8px rgba(112, 72, 30, .26), 0 20px 30px -22px rgba(112, 72, 30, .30);
+  --sombra-nav: 0 -8px 24px -12px rgba(112, 72, 30, .38);
+  --sombra-alta: 0 -14px 44px -12px rgba(74, 44, 16, .42);
+  --foco: #2B2118;
+  --tinta: rgba(74, 44, 16, .10);
   --brillo-esq: rgba(255, 253, 248, .75);
   color-scheme: light;
 }
@@ -63,8 +72,11 @@
     --huevo: #E8A317; --huevo-suave: #3A2E14; --sobre-huevo: #1A140D; --cielo: #6FAAD0;
     --alerta: #EBA197; --sobre-alerta: #1F0E0B; --precaucion: #F0A53A; --ok: #7CC88A;
     --alerta-viva: #E0705F; --precaucion-viva: #E8A33A; --ok-viva: #5FAE6E;
-    --velo: rgba(5, 9, 6, .66); --sombra: 0 1px 0 rgba(0, 0, 0, .3), 0 10px 24px -14px rgba(0, 0, 0, .8);
-    --sombra-alta: 0 -10px 40px -10px rgba(0, 0, 0, .7); --brillo-esq: rgba(243, 235, 221, .07);
+    --velo: rgba(5, 9, 6, .66);
+    --sombra-1: inset 0 1px 0 rgba(243, 235, 221, .05), 0 2px 6px -2px rgba(0, 0, 0, .6);
+    --sombra: inset 0 1px 0 rgba(243, 235, 221, .06), 0 10px 24px -12px rgba(0, 0, 0, .85), 0 2px 4px rgba(0, 0, 0, .35);
+    --sombra-nav: 0 -8px 24px -10px rgba(0, 0, 0, .8); --sombra-alta: 0 -14px 44px -10px rgba(0, 0, 0, .8);
+    --foco: #F3EBDD; --tinta: rgba(243, 235, 221, .10); --brillo-esq: rgba(243, 235, 221, .07);
     color-scheme: dark;
   }
 }
@@ -74,8 +86,11 @@
   --huevo: #E8A317; --huevo-suave: #3A2E14; --sobre-huevo: #1A140D; --cielo: #6FAAD0;
   --alerta: #EBA197; --sobre-alerta: #1F0E0B; --precaucion: #F0A53A; --ok: #7CC88A;
   --alerta-viva: #E0705F; --precaucion-viva: #E8A33A; --ok-viva: #5FAE6E;
-  --velo: rgba(5, 9, 6, .66); --sombra: 0 1px 0 rgba(0, 0, 0, .3), 0 10px 24px -14px rgba(0, 0, 0, .8);
-  --sombra-alta: 0 -10px 40px -10px rgba(0, 0, 0, .7); --brillo-esq: rgba(243, 235, 221, .07);
+  --velo: rgba(5, 9, 6, .66);
+  --sombra-1: inset 0 1px 0 rgba(243, 235, 221, .05), 0 2px 6px -2px rgba(0, 0, 0, .6);
+  --sombra: inset 0 1px 0 rgba(243, 235, 221, .06), 0 10px 24px -12px rgba(0, 0, 0, .85), 0 2px 4px rgba(0, 0, 0, .35);
+  --sombra-nav: 0 -8px 24px -10px rgba(0, 0, 0, .8); --sombra-alta: 0 -14px 44px -10px rgba(0, 0, 0, .8);
+  --foco: #F3EBDD; --tinta: rgba(243, 235, 221, .10); --brillo-esq: rgba(243, 235, 221, .07);
   color-scheme: dark;
 }
 
@@ -97,7 +112,8 @@ h3 { font-family: var(--f-texto); font-size: 1rem; font-weight: 700; margin: 0; 
 p { margin: 0; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
-:focus-visible { outline: 3px solid var(--huevo); outline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--foco); outline-offset: 3px; }
+[tabindex="-1"]:focus-visible { outline: none; } /* contenedores con foco programático (vista, hoja) */
 .num { font-variant-numeric: tabular-nums lining-nums; }
 .solo-lector { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .ic { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
@@ -180,7 +196,7 @@ button { cursor: pointer; }
   -moz-appearance: textfield; appearance: textfield;
 }
 .contador-valor::-webkit-outer-spin-button, .contador-valor::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.contador-valor:focus { border-color: var(--primario); outline: none; box-shadow: 0 0 0 3px var(--huevo); }
+.contador-valor:focus { border-color: var(--primario); outline: 3px solid var(--foco); outline-offset: 2px; }
 
 /* ---------- Hoja inferior ---------- */
 .hoja-capa { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: flex-end; }
@@ -240,7 +256,7 @@ button { cursor: pointer; }
 /* ---------- Shell: vista, franjas, barra inferior, toast ---------- */
 .vista { display: block; overflow-x: clip; min-height: 100vh; min-height: 100dvh; padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); outline: none; }
 .vista-raiz { width: 100%; max-width: 640px; margin: 0 auto; }
-.pantalla { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 24px 16px 8px; }
+.pantalla { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--e4); padding: var(--e5) max(var(--e4), env(safe-area-inset-right)) var(--e2) max(var(--e4), env(safe-area-inset-left)); }
 .pantalla-texto { color: var(--secundario); }
 .proximamente {
   display: flex; align-items: flex-start; gap: 12px; padding: 16px 18px; border-radius: var(--r-l);
@@ -248,12 +264,23 @@ button { cursor: pointer; }
 }
 .proximamente .ic { color: var(--primario); margin-top: 2px; }
 .pantalla-vacia { justify-items: center; text-align: center; padding-top: 48px; gap: 18px; }
-.vacia-ilustracion {
-  display: grid; place-items: center; width: 112px; height: 132px; color: var(--primario);
-  border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%; background: var(--primario-suave);
-  box-shadow: inset 0 -8px 0 color-mix(in srgb, var(--huevo) 30%, transparent);
-}
-.vacia-ilustracion .ic { width: 56px; height: 56px; stroke-width: 1.6; }
+.vacia-ilustracion { display: grid; place-items: center; width: 176px; margin-bottom: var(--e1); color: var(--primario); }
+.ilustracion { display: block; width: 100%; height: auto; overflow: visible; }
+.il-sol { fill: var(--huevo); opacity: .9; }
+.il-colina { fill: var(--ok-viva); opacity: .28; }
+.il-colina-2 { fill: var(--primario); opacity: .22; }
+.il-huevo, .il-ala, .il-cresta, .il-pico { stroke: var(--secundario); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.il-huevo { fill: var(--superficie); }
+.il-cola, .il-ala { fill: var(--huevo-suave); }
+.il-ala { fill: var(--huevo-suave); }
+.il-cresta { fill: var(--alerta-viva); }
+.il-pico { fill: var(--huevo); }
+.il-ojo { fill: var(--texto); }
+.il-pata { fill: none; stroke: var(--secundario); stroke-width: 3; stroke-linecap: round; }
+.il-brillo { fill: none; stroke: var(--huevo); stroke-width: 3; stroke-linecap: round; opacity: .8; }
+.il-ok { fill: none; stroke: var(--primario); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.il-brote { fill: var(--ok-viva); stroke: var(--secundario); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.il-brote path:first-child { fill: none; }
 .pantalla-vacia .pantalla-texto { max-width: 30ch; }
 .btn-grande { min-height: 64px; font-size: 1.125rem; border-radius: 22px; }
 .mas-lista { display: grid; gap: 12px; }
@@ -267,7 +294,7 @@ button { cursor: pointer; }
 .vista-error p { color: var(--secundario); max-width: 32ch; }
 
 .franjas { position: sticky; top: 0; z-index: 20; }
-.franja { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 1rem; font-weight: 700; line-height: 1.35; }
+.franja { display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left)); font-size: 1rem; font-weight: 700; line-height: 1.35; }
 .franja[hidden] { display: none; }
 .franja-offline { background: var(--superficie-2); color: var(--texto); border-bottom: 1px solid var(--linea-fuerte); }
 .franja-memoria { background: var(--alerta); color: var(--sobre-alerta); }
@@ -275,8 +302,8 @@ button { cursor: pointer; }
 .nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) 84px repeat(2, minmax(0, 1fr)); align-items: end; gap: 8px;
-  padding: 6px 2px calc(6px + env(safe-area-inset-bottom, 0px));
-  background: var(--superficie); border-top: 1px solid var(--linea); box-shadow: 0 -6px 20px -14px rgba(43, 33, 24, .5);
+  padding: 6px max(2px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom, 0px)) max(2px, env(safe-area-inset-left));
+  background: var(--superficie); border-top: 1px solid var(--linea); box-shadow: var(--sombra-nav);
 }
 .nav-item {
   position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px;
@@ -295,7 +322,7 @@ button { cursor: pointer; }
 .nav-circulo {
   display: grid; place-items: center; width: 64px; height: 64px; margin-top: -30px; border-radius: 50%;
   background: var(--primario); color: var(--sobre-primario); border: 4px solid var(--superficie);
-  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .22), 0 6px 16px -6px rgba(43, 33, 24, .55);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .22), 0 8px 16px -6px rgba(74, 44, 16, .55);
   transition: transform var(--dur) var(--rebote);
 }
 .nav-circulo .ic { width: 32px; height: 32px; stroke-width: 2.6; }
@@ -308,7 +335,7 @@ button { cursor: pointer; }
 .nav-insignia[hidden] { display: none; }
 
 .toast {
-  position: fixed; z-index: 40; left: 12px; right: 12px; bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  position: fixed; z-index: 40; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   max-width: 536px; margin: 0 auto; overflow: hidden;
   display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 18px; border-radius: var(--r);
   background: var(--texto); color: var(--fondo); box-shadow: var(--sombra-alta);
@@ -340,7 +367,7 @@ button { cursor: pointer; }
   width: 100%; min-height: 56px; padding: 10px 14px; border-radius: var(--r-s);
   background: var(--superficie); color: var(--texto); border: 2px solid var(--linea-fuerte); font-size: 1.125rem;
 }
-.reg-select:focus, .reg-texto:focus { outline: none; border-color: var(--primario); box-shadow: 0 0 0 3px var(--huevo); }
+.reg-select:focus, .reg-texto:focus { border-color: var(--primario); outline: 3px solid var(--foco); outline-offset: 2px; }
 .reg-opciones { display: grid; gap: 8px; }
 .reg-opcion {
   display: grid; gap: 2px; min-height: 64px; padding: 10px 16px; border-radius: var(--r); text-align: left;
@@ -384,9 +411,7 @@ button { cursor: pointer; }
 .seccion-titulo .num { color: var(--secundario); font-family: var(--f-texto); font-size: 1rem; }
 
 .bienvenida { padding-top: 32px; }
-.bv-ilustracion { display: grid; place-items: center; width: 96px; height: 96px; border-radius: 32px;
-  background: var(--huevo-suave); color: var(--precaucion); transform: rotate(-4deg); }
-.bv-ilustracion .ic { width: 56px; height: 56px; stroke-width: 1.6; }
+.bv-ilustracion { display: grid; place-items: center; width: 168px; margin-bottom: var(--e1); }
 .bv-opcion { grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 14px; min-height: 72px; }
 .bv-opcion > .ic { width: 32px; height: 32px; color: var(--primario); }
 .bv-opcion-texto { display: grid; gap: 2px; }
@@ -449,12 +474,12 @@ button { cursor: pointer; }
 .dl-cab { display: grid; gap: 6px; justify-items: start; }
 .dl-cab h1 { overflow-wrap: anywhere; }
 .dl-datos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.dl-dato { display: grid; gap: 2px; padding: 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); min-width: 0; }
+.dl-dato { display: grid; gap: 2px; padding: 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); min-width: 0; box-shadow: var(--sombra-1); }
 .dl-dato span { color: var(--secundario); font-size: 1rem; }
 .dl-dato b { font-family: var(--f-titulo); font-size: 1.3rem; overflow-wrap: anywhere; }
 .dl-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .dl-reg, .dl-vac { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 10px 10px 10px 14px; border-radius: var(--r);
-  background: var(--superficie); border: 1px solid var(--linea); }
+  background: var(--superficie); border: 1px solid var(--linea); box-shadow: var(--sombra-1); }
 .dl-icono { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--primario-suave); color: var(--primario); flex: none; }
 .dl-fila-texto { display: grid; gap: 2px; flex: 1 1 140px; min-width: 0; }
 .dl-fila-texto b { overflow-wrap: anywhere; }
@@ -469,7 +494,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 
 /* ---- Alertas e inventario (tarea 7) ---- */
 .al-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-.al-card { position: relative; display: grid; gap: 12px; padding: 14px 14px 14px 20px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); overflow: hidden; }
+.al-card { position: relative; display: grid; gap: 12px; padding: 14px 14px 14px 20px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); overflow: hidden; box-shadow: var(--sombra-1); }
 .al-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 6px; background: var(--linea-fuerte); }
 .al-rojo::before { background: var(--alerta-viva); }
 .al-ambar::before { background: var(--precaucion-viva); }
@@ -481,7 +506,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .al-botones { display: grid; gap: 8px; }
 .inv-grupo { display: grid; gap: 8px; }
 .inv-grupo .seccion-titulo { align-items: center; }
-.inv-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 12px 12px 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); }
+.inv-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 12px 12px 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); box-shadow: var(--sombra-1); }
 .inv-bajo { border-color: var(--precaucion-viva); background: var(--huevo-suave); }
 .inv-info { display: grid; gap: 2px; flex: 1 1 140px; min-width: 0; }
 .inv-nombre { overflow-wrap: anywhere; }
@@ -499,7 +524,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .rep-copia[hidden] { display: none; }
 .rep-texto { min-height: 160px; resize: vertical; font-size: 1rem; }
 .rep-grafica { min-width: 0; }
-.aj-seccion { display: grid; gap: 14px; padding: 16px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); }
+.aj-seccion { display: grid; gap: 14px; padding: 16px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); box-shadow: var(--sombra-1); }
 .aj-seccion > h2 { font-size: 1.25rem; }
 .aj-nota { color: var(--secundario); font-size: 1rem; }
 .aj-campo-error { border-color: var(--alerta-viva); }
@@ -561,7 +586,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .plan-item:has(input:checked) { border-color: var(--primario); background: var(--primario-suave); }
 .plan-item:has(input:checked) .plan-caja { background: var(--primario); }
 .plan-item:has(input:checked) .plan-caja::after { content: ""; width: 9px; height: 16px; margin-top: -4px; border: solid var(--sobre-primario); border-width: 0 3px 3px 0; transform: rotate(45deg); }
-.plan-item:has(input:focus-visible) { outline: 3px solid var(--huevo); outline-offset: 2px; }
+.plan-item:has(input:focus-visible) { outline: 3px solid var(--foco); outline-offset: 2px; }
 .plan-item-bloqueado { cursor: not-allowed; border-style: dashed; }
 .plan-item-bloqueado .plan-caja { border-color: var(--linea-fuerte); background: var(--superficie-2); }
 .plan-item-texto { display: grid; gap: 4px; min-width: 0; }
@@ -589,7 +614,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .plan-heroe-sub { font-size: 1.125rem; }
 .plan-vs { justify-self: start; margin-top: 4px; padding: 4px 12px; border-radius: var(--r-s); background: var(--primario-suave); color: var(--texto); font-weight: 700; }
 .plan-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.plan-kpi { display: grid; align-content: start; gap: 2px; min-width: 0; padding: 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); }
+.plan-kpi { display: grid; align-content: start; gap: 2px; min-width: 0; padding: 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); box-shadow: var(--sombra-1); }
 .plan-kpi-v { font-family: var(--f-titulo); font-size: 1.6rem; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
 .plan-kpi-v small { margin-left: 4px; font-family: var(--f-texto); font-size: 1rem; color: var(--secundario); }
 .plan-kpi-l { color: var(--secundario); font-size: 1rem; line-height: 1.3; }
@@ -612,6 +637,32 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .plan-metodo summary { display: flex; align-items: center; min-height: 56px; font-weight: 700; color: var(--primario); cursor: pointer; }
 .plan-metodo ul { margin: 0 0 16px; padding-left: 20px; display: grid; gap: 8px; color: var(--secundario); }
 .plan-final { margin-top: 8px; }
+
+/* ---------- Pulido visual (Task 11) ---------- */
+/* Presión táctil uniforme: escala suave + tinta (capa translúcida) en 120 ms; no cambia el layout. */
+.btn, .contador-btn, .nav-item, .gen-opcion, .reg-opcion, .segmento-btn, .selector-btn, .lote-item, .reg-lote, .ini-enlace,
+.plan-item, .plan-paso button, .dl-hechas summary, .plan-metodo summary {
+  transition: transform var(--t-toque) var(--curva), background-color var(--t-toque) var(--curva), box-shadow var(--t-toque) var(--curva), background-image var(--t-toque) var(--curva);
+}
+.btn:active, .contador-btn:active, .gen-opcion:active, .reg-opcion:active, .segmento-btn:active, .selector-btn:active, .lote-item:active, .reg-lote:active,
+.plan-item:active, .plan-paso button:active {
+  transform: scale(var(--presion)); background-image: linear-gradient(var(--tinta), var(--tinta));
+}
+.btn-primario:active, .contador-mas:active, .btn-peligro:active { background-image: linear-gradient(rgba(0, 0, 0, .16), rgba(0, 0, 0, .16)); }
+.ini-enlace:active .tarjeta { transform: scale(var(--presion)); }
+.ini-enlace .tarjeta { transition: transform var(--t-toque) var(--curva); }
+.nav-item:active .nav-icono { transform: scale(var(--presion)); background-image: linear-gradient(var(--tinta), var(--tinta)); }
+.nav-registrar:active .nav-circulo { transform: scale(.92); }
+.dl-hechas summary:active, .plan-metodo summary:active { background-image: linear-gradient(var(--tinta), var(--tinta)); border-radius: var(--r-s); }
+@media (prefers-reduced-motion: reduce) { :root { --presion: 1; } .nav-registrar:active .nav-circulo { transform: none; } }
+
+/* Jerarquía de elevación: 0 fondo, 1 filas, 2 tarjetas/ítems elegibles, 3 barra/toast, 4 hoja */
+.gen-opcion, .lote-item, .reg-opcion { box-shadow: var(--sombra-1); }
+.tarjeta, .lote-item { box-shadow: var(--sombra); }
+.lotes-cerrados .lote-item { box-shadow: none; }
+.hoja { border-radius: 28px 28px 0 0; border-top: 1px solid var(--linea); }
+.reg-pregunta, .dl-confirmar, .rep-aviso { box-shadow: var(--sombra-1); }
+@media (min-width: 600px) { .pantalla { padding-top: var(--e6); } }
 
 </style>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -2127,6 +2178,22 @@ function icono(nombre, clase) {
   return `<svg class="ic${clase ? ' ' + esc(clase) : ''}" aria-hidden="true" focusable="false"><use href="#i-${esc(nombre)}"></use></svg>`;
 }
 
+/* Ilustraciones de pantalla vacía (diseño propio, trazo 3 px redondeado como los íconos; colores por tokens).
+   nombre: 'gallina' (gallina junto a su huevo), 'huevo' (huevo con palomita), 'campo' (huevos que crecen). */
+function ilustracion(nombre) {
+  const fondo = '<clipPath id="il-recorte"><rect width="160" height="132" rx="30"/></clipPath><circle class="il-sol" cx="124" cy="30" r="14"/><g clip-path="url(#il-recorte)"><path class="il-colina" d="M0 112C34 90 70 98 92 108s46 0 68-10v34H0z"/><path class="il-colina il-colina-2" d="M0 124c40-14 76-6 104 2s40 0 56-6v12H0z"/></g>';
+  const brote = (x, y, s) => `<g class="il-brote" transform="translate(${x} ${y}) scale(${s})"><path d="M0 0V-16"/><path d="M0-12c-8 0-12-5-12-11 8 0 12 5 12 11z"/><path d="M0-16c7 0 11-4 11-10-7 0-11 4-11 10z"/></g>`;
+  let motivo;
+  if (nombre === 'huevo') {
+    motivo = `<path class="il-huevo" d="M80 22c-22 0-38 34-38 62 0 24 17 40 38 40s38-16 38-40c0-28-16-62-38-62z"/><path class="il-brillo" d="M62 70c2-12 8-22 15-28"/><path class="il-ok" d="M63 86l12 12 22-25"/>${brote(30, 118, 1)}${brote(136, 118, .8)}`;
+  } else if (nombre === 'campo') {
+    motivo = `<path class="il-huevo" d="M44 112c-8 0-13-9-13-17 0-9 5-19 13-19s13 10 13 19c0 8-5 17-13 17z"/><path class="il-huevo" d="M80 112c-10 0-17-11-17-23 0-13 7-27 17-27s17 14 17 27c0 12-7 23-17 23z"/><path class="il-huevo" d="M118 112c-12 0-21-13-21-29 0-16 9-33 21-33s21 17 21 33c0 16-9 29-21 29z"/><path class="il-brillo" d="M108 76c1-8 5-14 9-18"/>`;
+  } else {
+    motivo = `<path class="il-huevo il-cola" d="M108 84c12-4 18-14 14-26-6 8-12 12-20 14z"/><path class="il-huevo" d="M48 98c-3-22 10-36 32-36 21 0 32 12 30 29-1 12-12 19-30 19-18 0-30-4-32-12z"/><path class="il-ala" d="M72 86c10-9 24-8 32 2-8 10-22 12-32 6z"/><circle class="il-huevo" cx="58" cy="62" r="12"/><path class="il-cresta" d="M52 52c1-9 6-5 7-2 3-7 8-2 8 1-3 1-5 3-6 5z"/><path class="il-pico" d="M46 62l-10 4 10 4z"/><circle class="il-ojo" cx="56" cy="60" r="2"/><path class="il-pata" d="M76 111v7M88 111v7"/><path class="il-huevo" d="M129 118c-6 0-10-6-10-13s4-14 10-14 10 7 10 14-4 13-10 13z"/>`;
+  }
+  return `<svg class="ilustracion" viewBox="0 0 160 132" width="160" height="132" aria-hidden="true" focusable="false">${fondo}${motivo}</svg>`;
+}
+
 /* `datos` opcional: {ruta:'#/x', id:'L1'} -> data-ruta="#/x" data-id="L1" (claves en minúsculas y guiones).
    `clase` opcional: clases extra (p. ej. 'btn-ancho'). */
 function Boton({ texto, icono: ic, variante, accion, datos, clase } = {}) {
@@ -2520,7 +2587,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   VISTAS.alertas = async function () {
     const lista = await calcular();
     if (!lista.length) {
-      return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${icono('escudo')}</div>
+      return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${ilustracion('huevo')}</div>
   <h1>Todo en orden</h1><p class="pantalla-texto">No hay nada pendiente. Tus aves y tu inventario van bien.</p></section>`;
     }
     return `<section class="pantalla"><h1>Alertas</h1>
@@ -2559,7 +2626,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   const $v = s => document.querySelector('#view ' + s);
 
   function paso1() {
-    return `<div class="bv-ilustracion" aria-hidden="true">${icono('gallina')}</div>
+    return `<div class="bv-ilustracion" aria-hidden="true">${ilustracion('gallina')}</div>
   <p class="eyebrow">Paso 1 de 2</p>
   <h1>Bienvenido a Appollo</h1>
   <p class="pantalla-texto">Lleva el control diario de tus aves, aunque no tengas internet.</p>
@@ -2691,7 +2758,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   VISTAS.detalleLote = async function (params) {
     const l = await DB.obtener('lotes', params.id);
     if (!l) {
-      return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${icono('aviso')}</div>
+      return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${ilustracion('campo')}</div>
   <h1>Este lote no existe</h1><p class="pantalla-texto">Quizá fue borrado o el enlace está mal.</p>
   ${Boton({ texto: 'Ver mis lotes', icono: 'lotes', variante: 'primario', accion: 'ir', datos: { ruta: '#/lotes' }, clase: 'btn-ancho' })}</section>`;
     }
@@ -2943,7 +3010,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   }
 
   const vacio = () => `<section class="pantalla pantalla-vacia">
-  <div class="vacia-ilustracion" aria-hidden="true">${icono('gallina')}</div>
+  <div class="vacia-ilustracion" aria-hidden="true">${ilustracion('gallina')}</div>
   <h1>${esc((App.estado.granja && App.estado.granja.nombre) || 'Bienvenido a Appollo')}</h1>
   <p class="pantalla-texto">Aún no tienes lotes. Crea el primero para registrar mortalidad, alimento y huevos cada día.</p>
   ${Boton({ texto: 'Nuevo lote', icono: 'mas', variante: 'primario', accion: 'nuevo-lote', clase: 'btn-ancho btn-grande' })}
@@ -3201,7 +3268,7 @@ VISTAS.lotes = async function () {
   const activos = lotes.filter(l => l.estado === 'activo').sort(orden), cerrados = lotes.filter(l => l.estado !== 'activo').sort(orden);
   const nuevo = Boton({ texto: 'Nuevo lote', icono: 'mas', variante: 'primario', accion: 'nuevo-lote', clase: 'btn-ancho btn-grande' });
   if (!lotes.length) {
-    return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${icono('gallina')}</div>
+    return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${ilustracion('gallina')}</div>
   <h1>Lotes</h1><p class="pantalla-texto">Aún no tienes lotes. Un lote es un grupo de aves que llegó junto.</p>${nuevo}</section>`;
   }
   return `<section class="pantalla">
@@ -4168,7 +4235,7 @@ const Registrar = (function () {
     Boton({ texto: t.texto, icono: t.icono, variante: 'secundario', accion: 'reg-tipo', datos: { tipo: t.id } })).join('')}</div>`;
 
   const htmlSinLotes = () => `<div class="reg-vacio">
-  <div class="vacia-ilustracion" aria-hidden="true">${icono('gallina')}</div>
+  <div class="vacia-ilustracion" aria-hidden="true">${ilustracion('gallina')}</div>
   <p class="reg-vacio-titulo">Primero crea un lote</p>
   <p>Para registrar necesitas al menos un lote de aves activo.</p>
   ${Boton({ texto: 'Crear lote', icono: 'mas', variante: 'primario', accion: 'ir', datos: { ruta: '#/nuevo-lote' }, clase: 'btn-ancho' })}
@@ -4513,7 +4580,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     if (!lotes.length) {
       actual = null;
       return `<section class="pantalla pantalla-vacia">
-  <div class="vacia-ilustracion" aria-hidden="true">${icono('grafico')}</div>
+  <div class="vacia-ilustracion" aria-hidden="true">${ilustracion('campo')}</div>
   <h1>Reportes</h1>
   <p class="pantalla-texto">Aún no tienes lotes. Crea uno y registra tus datos para ver cómo va.</p>
   ${Boton({ texto: 'Nuevo lote', icono: 'mas', variante: 'primario', accion: 'nuevo-lote', clase: 'btn-ancho btn-grande' })}

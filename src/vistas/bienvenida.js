@@ -14,7 +14,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   const $v = s => document.querySelector('#view ' + s);
 
   function paso1() {
-    return `<div class="bv-ilustracion" aria-hidden="true">${icono('gallina')}</div>
+    return `<div class="bv-ilustracion" aria-hidden="true">${ilustracion('gallina')}</div>
   <p class="eyebrow">Paso 1 de 2</p>
   <h1>Bienvenido a Appollo</h1>
   <p class="pantalla-texto">Lleva el control diario de tus aves, aunque no tengas internet.</p>

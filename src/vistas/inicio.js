@@ -116,7 +116,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   }
 
   const vacio = () => `<section class="pantalla pantalla-vacia">
-  <div class="vacia-ilustracion" aria-hidden="true">${icono('gallina')}</div>
+  <div class="vacia-ilustracion" aria-hidden="true">${ilustracion('gallina')}</div>
   <h1>${esc((App.estado.granja && App.estado.granja.nombre) || 'Bienvenido a Appollo')}</h1>
   <p class="pantalla-texto">Aún no tienes lotes. Crea el primero para registrar mortalidad, alimento y huevos cada día.</p>
   ${Boton({ texto: 'Nuevo lote', icono: 'mas', variante: 'primario', accion: 'nuevo-lote', clase: 'btn-ancho btn-grande' })}

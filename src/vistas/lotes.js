@@ -28,7 +28,7 @@ VISTAS.lotes = async function () {
   const activos = lotes.filter(l => l.estado === 'activo').sort(orden), cerrados = lotes.filter(l => l.estado !== 'activo').sort(orden);
   const nuevo = Boton({ texto: 'Nuevo lote', icono: 'mas', variante: 'primario', accion: 'nuevo-lote', clase: 'btn-ancho btn-grande' });
   if (!lotes.length) {
-    return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${icono('gallina')}</div>
+    return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${ilustracion('gallina')}</div>
   <h1>Lotes</h1><p class="pantalla-texto">Aún no tienes lotes. Un lote es un grupo de aves que llegó junto.</p>${nuevo}</section>`;
   }
   return `<section class="pantalla">
