@@ -128,7 +128,25 @@ const DB = (function () {
       if (!j.datos[k].every(o => o && typeof o === 'object' && !Array.isArray(o) && idValido(o.id)))
         return { error: 'Hay registros inválidos en "' + k + '" (cada uno debe tener un id de texto o número).' };
     }
-    return { datos: j.datos };
+    return { datos: normalizar(j.datos) };
+  }
+
+  /* Normaliza un respaldo ya validado: ids a texto (las rutas #/lote/5 y la edición del inventario comparan con
+     cadenas) y genética desconocida a null (se conserva en geneticaOriginal; las alertas y vistas la omiten). */
+  function normalizar(datos) {
+    const sid = v => (v === undefined || v === null ? v : String(v));
+    const out = {};
+    for (const s of Object.keys(datos)) out[s] = datos[s].map(o => Object.assign({}, o, { id: String(o.id) }));
+    (out.registros || []).forEach(r => {
+      r.loteId = sid(r.loteId);
+      if (r.datos && typeof r.datos === 'object' && r.datos.planId !== undefined && r.datos.planId !== null) r.datos = Object.assign({}, r.datos, { planId: String(r.datos.planId) });
+    });
+    (out.vacunasPlan || []).forEach(v => { v.loteId = sid(v.loteId); });
+    (out.lotes || []).forEach(l => {
+      const conocida = typeof l.genetica === 'string' && typeof GENETICAS !== 'undefined' && GENETICAS.some(g => g.id === l.genetica);
+      if (!conocida && l.genetica !== null && l.genetica !== undefined) { l.geneticaOriginal = l.genetica; l.genetica = null; }
+    });
+    return out;
   }
 
   async function importar(texto) {
@@ -152,15 +170,22 @@ const DB = (function () {
       const aves = Number(est.aves !== undefined ? est.aves : (e.avesInicio !== undefined ? e.avesInicio : e.aves));
       let gNombre = gid;
       try { const g = typeof GENETICAS !== 'undefined' && GENETICAS.find(x => x.id === gid); if (g) gNombre = g.nombre; } catch (x) { /* sin catálogo */ }
-      const fecha = typeof e.fecha === 'string' ? e.fecha.slice(0, 10) : '';
+      // v1 guardó la fecha con toISOString (UTC): se convierte al día local para que no se corra un día.
+      const d = new Date(e.fecha);
+      const fecha = e.fecha && !isNaN(d.getTime()) && typeof hoyLocal === 'function' ? hoyLocal(d) : (typeof e.fecha === 'string' ? e.fecha.slice(0, 10) : '');
       // Fecha de llegada siempre válida: si la entrada vieja no trae una, se usa hoy (nunca null).
       const llegada = typeof fechaValida === 'function' && fechaValida(fecha) ? fecha : (typeof hoyLocal === 'function' ? hoyLocal() : new Date().toISOString().slice(0, 10));
       const nombre = [gNombre || 'Lote anterior', fecha].filter(Boolean).join(' · ');
-      await guardar('lotes', {
+      // Edad que tenían las aves en el plan v1: estado.edad en semanas o días según estado.unidad (por omisión semanas).
+      const ed = est.edad === null || est.edad === '' || est.edad === undefined ? NaN : Number(est.edad);
+      const edadDias = isFinite(ed) && ed >= 0 ? Math.round(est.unidad === 'dias' ? ed : ed * 7) : 0;
+      const lote = {
         id: 'ls-' + (e.id !== undefined ? e.id : nuevoId()),
         nombre, genetica: gid, avesInicio: isFinite(aves) ? aves : 0,
-        fechaLlegada: llegada, edadLlegadaDias: 0, estado: 'cerrado', origen: 'v1', resumen: e.resumen || ''
-      });
+        fechaLlegada: llegada, edadLlegadaDias: edadDias, estado: 'cerrado', fechaCierre: llegada, origen: 'v1', resumen: e.resumen || ''
+      }; // cerrado el día del guardado: la edad que muestra es la del plan y no crece con los días
+      if (e.estado && typeof e.estado === 'object' && gid) lote.planV1 = copia(e.estado); // para "Abrir en Planificador"
+      await guardar('lotes', lote);
       n++;
     }
     // En modo memoria los datos no persisten: no se marca la migración para reintentarla tras recargar.

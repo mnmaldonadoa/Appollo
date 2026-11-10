@@ -35,3 +35,21 @@ assert.strictEqual(ec.huevos, 0); assert.strictEqual(ec.hdPct, null); assert.ok(
 
 const r = c.rendimiento(lote30, [reg('huevos', lote30.fechaLlegada, { cantidad: 80 })], lote30.fechaLlegada);
 assert.ok(r > 0 && Number.isFinite(r));
+
+/* ---- Carne: conversión acumulada y rendimiento (peso real / estándar) ---- */
+const carne = { id: 'L1', nombre: 'B', genetica: 'cobb500', avesInicio: 100, fechaLlegada: '2026-01-01', edadLlegadaDias: 0, galpon: 'G', estado: 'activo' };
+const rc = [reg('alimento', '2026-01-10', { kg: 20 }), reg('alimento', '2026-01-20', { kg: 30 }), reg('peso', '2026-01-20', { gramos: 800 }),
+  reg('mortalidad', '2026-01-15', { cantidad: 10 })];
+// 90 aves vivas × 0,8 kg = 72 kg vivos; 50 kg de alimento acumulado -> 50/72
+assert.ok(Math.abs(c.conversion(carne, rc, '2026-01-20') - 50 / 72) < 1e-9);
+// sólo cuenta el alimento hasta la fecha consultada y el último peso hasta esa fecha
+assert.strictEqual(c.conversion(carne, rc, '2026-01-10'), null, 'sin peso registrado aún');
+assert.strictEqual(c.conversion(carne, [reg('peso', '2026-01-20', { gramos: 800 })], '2026-01-20'), null, 'sin alimento');
+const std20 = c.estandarDia(carne, '2026-01-20', 2800).pesoG;
+assert.ok(std20 > 0);
+assert.ok(Math.abs(c.rendimiento(carne, rc, '2026-01-20') - 100 * 800 / std20) < 1e-9);
+assert.strictEqual(c.rendimiento(carne, [reg('alimento', '2026-01-20', { kg: 5 })], '2026-01-20'), null, 'sin peso: null');
+// el peso más reciente manda
+const rc2 = rc.concat(reg('peso', '2026-01-18', { gramos: 600 }));
+assert.ok(Math.abs(c.rendimiento(carne, rc2, '2026-01-20') - 100 * 800 / std20) < 1e-9);
+assert.ok(Math.abs(c.rendimiento(carne, rc2, '2026-01-18') - 100 * 600 / c.estandarDia(carne, '2026-01-18', 2800).pesoG) < 1e-9);

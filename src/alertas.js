@@ -35,6 +35,7 @@ function alertaVacunas(datos, hoy) {
 function alertaMortalidad(datos, hoy) {
   const out = [];
   for (const l of _activos(datos.lotes)) {
+    if (!GENETICAS.some(g => g.id === l.genetica)) continue; // genética desconocida (respaldo manipulado, lote migrado): sin estándar, sin alerta
     const muertes = datos.registros.filter(r => r.loteId === l.id && r.tipo === 'mortalidad' && r.fecha === hoy)
       .reduce((s, r) => s + (Number(r.datos && r.datos.cantidad) || 0), 0);
     if (!muertes) continue;

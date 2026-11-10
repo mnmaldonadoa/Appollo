@@ -480,7 +480,10 @@ button { cursor: pointer; }
 .dl-vac-hecha { background: var(--superficie-2); }
 .dl-hechas summary { display: flex; align-items: center; min-height: 56px; padding: 0 4px; font-weight: 700; color: var(--primario); cursor: pointer; }
 .dl-cierre { display: grid; gap: 12px; margin-top: 12px; padding-top: 16px; border-top: 1px dashed var(--linea-fuerte); }
-.dl-confirmar { display: grid; gap: 12px; padding: 14px; border-radius: var(--r); background: var(--huevo-suave); color: var(--texto); }
+.dl-plan, .dl-borrar-lote { display: grid; gap: 12px; margin-top: 12px; }
+.dl-borrar-lote-btn { color: var(--alerta); border-color: var(--alerta); }
+.dl-confirmar, .dl-confirmar-borrar { display: grid; gap: 12px; padding: 14px; border-radius: var(--r); background: var(--huevo-suave); color: var(--texto); }
+.dl-confirmar-borrar[hidden], .dl-borrar-lote-btn[hidden] { display: none; }
 h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 700; letter-spacing: 0; }
 
 /* ---- Alertas e inventario (tarea 7) ---- */
@@ -521,6 +524,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .aj-campo-error { border-color: var(--alerta-viva); }
 .aj-ok { color: var(--ok); font-weight: 700; }
 .aj-acerca { text-align: center; color: var(--secundario); padding: 8px 0 16px; }
+.aj-respaldo-texto { min-height: 160px; max-height: 32vh; font-size: .875rem; word-break: break-all; }
 .aj-oculto { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
 /* ---- Planificar (tarea 9) ---- */

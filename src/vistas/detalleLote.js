@@ -102,11 +102,18 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   ${pend.length > 3 ? `<details class="dl-hechas"><summary>Siguientes vacunas (${formatoNumero(pend.length - 3)})</summary><ul class="dl-lista">${pend.slice(3).map(v => vacunaHtml(v, hoy, activo)).join('')}</ul></details>` : ''}
   ${hechas.length ? `<details class="dl-hechas"><summary>Aplicadas (${formatoNumero(hechas.length)})</summary><ul class="dl-lista">${hechas.map(v => vacunaHtml(v, hoy, activo)).join('')}</ul></details>` : ''}`
     : '<p class="pantalla-texto">Este lote no tiene vacunas previstas.</p>'}
+  ${l.planV1 ? `<div class="dl-plan"><p class="pantalla-texto">Este lote viene de una proyección guardada en la versión 1 de Appollo.</p>
+  ${Boton({ texto: 'Abrir en Planificador', icono: 'grafico', variante: 'secundario', accion: 'dl-abrir-plan', datos: { id: l.id }, clase: 'btn-ancho' })}</div>` : ''}
   <div class="dl-cierre">
   ${activo ? `${Boton({ texto: 'Cerrar lote', variante: 'secundario', accion: 'dl-cerrar', clase: 'btn-ancho dl-cerrar' })}
   <div class="dl-confirmar" hidden><p><b>¿Cerrar este lote?</b> Ya no aparecerá en Inicio ni en el registro rápido. Sus datos se conservan y puedes reabrirlo.</p>
     <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'dl-cerrar-no' })}${Boton({ texto: 'Sí, cerrar lote', variante: 'peligro', accion: 'dl-cerrar-si', datos: { id: l.id } })}</div></div>`
     : Boton({ texto: 'Reabrir lote', variante: 'primario', accion: 'dl-reabrir', datos: { id: l.id }, clase: 'btn-ancho' })}
+  </div>
+  <div class="dl-borrar-lote">
+  ${Boton({ texto: 'Borrar lote', icono: 'cruz', variante: 'secundario', accion: 'dl-borrar-lote', clase: 'btn-ancho dl-borrar-lote-btn' })}
+  <div class="dl-confirmar-borrar" hidden><p><b>¿Borrar este lote?</b> Se borran también sus ${formatoNumero(regs.length)} registros y ${formatoNumero(vacs.length)} vacunas. No se puede deshacer.</p>
+    <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'dl-borrar-lote-no' })}${Boton({ texto: 'Sí, borrar lote', variante: 'peligro', accion: 'dl-borrar-lote-si', datos: { id: l.id } })}</div></div>
   </div>
 </section>`;
   };
@@ -188,6 +195,43 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
       if (cerrar && lsPrevio === id) App.fijarLote(id);
     });
   }
+  /* Borrar lote (con confirmación): también sirve para los lotes migrados de la v1. */
+  const confirmarBorrar = ver => {
+    const c = document.querySelector('#view .dl-confirmar-borrar'), b = document.querySelector('#view .dl-borrar-lote-btn');
+    if (!c || !b) return;
+    c.hidden = !ver; b.hidden = ver;
+    const foco = ver ? c.querySelector('[data-accion=dl-borrar-lote-no]') : b;
+    try { foco.focus({ preventScroll: true }); } catch (e) { /* sin foco */ }
+    if (ver) c.scrollIntoView({ block: 'nearest' });
+  };
+  ACCIONES['dl-borrar-lote'] = () => confirmarBorrar(true);
+  ACCIONES['dl-borrar-lote-no'] = () => confirmarBorrar(false);
+  ACCIONES['dl-borrar-lote-si'] = async el => {
+    el.disabled = true;
+    const id = el.dataset.id;
+    try {
+      const [regs, vacs] = await Promise.all([DB.listar('registros', { loteId: id }), DB.listar('vacunasPlan', { loteId: id })]);
+      for (const r of regs) await DB.borrar('registros', r.id);
+      for (const v of vacs) await DB.borrar('vacunasPlan', v.id);
+      await DB.borrar('lotes', id);
+      if (App.estado.loteActivoId === id) App.fijarLote(null);
+    } catch (e) { el.disabled = false; App.toast('No se pudo borrar. Intenta de nuevo.'); return; }
+    App.toast('Lote borrado');
+    App.actualizarAlertas();
+    App.ir('#/lotes');
+  };
+
+  /* Restaura en el Planificador la proyección que el lote guardó en la v1 (mismo estado que usa el Planificador). */
+  ACCIONES['dl-abrir-plan'] = async el => {
+    const l = await DB.obtener('lotes', el.dataset.id);
+    if (!l || !l.planV1 || typeof PlanEstado === 'undefined') return;
+    const P = PlanEstado;
+    Object.assign(P.S, P.BASE, { filtro: P.S.filtro }, copia(l.planV1));
+    if (!Array.isArray(P.S.sel)) P.S.sel = [];
+    P.guardar();
+    App.ir(P.loteValido() ? '#/plan/proyeccion' : '#/plan/genetica');
+  };
+
   ACCIONES['dl-cerrar-si'] = el => { el.disabled = true; return cambiarEstado(el.dataset.id, true); };
   ACCIONES['dl-reabrir'] = el => { el.disabled = true; return cambiarEstado(el.dataset.id, false); };
 })();
