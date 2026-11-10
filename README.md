@@ -101,3 +101,12 @@ Para Play Store se necesita un APK/AAB firmado (*release*) con tu propia llave. 
 - El efecto de cada práctica de manejo, de la altitud y de las enfermedades son coeficientes de referencia, no mediciones. Conviene calibrarlos con registros reales de granjas.
 - Las dosis de medicamentos son referenciales. Toda medicación requiere diagnóstico y receta de un médico veterinario y respetar el tiempo de retiro.
 - El calendario de vacunación es una guía; debe ajustarse con el veterinario y con los programas de Agrocalidad.
+
+## Subir a GitHub y obtener el APK
+
+1. Crea un repositorio vacío en GitHub (sin README) y, desde esta carpeta:
+   `git remote add origin https://github.com/TU_USUARIO/appollo.git`
+   `git push -u origin appollo-2` (o fusiona antes con `main`).
+2. En la pestaña **Actions** se ejecuta «Compilar APK de Appollo» con cada push (también con «Run workflow»).
+3. Al terminar, descarga el artefacto **Appollo-apk** (`app-debug.apk`) e instálalo en el teléfono (permite «orígenes desconocidos»).
+4. Es un APK de depuración; para publicar en Play Store hay que firmar uno de release.

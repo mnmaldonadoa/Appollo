@@ -1,7 +1,8 @@
 name: Compilar APK de Appollo
 on:
   push:
-    branches: [main, master]
+    branches: ['**']
+  pull_request:
   workflow_dispatch:
 jobs:
   apk:
@@ -16,6 +17,7 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install Pillow
       - run: python3 build.py
+      - run: python3 android_assets.py
       - run: npm ci
       - run: npx cap sync android
       - name: Compilar APK (debug)
