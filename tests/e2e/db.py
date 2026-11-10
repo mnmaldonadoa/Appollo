@@ -2,6 +2,8 @@
 import json, socket, subprocess, sys, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from util import nuevo_contexto
 
 RAIZ = Path(__file__).resolve().parents[2]
 fallos = 0
@@ -34,7 +36,7 @@ def main():
             br = pw.chromium.launch()
 
             def nueva(init=None):
-                ctx = br.new_context()
+                ctx = nuevo_contexto(br)
                 if init: ctx.add_init_script(init)
                 pg = ctx.new_page()
                 pg.on("pageerror", lambda e: (print("  pageerror:", e), errores_pagina.append(str(e))))

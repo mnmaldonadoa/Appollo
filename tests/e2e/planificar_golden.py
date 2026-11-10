@@ -4,6 +4,8 @@ Conduce la interfaz antigua (data-act) con Playwright a 360x740 y guarda las cif
 import json, socket, subprocess, sys, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from util import nuevo_contexto
 
 RAIZ = Path(__file__).resolve().parents[2]
 SALIDA = Path(__file__).with_name("planificar.golden.json")
@@ -105,7 +107,7 @@ def main():
         with sync_playwright() as pw:
             br = pw.chromium.launch()
             for c in CONFIGS:
-                ctx = br.new_context(viewport={"width": 360, "height": 740}, permissions=["clipboard-read", "clipboard-write"])
+                ctx = nuevo_contexto(br, viewport={"width": 360, "height": 740}, permissions=["clipboard-read", "clipboard-write"])
                 pg = ctx.new_page()
                 r = capturar(pg, url, c)
                 out["configs"].append({"config": c, "esperado": r})

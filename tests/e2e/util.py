@@ -14,6 +14,15 @@ DESBORDE = "document.documentElement.scrollWidth > document.documentElement.clie
 SIN_NAN = "!/NaN|Infinity|undefined/.test(document.body.innerText)"
 
 
+# Contexto de navegador común: la hora local de la app (hoyLocal, "hoy", medianoche) no debe depender de la máquina que corre las pruebas.
+CTX = dict(timezone_id="America/Guayaquil", locale="es-EC")
+
+
+def nuevo_contexto(br, **kw):
+    """br.new_context con zona horaria America/Guayaquil y locale es-EC fijos (se puede sobrescribir con kw)."""
+    return br.new_context(**{**CTX, **kw})
+
+
 def libre():
     s = socket.socket(); s.bind(("127.0.0.1", 0)); p = s.getsockname()[1]; s.close(); return p
 

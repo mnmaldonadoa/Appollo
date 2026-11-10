@@ -50,14 +50,14 @@ node tests/run.js             # pruebas unitarias: cálculos, alertas, validaci�
 python3 tests/e2e/todo.py     # recorrido completo, sin conexión, claro y oscuro, objetivos táctiles
 ```
 
-Las demás pruebas de extremo a extremo (`tests/e2e/lotes.py`, `registro.py`, `alertas.py`, `reportes.py`, `planificar.py`, `planificar_golden.py`, `db.py`, `visual.py`) se ejecutan igual: `python3 tests/e2e/<nombre>.py`. Cada una levanta su propio servidor `http.server` sobre `dist/` (el service worker y IndexedDB necesitan `http`, no `file://`) y usa un teléfono de 360×740. `visual.py` necesita antes `python3 build.py --kit`.
+Las demás pruebas de extremo a extremo (`tests/e2e/lotes.py`, `registro.py`, `alertas.py`, `reportes.py`, `planificar.py`, `planificar_golden.py`, `db.py`, `migracion.py`, `visual.py`) se ejecutan igual: `python3 tests/e2e/<nombre>.py`. Cada una levanta su propio servidor `http.server` sobre `dist/` (el service worker y IndexedDB necesitan `http`, no `file://`) y usa un teléfono de 360×740. `visual.py` necesita antes `python3 build.py --kit`.
 
 Reglas que las pruebas vigilan: ningún botón o campo de menos de 56 px de alto, sin desborde horizontal ni en claro ni en oscuro, contraste de texto de al menos 7:1, cero errores de consola y la app completa sin conexión. Para esperar un resultado asíncrono (una escritura en la base) usa `esperar()` de `tests/e2e/util.py`; no uses `wait_for_function` con un predicado que devuelva una Promesa.
 
 ## PWA y uso sin conexión
 
-- La primera vez la app debe abrirse desde una dirección `https` (o `http://localhost`). El service worker guarda `index.html`, el manifest, los íconos y las cuatro tipografías en el caché `appollo-v3`; desde entonces abre sin internet y los datos se escriben en el teléfono.
-- Al cambiar algo que se precarga, sube el número de `CACHE` en `src/sw.js` para que los teléfonos descarguen la versión nueva.
+- La primera vez la app debe abrirse desde una dirección `https` (o `http://localhost`). El service worker guarda `index.html`, el manifest, los íconos y las cuatro tipografías en el caché `appollo-v4`; desde entonces abre sin internet y los datos se escriben en el teléfono.
+- **Sube el número de `CACHE` en `src/sw.js` en cada versión que publiques** (`appollo-v4` → `appollo-v5`…): sin eso los teléfonos que ya instalaron la app siguen con los archivos viejos. La instalación del service worker descarga los archivos con `cache: 'reload'`, así que nunca guarda copias viejas del caché HTTP.
 - La barra de estado y la pantalla de arranque usan el color crema de la app (`#F6F1E7`; `#121A14` en modo oscuro).
 - Si el navegador no deja guardar datos (modo privado), aparece un aviso y conviene exportar un respaldo desde **Ajustes**.
 
@@ -78,6 +78,22 @@ El proyecto incluye Capacitor (`android/`) y el flujo `.github/workflows/android
 3. Descarga **Appollo-apk** de *Artifacts*: dentro está `app-debug.apk`. Cópialo al teléfono e instálalo (permite "instalar apps desconocidas").
 
 Para Play Store se necesita un APK/AAB firmado (*release*) con tu propia llave. Como alternativa rápida, con la app publicada en `https` puedes usar pwabuilder.com y descargar el paquete Android.
+
+## Limitaciones conocidas
+
+- **Respaldo en la app instalada (Android):** el WebView no puede guardar archivos desde la página, así que ahí **Exportar respaldo** muestra el texto para **Copiar respaldo** (pegar en notas o enviártelo) y se recupera con **Pegar respaldo**. En el navegador sí se descarga un `.json`. Un plugin nativo de archivos (p. ej. Filesystem/Share de Capacitor) requeriría cambiar el proyecto Android.
+- Las proyecciones guardadas en la versión 1 pasan a **Lotes cerrados** con su edad y un botón **Abrir en Planificador**; no tienen registros ni vacunas.
+- Borrar un lote borra también sus registros y vacunas y no se puede deshacer (pide confirmación); no devuelve el alimento descontado del inventario.
+- No hay deslizar para borrar (se borra con botón).
+- Solo se registra el día de hoy: no hay registro de días pasados.
+- No se pueden registrar vacunas no previstas en el calendario.
+- El costo de los ítems del inventario se guarda pero aún no se usa en Reportes.
+- La alerta de "sin registro" no tiene el atajo **Registrar**.
+- Para doble propósito, la elección de huevos o carne es una sola por lote.
+- Los precios viven en dos lugares (Ajustes y los del Planificador).
+- El margen superior de pantalla usa `:has()` (Chrome 105 o más); en un WebView más viejo aparece un poco de espacio extra arriba.
+- Los colores del ícono de Android (`ic_launcher_background.xml`) los ajusta quien genera el APK.
+- Un respaldo con una genética desconocida se importa, pero el lote queda sin genética y sin alertas.
 
 ## Sobre los datos
 

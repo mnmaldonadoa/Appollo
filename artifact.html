@@ -490,7 +490,10 @@ button { cursor: pointer; }
 .dl-vac-hecha { background: var(--superficie-2); }
 .dl-hechas summary { display: flex; align-items: center; min-height: 56px; padding: 0 4px; font-weight: 700; color: var(--primario); cursor: pointer; }
 .dl-cierre { display: grid; gap: 12px; margin-top: 12px; padding-top: 16px; border-top: 1px dashed var(--linea-fuerte); }
-.dl-confirmar { display: grid; gap: 12px; padding: 14px; border-radius: var(--r); background: var(--huevo-suave); color: var(--texto); }
+.dl-plan, .dl-borrar-lote { display: grid; gap: 12px; margin-top: 12px; }
+.dl-borrar-lote-btn { color: var(--alerta); border-color: var(--alerta); }
+.dl-confirmar, .dl-confirmar-borrar { display: grid; gap: 12px; padding: 14px; border-radius: var(--r); background: var(--huevo-suave); color: var(--texto); }
+.dl-confirmar-borrar[hidden], .dl-borrar-lote-btn[hidden] { display: none; }
 h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 700; letter-spacing: 0; }
 
 /* ---- Alertas e inventario (tarea 7) ---- */
@@ -531,6 +534,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .aj-campo-error { border-color: var(--alerta-viva); }
 .aj-ok { color: var(--ok); font-weight: 700; }
 .aj-acerca { text-align: center; color: var(--secundario); padding: 8px 0 16px; }
+.aj-respaldo-texto { min-height: 160px; max-height: 32vh; font-size: .875rem; word-break: break-all; }
 .aj-oculto { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
 /* ---- Planificar (tarea 9) ---- */
@@ -1885,6 +1889,7 @@ function alertaVacunas(datos, hoy) {
 function alertaMortalidad(datos, hoy) {
   const out = [];
   for (const l of _activos(datos.lotes)) {
+    if (!GENETICAS.some(g => g.id === l.genetica)) continue; // genética desconocida (respaldo manipulado, lote migrado): sin estándar, sin alerta
     const muertes = datos.registros.filter(r => r.loteId === l.id && r.tipo === 'mortalidad' && r.fecha === hoy)
       .reduce((s, r) => s + (Number(r.datos && r.datos.cantidad) || 0), 0);
     if (!muertes) continue;
@@ -2114,7 +2119,25 @@ const DB = (function () {
       if (!j.datos[k].every(o => o && typeof o === 'object' && !Array.isArray(o) && idValido(o.id)))
         return { error: 'Hay registros inválidos en "' + k + '" (cada uno debe tener un id de texto o número).' };
     }
-    return { datos: j.datos };
+    return { datos: normalizar(j.datos) };
+  }
+
+  /* Normaliza un respaldo ya validado: ids a texto (las rutas #/lote/5 y la edición del inventario comparan con
+     cadenas) y genética desconocida a null (se conserva en geneticaOriginal; las alertas y vistas la omiten). */
+  function normalizar(datos) {
+    const sid = v => (v === undefined || v === null ? v : String(v));
+    const out = {};
+    for (const s of Object.keys(datos)) out[s] = datos[s].map(o => Object.assign({}, o, { id: String(o.id) }));
+    (out.registros || []).forEach(r => {
+      r.loteId = sid(r.loteId);
+      if (r.datos && typeof r.datos === 'object' && r.datos.planId !== undefined && r.datos.planId !== null) r.datos = Object.assign({}, r.datos, { planId: String(r.datos.planId) });
+    });
+    (out.vacunasPlan || []).forEach(v => { v.loteId = sid(v.loteId); });
+    (out.lotes || []).forEach(l => {
+      const conocida = typeof l.genetica === 'string' && typeof GENETICAS !== 'undefined' && GENETICAS.some(g => g.id === l.genetica);
+      if (!conocida && l.genetica !== null && l.genetica !== undefined) { l.geneticaOriginal = l.genetica; l.genetica = null; }
+    });
+    return out;
   }
 
   async function importar(texto) {
@@ -2138,15 +2161,22 @@ const DB = (function () {
       const aves = Number(est.aves !== undefined ? est.aves : (e.avesInicio !== undefined ? e.avesInicio : e.aves));
       let gNombre = gid;
       try { const g = typeof GENETICAS !== 'undefined' && GENETICAS.find(x => x.id === gid); if (g) gNombre = g.nombre; } catch (x) { /* sin catálogo */ }
-      const fecha = typeof e.fecha === 'string' ? e.fecha.slice(0, 10) : '';
+      // v1 guardó la fecha con toISOString (UTC): se convierte al día local para que no se corra un día.
+      const d = new Date(e.fecha);
+      const fecha = e.fecha && !isNaN(d.getTime()) && typeof hoyLocal === 'function' ? hoyLocal(d) : (typeof e.fecha === 'string' ? e.fecha.slice(0, 10) : '');
       // Fecha de llegada siempre válida: si la entrada vieja no trae una, se usa hoy (nunca null).
       const llegada = typeof fechaValida === 'function' && fechaValida(fecha) ? fecha : (typeof hoyLocal === 'function' ? hoyLocal() : new Date().toISOString().slice(0, 10));
       const nombre = [gNombre || 'Lote anterior', fecha].filter(Boolean).join(' · ');
-      await guardar('lotes', {
+      // Edad que tenían las aves en el plan v1: estado.edad en semanas o días según estado.unidad (por omisión semanas).
+      const ed = est.edad === null || est.edad === '' || est.edad === undefined ? NaN : Number(est.edad);
+      const edadDias = isFinite(ed) && ed >= 0 ? Math.round(est.unidad === 'dias' ? ed : ed * 7) : 0;
+      const lote = {
         id: 'ls-' + (e.id !== undefined ? e.id : nuevoId()),
         nombre, genetica: gid, avesInicio: isFinite(aves) ? aves : 0,
-        fechaLlegada: llegada, edadLlegadaDias: 0, estado: 'cerrado', origen: 'v1', resumen: e.resumen || ''
-      });
+        fechaLlegada: llegada, edadLlegadaDias: edadDias, estado: 'cerrado', fechaCierre: llegada, origen: 'v1', resumen: e.resumen || ''
+      }; // cerrado el día del guardado: la edad que muestra es la del plan y no crece con los días
+      if (e.estado && typeof e.estado === 'object' && gid) lote.planV1 = copia(e.estado); // para "Abrir en Planificador"
+      await guardar('lotes', lote);
       n++;
     }
     // En modo memoria los datos no persisten: no se marca la migración para reintentarla tras recargar.
@@ -2443,16 +2473,23 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
       `<button type="button" class="segmento-btn" data-accion="aj-tema" data-tema="${id}" aria-pressed="${id === tema}">${t}</button>`).join('')}</div>
   </div>
   <div class="aj-seccion"><h2>Respaldo de datos</h2>
-    <p class="aj-nota">Guarda una copia de todos tus lotes y registros en un archivo, o recupérala en otro teléfono.</p>
+    <p class="aj-nota">Guarda una copia de todos tus lotes y registros (en un archivo, o copiándola como texto), o recupérala en otro teléfono.</p>
     ${Boton({ texto: 'Exportar respaldo', icono: 'sig', variante: 'primario', accion: 'aj-exportar', clase: 'btn-ancho' })}
     ${puedeCompartir ? Boton({ texto: 'Compartir respaldo', icono: 'copiar', variante: 'secundario', accion: 'aj-compartir-respaldo', clase: 'btn-ancho' }) : ''}
     ${Boton({ texto: 'Importar respaldo', icono: 'atras', variante: 'secundario', accion: 'aj-importar', clase: 'btn-ancho' })}
+    ${Boton({ texto: 'Pegar respaldo', icono: 'copiar', variante: 'secundario', accion: 'aj-pegar', clase: 'btn-ancho' })}
     <input class="aj-oculto" id="aj-archivo" type="file" accept=".json,application/json" tabindex="-1" aria-label="Archivo de respaldo">
     <p id="aj-respaldo-msg" role="alert" hidden></p>
   </div>
   <p class="aj-acerca">Appollo · versión ${esc(APP_VERSION)}</p>
 </section>`;
   };
+
+  function confirmarImportar() {
+    App.abrirHoja({ titulo: '¿Importar respaldo?', contenido: `<div class="aj-confirmar">
+  <p>Esto reemplaza todos los datos de este teléfono.</p>
+  <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'aj-cancelar-importar' })}${Boton({ texto: 'Reemplazar', variante: 'peligro', accion: 'aj-reemplazar' })}</div></div>` });
+  }
 
   VISTAS.ajustes.montar = function (raiz) {
     const f = raiz.querySelector('#aj-archivo');
@@ -2462,9 +2499,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
       try { textoRespaldo = await a.text(); } catch (e) { textoRespaldo = null; msg('aj-respaldo-msg', 'No se pudo leer el archivo.'); f.value = ''; return; }
       f.value = '';
       msg('aj-respaldo-msg', '');
-      App.abrirHoja({ titulo: '¿Importar respaldo?', contenido: `<div class="aj-confirmar">
-  <p>Esto reemplaza todos los datos de este teléfono.</p>
-  <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'aj-cancelar-importar' })}${Boton({ texto: 'Reemplazar', variante: 'peligro', accion: 'aj-reemplazar' })}</div></div>` });
+      confirmarImportar();
     });
   };
 
@@ -2515,16 +2550,66 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
 
   const nombreArchivo = () => `appollo-respaldo-${hoyLocal()}.json`;
 
+  /* En el WebView de Capacitor (la app instalada) `a.download` con un blob no hace nada: ahí el respaldo se
+     muestra en una hoja para copiarlo. Nunca se avisa de éxito sin que haya ocurrido. */
+  const esNativo = () => { try { return !!(window.Capacitor && typeof Capacitor.isNativePlatform === 'function' && Capacitor.isNativePlatform()); } catch (e) { return false; } };
+
+  async function copiarTexto(ta) {
+    try { await navigator.clipboard.writeText(ta.value); return true; } catch (e) { /* respaldo: seleccionar y copiar */ }
+    try { ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); return !!document.execCommand('copy'); } catch (e) { return false; }
+  }
+
+  function hojaRespaldo(json) {
+    App.abrirHoja({ titulo: 'Copiar respaldo', contenido: `<div class="aj-confirmar">
+  <p>Esta app no puede guardar archivos en el teléfono. Toca <b>Copiar respaldo</b> y pégalo en tus notas o envíalo a ti mismo (WhatsApp, correo). Para recuperarlo, en Ajustes usa <b>Pegar respaldo</b>.</p>
+  <textarea class="reg-texto rep-texto aj-respaldo-texto" id="aj-respaldo-texto" readonly aria-label="Texto del respaldo" spellcheck="false"></textarea>
+  <p id="aj-copia-msg" role="status" hidden></p>
+  ${Boton({ texto: 'Copiar respaldo', icono: 'copiar', variante: 'primario', accion: 'aj-copiar-respaldo', clase: 'btn-ancho btn-grande' })}</div>` });
+    const ta = document.getElementById('aj-respaldo-texto');
+    if (ta) ta.value = json;
+  }
+
+  ACCIONES['aj-copiar-respaldo'] = async () => {
+    const ta = document.getElementById('aj-respaldo-texto'), m = document.getElementById('aj-copia-msg');
+    if (!ta || !m) return;
+    const ok = await copiarTexto(ta);
+    m.hidden = false;
+    m.classList.toggle('aj-ok', ok); m.classList.toggle('reg-error', !ok);
+    m.textContent = ok ? 'Respaldo copiado. Pégalo en tus notas o envíatelo: sin esa copia, tus datos solo viven en este teléfono.'
+      : 'No se pudo copiar solo. El texto quedó seleccionado: mantén pulsado y elige Copiar.';
+    if (!ok) { try { ta.focus(); ta.select(); } catch (e) { /* sin foco */ } }
+  };
+
   ACCIONES['aj-exportar'] = async () => {
+    let json;
+    try { json = await DB.exportar(); } catch (e) { msg('aj-respaldo-msg', 'No se pudo crear el respaldo.'); return; }
+    if (esNativo()) { msg('aj-respaldo-msg', ''); hojaRespaldo(json); return; }
     try {
-      const url = URL.createObjectURL(new Blob([await DB.exportar()], { type: 'application/json' }));
+      const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
       const a = document.createElement('a');
       a.href = url; a.download = nombreArchivo(); a.style.display = 'none';
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 4000);
-      msg('aj-respaldo-msg', 'Respaldo descargado', true);
+      msg('aj-respaldo-msg', 'Respaldo descargado', true); // el clic ya se envió al navegador
       App.toast('Respaldo descargado');
     } catch (e) { msg('aj-respaldo-msg', 'No se pudo crear el respaldo.'); }
+  };
+
+  ACCIONES['aj-pegar'] = () => {
+    msg('aj-respaldo-msg', '');
+    App.abrirHoja({ titulo: 'Pegar respaldo', contenido: `<div class="aj-confirmar">
+  <p>Pega aquí el texto del respaldo que copiaste antes.</p>
+  <textarea class="reg-texto rep-texto aj-respaldo-texto" id="aj-pegado" spellcheck="false" aria-label="Texto del respaldo" aria-describedby="aj-pegado-msg"></textarea>
+  <p id="aj-pegado-msg" class="reg-error" role="alert" hidden></p>
+  <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'aj-cancelar-importar' })}${Boton({ texto: 'Revisar', variante: 'primario', accion: 'aj-pegar-revisar' })}</div></div>` });
+  };
+
+  ACCIONES['aj-pegar-revisar'] = () => {
+    const ta = document.getElementById('aj-pegado'), m = document.getElementById('aj-pegado-msg');
+    const t = ta ? ta.value.trim() : '';
+    if (!t) { if (m) { m.hidden = false; m.textContent = 'Pega primero el texto del respaldo.'; } if (ta) ta.focus(); return; }
+    textoRespaldo = t;
+    confirmarImportar();
   };
 
   ACCIONES['aj-compartir-respaldo'] = async () => {
@@ -2805,11 +2890,18 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   ${pend.length > 3 ? `<details class="dl-hechas"><summary>Siguientes vacunas (${formatoNumero(pend.length - 3)})</summary><ul class="dl-lista">${pend.slice(3).map(v => vacunaHtml(v, hoy, activo)).join('')}</ul></details>` : ''}
   ${hechas.length ? `<details class="dl-hechas"><summary>Aplicadas (${formatoNumero(hechas.length)})</summary><ul class="dl-lista">${hechas.map(v => vacunaHtml(v, hoy, activo)).join('')}</ul></details>` : ''}`
     : '<p class="pantalla-texto">Este lote no tiene vacunas previstas.</p>'}
+  ${l.planV1 ? `<div class="dl-plan"><p class="pantalla-texto">Este lote viene de una proyección guardada en la versión 1 de Appollo.</p>
+  ${Boton({ texto: 'Abrir en Planificador', icono: 'grafico', variante: 'secundario', accion: 'dl-abrir-plan', datos: { id: l.id }, clase: 'btn-ancho' })}</div>` : ''}
   <div class="dl-cierre">
   ${activo ? `${Boton({ texto: 'Cerrar lote', variante: 'secundario', accion: 'dl-cerrar', clase: 'btn-ancho dl-cerrar' })}
   <div class="dl-confirmar" hidden><p><b>¿Cerrar este lote?</b> Ya no aparecerá en Inicio ni en el registro rápido. Sus datos se conservan y puedes reabrirlo.</p>
     <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'dl-cerrar-no' })}${Boton({ texto: 'Sí, cerrar lote', variante: 'peligro', accion: 'dl-cerrar-si', datos: { id: l.id } })}</div></div>`
     : Boton({ texto: 'Reabrir lote', variante: 'primario', accion: 'dl-reabrir', datos: { id: l.id }, clase: 'btn-ancho' })}
+  </div>
+  <div class="dl-borrar-lote">
+  ${Boton({ texto: 'Borrar lote', icono: 'cruz', variante: 'secundario', accion: 'dl-borrar-lote', clase: 'btn-ancho dl-borrar-lote-btn' })}
+  <div class="dl-confirmar-borrar" hidden><p><b>¿Borrar este lote?</b> Se borran también sus ${formatoNumero(regs.length)} registros y ${formatoNumero(vacs.length)} vacunas. No se puede deshacer.</p>
+    <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'dl-borrar-lote-no' })}${Boton({ texto: 'Sí, borrar lote', variante: 'peligro', accion: 'dl-borrar-lote-si', datos: { id: l.id } })}</div></div>
   </div>
 </section>`;
   };
@@ -2891,6 +2983,43 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
       if (cerrar && lsPrevio === id) App.fijarLote(id);
     });
   }
+  /* Borrar lote (con confirmación): también sirve para los lotes migrados de la v1. */
+  const confirmarBorrar = ver => {
+    const c = document.querySelector('#view .dl-confirmar-borrar'), b = document.querySelector('#view .dl-borrar-lote-btn');
+    if (!c || !b) return;
+    c.hidden = !ver; b.hidden = ver;
+    const foco = ver ? c.querySelector('[data-accion=dl-borrar-lote-no]') : b;
+    try { foco.focus({ preventScroll: true }); } catch (e) { /* sin foco */ }
+    if (ver) c.scrollIntoView({ block: 'nearest' });
+  };
+  ACCIONES['dl-borrar-lote'] = () => confirmarBorrar(true);
+  ACCIONES['dl-borrar-lote-no'] = () => confirmarBorrar(false);
+  ACCIONES['dl-borrar-lote-si'] = async el => {
+    el.disabled = true;
+    const id = el.dataset.id;
+    try {
+      const [regs, vacs] = await Promise.all([DB.listar('registros', { loteId: id }), DB.listar('vacunasPlan', { loteId: id })]);
+      for (const r of regs) await DB.borrar('registros', r.id);
+      for (const v of vacs) await DB.borrar('vacunasPlan', v.id);
+      await DB.borrar('lotes', id);
+      if (App.estado.loteActivoId === id) App.fijarLote(null);
+    } catch (e) { el.disabled = false; App.toast('No se pudo borrar. Intenta de nuevo.'); return; }
+    App.toast('Lote borrado');
+    App.actualizarAlertas();
+    App.ir('#/lotes');
+  };
+
+  /* Restaura en el Planificador la proyección que el lote guardó en la v1 (mismo estado que usa el Planificador). */
+  ACCIONES['dl-abrir-plan'] = async el => {
+    const l = await DB.obtener('lotes', el.dataset.id);
+    if (!l || !l.planV1 || typeof PlanEstado === 'undefined') return;
+    const P = PlanEstado;
+    Object.assign(P.S, P.BASE, { filtro: P.S.filtro }, copia(l.planV1));
+    if (!Array.isArray(P.S.sel)) P.S.sel = [];
+    P.guardar();
+    App.ir(P.loteValido() ? '#/plan/proyeccion' : '#/plan/genetica');
+  };
+
   ACCIONES['dl-cerrar-si'] = el => { el.disabled = true; return cambiarEstado(el.dataset.id, true); };
   ACCIONES['dl-reabrir'] = el => { el.disabled = true; return cambiarEstado(el.dataset.id, false); };
 })();
@@ -4473,6 +4602,7 @@ ${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'reg-cancelar-dup',
         .sort((a, b) => String(a.creado || '').localeCompare(String(b.creado || '')))[0];
       if (ex) { preguntar(ex); return; }
     }
+    App.ocultarToast(); // el Deshacer del guardado anterior ya no vale: borraría datos sumados después
     st.guardando = true;
     const cuerpo = $h('.hoja-cuerpo');
     if (cuerpo) cuerpo.querySelectorAll('button, input, select').forEach(b => { b.disabled = true; });
@@ -4893,7 +5023,7 @@ const App = (function () {
     actualizarAlertas();
   }
 
-  return { ir, estado, refrescar, toast, actualizarAlertas, abrirHoja, cerrarHoja, hojaAbierta, fijarLote, arrancar };
+  return { ir, estado, refrescar, toast, ocultarToast, actualizarAlertas, abrirHoja, cerrarHoja, hojaAbierta, fijarLote, arrancar };
 })();
 
 App.arrancar();

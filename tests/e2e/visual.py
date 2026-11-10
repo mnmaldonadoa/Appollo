@@ -4,6 +4,8 @@ y oscuro (colores calculados de elementos reales del kit) y movimiento reducido.
 import socket, subprocess, sys, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from util import nuevo_contexto
 
 RAIZ = Path(__file__).resolve().parents[2]
 fallos = 0
@@ -60,7 +62,7 @@ def main():
             br = pw.chromium.launch()
 
             def nueva(**opc):
-                ctx = br.new_context(viewport={"width": 360, "height": 740}, **opc)
+                ctx = nuevo_contexto(br, viewport={"width": 360, "height": 740}, **opc)
                 ctx.add_init_script(JS_COLOR)
                 pg = ctx.new_page()
                 pg.on("pageerror", lambda e: (print("  pageerror:", e), errores_pagina.append(str(e))))

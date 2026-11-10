@@ -45,7 +45,7 @@ def main():
             print("FAIL el servidor http no arrancó"); sys.exit(1)
         with sync_playwright() as pw:
             br = pw.chromium.launch()
-            ctx = br.new_context(viewport={"width": 360, "height": 740})
+            ctx = U.nuevo_contexto(br, viewport={"width": 360, "height": 740})
             ctx.clock.set_fixed_time("2026-11-04T10:00:00")   # fecha fija; los temporizadores siguen en tiempo real
             pg = ctx.new_page()
             pg.on("pageerror", lambda e: errores.append("pageerror: " + str(e)))
@@ -172,7 +172,7 @@ def main():
             ir("#/inicio"); registrar_kg(50)
             inv_es(aid, 8.75)
             check("50 kg bajan 1,25 sacos (de 10 a 8,75)", pg.evaluate(INV, aid)["cantidad"] == 8.75)
-            pg.click("#toast [data-accion=deshacer]"); pg.wait_for_timeout(300)
+            pg.click("#toast [data-accion=deshacer]"); inv_es(aid, 10)
             pg.wait_for_selector("#toast", state="hidden", timeout=8000)
 
             # ---------- 6. Solo un vínculo + Entrada + Bajo ----------
@@ -276,12 +276,14 @@ def main():
             check("sin vínculo no guarda descontadoKg", "descontadoKg" not in pg.evaluate(REGS, "alimento")[0]["datos"])
             poner(20, vinculo=True)
             ir(f"#/lote/{lid}"); pg.click("#view .dl-borrar >> nth=0")
-            pg.wait_for_selector("#toast:not([hidden])"); pg.wait_for_timeout(300)
+            pg.wait_for_selector("#toast:not([hidden])")
+            esperar("() => DB.listar('registros').then(r => r.filter(x => x.tipo === 'alimento').length === 0)")  # el borrado terminó de verdad
+            pg.wait_for_timeout(100)  # margen corto: si el borrado tocara el stock, ya lo habría hecho
             check("borrar un registro creado antes del vínculo no cambia el stock", stock() == 20 and len(pg.evaluate(REGS, "alimento")) == 0, stock())
             pg.wait_for_selector("#toast", state="hidden", timeout=8000)
 
             # ---------- 10. A las 19:00: aviso 'sin registro' no suma al contador ----------
-            ctx2 = br.new_context(viewport={"width": 360, "height": 740}); ctx2.clock.set_fixed_time("2026-11-04T19:00:00")
+            ctx2 = U.nuevo_contexto(br, viewport={"width": 360, "height": 740}); ctx2.clock.set_fixed_time("2026-11-04T19:00:00")
             p2 = ctx2.new_page(); p2.on("pageerror", lambda e: errores.append("pageerror: " + str(e)))
             p2.on("console", lambda m: m.type == "error" and errores.append("console: " + m.text))
             p2.goto(url); p2.wait_for_selector("#view .pantalla")

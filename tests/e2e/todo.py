@@ -6,7 +6,7 @@ import re, sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from util import RAIZ, CHICOS, DESBORDE, SIN_NAN, servidor, esperar, cumple
+from util import RAIZ, CHICOS, DESBORDE, SIN_NAN, servidor, esperar, cumple, nuevo_contexto
 
 fallos = 0
 errores = []
@@ -29,7 +29,7 @@ def main():
     precache = re.findall(r"'\./([^']*)'", (RAIZ / "dist/sw.js").read_text(encoding="utf-8").split("ARCHIVOS")[1].split("];")[0])
     with servidor() as url, sync_playwright() as pw:
         br = pw.chromium.launch()
-        ctx = br.new_context(viewport={"width": 360, "height": 740})
+        ctx = nuevo_contexto(br, viewport={"width": 360, "height": 740})
         pg = ctx.new_page()
         pg.on("pageerror", lambda e: errores.append("pageerror: " + str(e)))
         pg.on("console", lambda m: m.type in ("error", "warning") and errores.append(f"console {m.type}: " + m.text))
@@ -152,10 +152,10 @@ def main():
         # ---------- 6. Sin conexión ----------
         pg.evaluate("navigator.serviceWorker.ready.then(() => 0)")
         esperar(pg, "navigator.serviceWorker.controller !== null", 8000)
-        faltan = pg.evaluate("""async lista => { const c = await caches.open('appollo-v3'); const ks = (await c.keys()).map(r => new URL(r.url).pathname);
+        faltan = pg.evaluate("""async lista => { const c = await caches.open('appollo-v4'); const ks = (await c.keys()).map(r => new URL(r.url).pathname);
             return lista.filter(p => !ks.includes('/' + p)); }""", [p for p in precache if p])
         check("el service worker precargó todos los archivos (fuentes, íconos, manifest)", not faltan and len(precache) >= 10, faltan)
-        check("el caché 'appollo-v3' es el único", pg.evaluate("caches.keys()") == ["appollo-v3"], pg.evaluate("caches.keys()"))
+        check("el caché 'appollo-v4' es el único", pg.evaluate("caches.keys()") == ["appollo-v4"], pg.evaluate("caches.keys()"))
         ctx.set_offline(True)
         pg.reload(); pg.wait_for_selector("#view .pantalla, #view .vista-error", timeout=8000)
         check("sin conexión: la app carga desde el service worker", pg.locator("#view .vista-error").count() == 0 and pg.title() == "Appollo")

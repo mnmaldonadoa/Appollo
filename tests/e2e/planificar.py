@@ -12,6 +12,8 @@ Así "55.961 huevos" == "55.961huevos" == "55961huevos" y "36,8 %" == "36.8%". L
 import json, re, socket, subprocess, sys, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from util import nuevo_contexto
 
 RAIZ = Path(__file__).resolve().parents[2]
 SDD = RAIZ / ".superpowers/sdd/2026-11-03-appollo-gestion"
@@ -83,7 +85,7 @@ def main():
             br = pw.chromium.launch()
 
             def nueva(ruta="#/plan/genetica", **opc):
-                ctx = br.new_context(viewport={"width": 360, "height": 740},
+                ctx = nuevo_contexto(br, viewport={"width": 360, "height": 740},
                                      permissions=["clipboard-read", "clipboard-write"], **opc)
                 pg = ctx.new_page()
                 pg.on("pageerror", lambda e: errores.append("pageerror: " + str(e)))

@@ -4,7 +4,7 @@ import json, socket, subprocess, sys, tempfile, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from util import esperar
+from util import esperar, nuevo_contexto
 
 RAIZ = Path(__file__).resolve().parents[2]
 SDD = RAIZ / ".superpowers/sdd/2026-11-03-appollo-gestion"
@@ -43,7 +43,7 @@ def main():
             print("FAIL el servidor http no arrancó"); sys.exit(1)
         with sync_playwright() as pw:
             br = pw.chromium.launch()
-            ctx = br.new_context(viewport={"width": 360, "height": 740}, accept_downloads=True)
+            ctx = nuevo_contexto(br, viewport={"width": 360, "height": 740}, accept_downloads=True)
             ctx.grant_permissions(["clipboard-read", "clipboard-write"])
             ctx.clock.set_fixed_time("2026-11-04T10:00:00")
             ctx.add_init_script("document.addEventListener('DOMContentLoaded', () => { window.__temaDCL = document.documentElement.getAttribute('data-tema'); });")
