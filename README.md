@@ -1,67 +1,83 @@
-# Appollo · Manejo de gallinas por genética
+# Appollo 2 · Gestión de gallinas por genética
 
-Aplicación móvil que funciona **sin internet**. El usuario elige la genética, ingresa la edad y los datos del lote, marca las prácticas de manejo que va a aplicar y obtiene la proyección de huevos o carne.
+Aplicación móvil (PWA) que funciona **sin internet**. Sirve para llevar el día a día de la granja y, además, para planificar un lote antes de comprarlo.
 
-## Flujo
+- **Gestión diaria:** crea tus lotes y registra en pocos toques la mortalidad, el alimento, los huevos, el peso, las vacunas y los problemas de sanidad. Appollo calcula el estado de cada lote (aves vivas, % de postura, mortalidad frente al estándar de la genética) y avisa lo que toca hacer.
+- **Planificar:** elige la genética, la edad, las aves y la altitud, marca las prácticas de manejo y obtén la proyección de huevos o carne. Con **Crear lote con este plan** pasas directo al alta de un lote con esos datos.
+- Todo se guarda en el teléfono (IndexedDB). Nada sale del dispositivo salvo el respaldo que tú compartas.
 
-1. **Genética** · 11 líneas: Hy-Line Brown, Lohmann Brown-Classic, ISA Brown, Hisex Brown, Lohmann LSL-Classic, Cobb 500, Ross 308, pollo campero, Rhode Island Red, Plymouth Rock Barrada y gallina criolla.
-2. **Lote** · edad (días o semanas), número de aves, altitud y un dato real opcional (% de postura o peso actual).
-3. **Manejo** · alimentación, temperatura y ambiente, humedad, agua, vitaminas, vacunas, control sanitario, remedios caseros y control químico, todo ajustado a la fase de edad. Cada práctica se marca o desmarca y el índice de manejo se actualiza al instante.
-4. **Proyección** · huevos (total, cubetas de 30, pico, peso del huevo, alimento por docena, conversión) o carne (peso a la venta, kg en pie y de canal, conversión, viabilidad, IEP), gráfico frente al estándar de la genética, prácticas que más sumarían y margen sobre alimento.
-5. **Mis lotes** · las proyecciones se guardan en el teléfono.
+## Flujo de uso
+
+1. **Bienvenida** (primera vez): nombre de la granja y qué aves crías.
+2. **Nuevo lote** en 3 pasos: genética, aves y edad (o fecha de llegada), altitud y galpón. Se genera el calendario de vacunas del lote.
+3. **Inicio:** tarjetas con aves vivas, mortalidad, producción, alimento y estado sanitario; botón central **Registrar** disponible en toda la app.
+4. **Registrar** (hoja inferior): mortalidad, alimento, huevos, peso, vacuna o sanidad en 3 toques o menos, con **Deshacer**.
+5. **Lotes** y **detalle del lote:** historial, gráfica frente al estándar, vacunas pendientes, cerrar o reabrir el lote.
+6. **Alertas:** mortalidad alta, atraso de registros, vacunas, retiros, cambio de fase e inventario bajo. La insignia de la barra cuenta las urgentes.
+7. **Más:** Inventario (el alimento registrado descuenta del stock), Reportes (resumen por periodo, copiar o compartir), Planificar y Ajustes (granja, precios, tema claro/oscuro, respaldo y restauración).
 
 ## Estructura
 
 ```
 src/
-  data.js      Base de datos técnica: genéticas, vacunas, enfermedades y remedios (editar aquí)
-  model.js     Fases, recomendaciones por edad y modelo de proyección
-  app.js       Pantallas e interacción
-  styles.css   Diseño (tema claro y oscuro)
-  body.html    Íconos y contenedor de la app
-  sw.js        Service worker: guarda la app para usarla sin internet
-build.py       Une todo en dist/
-dist/          App lista para publicar (index.html, manifest, sw.js, íconos)
+  data.js        Base técnica: genéticas, vacunas, enfermedades y remedios (editar aquí)
+  model.js       Fases, recomendaciones por edad y modelo de proyección
+  calc.js        Cálculos puros del lote: edad, aves vivas, % de postura, mortalidad, validación de registros, reportes
+  alertas.js     Reglas de las alertas (puro)
+  db.js          IndexedDB (con respaldo en memoria): listar, obtener, guardar, borrar, exportar e importar
+  app.js         Rutas (#/inicio, #/lotes, #/lote/ID, #/alertas, #/mas, #/inventario, #/reportes, #/ajustes, #/plan/...), hojas, toasts
+  ui/            Componentes, gráficos y animaciones propios; kit.js/kit.css es el muestrario visual
+  vistas/        Una pantalla por archivo (inicio, lotes, nuevoLote, detalleLote, registrar, alertas, inventario, reportes, ajustes, planificar*)
+  styles.css     Sistema visual: tokens de color, espacio y radios, tema claro y oscuro
+  body.html      Íconos (sprite SVG) y contenedores de la app
+  fonts/         Tipografías incluidas (Atkinson Hyperlegible, Zilla Slab): no se pide nada a internet
+  sw.js          Service worker: guarda la app para usarla sin conexión
+build.py         Une todo en dist/ y artifact.html
+tests/           Pruebas unitarias (Node) y de extremo a extremo (Python + Playwright)
+dist/            App lista para publicar (index.html, manifest, sw.js, fuentes, íconos)
+android/         Proyecto Capacitor para el APK
+docs/superpowers/  Especificación y plan de esta versión
 ```
 
-Para reconstruir después de editar `src/`: `python3 build.py` (requiere Python 3 y Pillow).
+## Construir y probar
 
-## Probar e instalar en el teléfono
+Requisitos: Python 3 con Pillow y Playwright (`pip install pillow playwright && playwright install chromium`) y Node 18 o más.
 
-La app es una PWA (aplicación web progresiva). Para que funcione sin internet debe abrirse una vez desde una dirección `https`:
+```
+python3 build.py              # genera dist/ y artifact.html
+python3 build.py --kit        # además dist/_kit.html (muestrario visual)
+node tests/run.js             # pruebas unitarias: cálculos, alertas, validación, inventario, reportes, componentes, planVacunas
+python3 tests/e2e/todo.py     # recorrido completo, sin conexión, claro y oscuro, objetivos táctiles
+```
+
+Las demás pruebas de extremo a extremo (`tests/e2e/lotes.py`, `registro.py`, `alertas.py`, `reportes.py`, `planificar.py`, `planificar_golden.py`, `db.py`, `visual.py`) se ejecutan igual: `python3 tests/e2e/<nombre>.py`. Cada una levanta su propio servidor `http.server` sobre `dist/` (el service worker y IndexedDB necesitan `http`, no `file://`) y usa un teléfono de 360×740. `visual.py` necesita antes `python3 build.py --kit`.
+
+Reglas que las pruebas vigilan: ningún botón o campo de menos de 56 px de alto, sin desborde horizontal ni en claro ni en oscuro, contraste de texto de al menos 7:1, cero errores de consola y la app completa sin conexión. Para esperar un resultado asíncrono (una escritura en la base) usa `esperar()` de `tests/e2e/util.py`; no uses `wait_for_function` con un predicado que devuelva una Promesa.
+
+## PWA y uso sin conexión
+
+- La primera vez la app debe abrirse desde una dirección `https` (o `http://localhost`). El service worker guarda `index.html`, el manifest, los íconos y las cuatro tipografías en el caché `appollo-v3`; desde entonces abre sin internet y los datos se escriben en el teléfono.
+- Al cambiar algo que se precarga, sube el número de `CACHE` en `src/sw.js` para que los teléfonos descarguen la versión nueva.
+- La barra de estado y la pantalla de arranque usan el color crema de la app (`#F6F1E7`; `#121A14` en modo oscuro).
+- Si el navegador no deja guardar datos (modo privado), aparece un aviso y conviene exportar un respaldo desde **Ajustes**.
+
+## Instalar en el teléfono
 
 1. Sube la carpeta `dist/` a un hosting gratuito (GitHub Pages, Netlify o Cloudflare Pages).
 2. Abre la dirección en Chrome del teléfono.
 3. Menú ⋮ → **Agregar a la pantalla principal** (o **Instalar app**).
-4. Desde ese momento abre sin conexión, como cualquier app.
 
 Para probar en la computadora: `cd dist && python3 -m http.server 8000` y abre `http://localhost:8000`.
 
-## Generar el APK con GitHub Actions (sin instalar nada)
+## Generar el APK
 
-El proyecto ya incluye Capacitor (`android/`) y el flujo `.github/workflows/android.yml`.
+El proyecto incluye Capacitor (`android/`) y el flujo `.github/workflows/android.yml`.
 
-1. Crea un repositorio en github.com y sube **todo el contenido de esta carpeta** (botón *Add file → Upload files*, o `git push`).
-2. Abre la pestaña **Actions**. El flujo "Compilar APK de Appollo" corre solo (unos 5 a 8 minutos). Si no, tócalo y pulsa *Run workflow*.
-3. Al terminar, entra a la ejecución y descarga **Appollo-apk** (abajo, en *Artifacts*). Dentro está `app-debug.apk`: cópialo al teléfono e instálalo (permite "instalar apps desconocidas").
+1. Reconstruye y sincroniza: `python3 build.py && npx cap sync android`.
+2. Sube el repositorio a GitHub. En la pestaña **Actions** corre "Compilar APK de Appollo" (5 a 8 minutos).
+3. Descarga **Appollo-apk** de *Artifacts*: dentro está `app-debug.apk`. Cópialo al teléfono e instálalo (permite "instalar apps desconocidas").
 
-Para Play Store se necesita un APK/AAB firmado (*release*) con tu propia llave; eso se agrega después.
-Si cambias algo en `src/`: `python3 build.py && npx cap sync android` y vuelve a subir.
-
-## Otras opciones de APK
-
-**Opción rápida · PWABuilder:** con la app ya publicada en `https`, entra a pwabuilder.com, pega la dirección y descarga el paquete Android (Trusted Web Activity).
-
-**Opción nativa · Capacitor** (permite cámara, notificaciones y acceso a archivos más adelante):
-
-```
-npm init -y
-npm install @capacitor/core @capacitor/cli @capacitor/android
-npx cap init Appollo ec.appollo.app --web-dir dist
-npx cap add android
-npx cap copy
-npx cap open android   # se compila el APK en Android Studio
-```
+Para Play Store se necesita un APK/AAB firmado (*release*) con tu propia llave. Como alternativa rápida, con la app publicada en `https` puedes usar pwabuilder.com y descargar el paquete Android.
 
 ## Sobre los datos
 
