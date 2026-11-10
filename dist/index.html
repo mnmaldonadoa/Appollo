@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Appollo</title>
 <meta name="description" content="Manejo de gallinas por genética y proyección de huevos o carne. Funciona sin internet.">
-<meta name="theme-color" content="#17201B">
+<meta name="theme-color" content="#F6F1E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121A14" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -34,6 +35,7 @@
   --r-s: 14px;
   --r: 20px;
   --r-l: 24px;
+  --r-xl: 28px;                 /* hoja inferior */
   /* escala de espacio (4/8) */
   --e1: 4px; --e2: 8px; --e3: 12px; --e4: 16px; --e5: 24px; --e6: 32px; --e7: 48px;
   --presion: .97;               /* escala al tocar; 1 con movimiento reducido */
@@ -124,7 +126,7 @@ p { margin: 0; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 3px solid var(--foco); outline-offset: 3px; }
-[tabindex="-1"]:focus-visible { outline: none; } /* contenedores con foco programático (vista, hoja) */
+#view:focus-visible, .hoja:focus-visible { outline: none; } /* contenedores con foco programático (vista, hoja) */
 .num { font-variant-numeric: tabular-nums lining-nums; }
 .solo-lector { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .ic { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
@@ -216,7 +218,7 @@ button { cursor: pointer; }
   position: relative; max-height: 88%; overflow: auto; overscroll-behavior: contain;
   width: 100%; max-width: 560px; margin: 0 auto;
   background: var(--superficie); color: var(--texto);
-  border-radius: 28px 28px 0 0; box-shadow: var(--sombra-alta);
+  border-radius: var(--r-xl) var(--r-xl) 0 0; box-shadow: var(--sombra-alta);
   padding: 8px 20px calc(24px + env(safe-area-inset-bottom, 0px));
   animation: subir 420ms var(--rebote) both;
 }
@@ -265,7 +267,7 @@ button { cursor: pointer; }
 .pantalla-entra { animation: entrar var(--dur) var(--curva) both; }
 
 /* ---------- Shell: vista, franjas, barra inferior, toast ---------- */
-.vista { display: block; overflow-x: clip; min-height: 100vh; min-height: 100dvh; padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); outline: none; }
+.vista { padding-top: env(safe-area-inset-top, 0px); display: block; overflow-x: clip; min-height: 100vh; min-height: 100dvh; padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); outline: none; }
 .vista-raiz { width: 100%; max-width: 640px; margin: 0 auto; }
 .pantalla { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--e4); padding: var(--e5) max(var(--e4), env(safe-area-inset-right)) var(--e2) max(var(--e4), env(safe-area-inset-left)); }
 .pantalla-texto { color: var(--secundario); }
@@ -671,8 +673,10 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .gen-opcion, .lote-item, .reg-opcion { box-shadow: var(--sombra-1); }
 .tarjeta, .lote-item { box-shadow: var(--sombra); }
 .lotes-cerrados .lote-item { box-shadow: none; }
-.hoja { border-radius: 28px 28px 0 0; border-top: 1px solid var(--linea); }
+.hoja { border-radius: var(--r-xl) var(--r-xl) 0 0; border-top: 1px solid var(--linea); }
 .reg-pregunta, .dl-confirmar, .rep-aviso { box-shadow: var(--sombra-1); }
+/* Con franja visible ella ya reserva la zona segura superior: no se duplica. */
+.franjas:has(.franja:not([hidden])) ~ .vista { padding-top: 0; }
 @media (min-width: 600px) { .pantalla { padding-top: var(--e6); } }
 
 </style>
@@ -2193,8 +2197,10 @@ function icono(nombre, clase) {
 
 /* Ilustraciones de pantalla vacía (diseño propio, trazo 3 px redondeado como los íconos; colores por tokens).
    nombre: 'gallina' (gallina junto a su huevo), 'huevo' (huevo con palomita), 'campo' (huevos que crecen). */
+let _ilN = 0; // id único por ilustración: dos en la misma página no deben compartir el recorte
 function ilustracion(nombre) {
-  const fondo = '<clipPath id="il-recorte"><rect width="160" height="132" rx="30"/></clipPath><circle class="il-sol" cx="124" cy="30" r="14"/><g clip-path="url(#il-recorte)"><path class="il-colina" d="M0 112C34 90 70 98 92 108s46 0 68-10v34H0z"/><path class="il-colina il-colina-2" d="M0 124c40-14 76-6 104 2s40 0 56-6v12H0z"/></g>';
+  const rid = 'il-recorte-' + (++_ilN);
+  const fondo = `<clipPath id="${rid}"><rect width="160" height="132" rx="30"/></clipPath><circle class="il-sol" cx="124" cy="30" r="14"/><g clip-path="url(#${rid})"><path class="il-colina" d="M0 112C34 90 70 98 92 108s46 0 68-10v34H0z"/><path class="il-colina il-colina-2" d="M0 124c40-14 76-6 104 2s40 0 56-6v12H0z"/></g>`;
   const brote = (x, y, s) => `<g class="il-brote" transform="translate(${x} ${y}) scale(${s})"><path d="M0 0V-16"/><path d="M0-12c-8 0-12-5-12-11 8 0 12 5 12 11z"/><path d="M0-16c7 0 11-4 11-10-7 0-11 4-11 10z"/></g>`;
   let motivo;
   if (nombre === 'huevo') {
@@ -3731,7 +3737,10 @@ const PlanEstado = (function () {
       for (const k of ['v', 'u']) if (el.dataset[k] !== undefined) sel += `[data-${k}="${CSS.escape(el.dataset[k])}"]`;
     }
     await App.refrescar();
-    const nuevo = sel && document.querySelector('#view ' + sel);
+    // Si el control exacto ya no existe (p. ej. cambiaron los atajos), se cae a otro de la misma acción y,
+    // en último caso, a la vista misma (tabindex -1), nunca a <body>.
+    const base = el && el.dataset && el.dataset.accion ? `[data-accion="${CSS.escape(el.dataset.accion)}"]` : null;
+    const nuevo = (sel && document.querySelector('#view ' + sel)) || (base && document.querySelector('#view ' + base)) || document.getElementById('view');
     if (nuevo) { try { nuevo.focus({ preventScroll: true }); } catch (e) { /* sin foco */ } }
   }
 
