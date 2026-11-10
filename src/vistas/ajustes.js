@@ -57,16 +57,23 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
       `<button type="button" class="segmento-btn" data-accion="aj-tema" data-tema="${id}" aria-pressed="${id === tema}">${t}</button>`).join('')}</div>
   </div>
   <div class="aj-seccion"><h2>Respaldo de datos</h2>
-    <p class="aj-nota">Guarda una copia de todos tus lotes y registros en un archivo, o recupérala en otro teléfono.</p>
+    <p class="aj-nota">Guarda una copia de todos tus lotes y registros (en un archivo, o copiándola como texto), o recupérala en otro teléfono.</p>
     ${Boton({ texto: 'Exportar respaldo', icono: 'sig', variante: 'primario', accion: 'aj-exportar', clase: 'btn-ancho' })}
     ${puedeCompartir ? Boton({ texto: 'Compartir respaldo', icono: 'copiar', variante: 'secundario', accion: 'aj-compartir-respaldo', clase: 'btn-ancho' }) : ''}
     ${Boton({ texto: 'Importar respaldo', icono: 'atras', variante: 'secundario', accion: 'aj-importar', clase: 'btn-ancho' })}
+    ${Boton({ texto: 'Pegar respaldo', icono: 'copiar', variante: 'secundario', accion: 'aj-pegar', clase: 'btn-ancho' })}
     <input class="aj-oculto" id="aj-archivo" type="file" accept=".json,application/json" tabindex="-1" aria-label="Archivo de respaldo">
     <p id="aj-respaldo-msg" role="alert" hidden></p>
   </div>
   <p class="aj-acerca">Appollo · versión ${esc(APP_VERSION)}</p>
 </section>`;
   };
+
+  function confirmarImportar() {
+    App.abrirHoja({ titulo: '¿Importar respaldo?', contenido: `<div class="aj-confirmar">
+  <p>Esto reemplaza todos los datos de este teléfono.</p>
+  <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'aj-cancelar-importar' })}${Boton({ texto: 'Reemplazar', variante: 'peligro', accion: 'aj-reemplazar' })}</div></div>` });
+  }
 
   VISTAS.ajustes.montar = function (raiz) {
     const f = raiz.querySelector('#aj-archivo');
@@ -76,9 +83,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
       try { textoRespaldo = await a.text(); } catch (e) { textoRespaldo = null; msg('aj-respaldo-msg', 'No se pudo leer el archivo.'); f.value = ''; return; }
       f.value = '';
       msg('aj-respaldo-msg', '');
-      App.abrirHoja({ titulo: '¿Importar respaldo?', contenido: `<div class="aj-confirmar">
-  <p>Esto reemplaza todos los datos de este teléfono.</p>
-  <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'aj-cancelar-importar' })}${Boton({ texto: 'Reemplazar', variante: 'peligro', accion: 'aj-reemplazar' })}</div></div>` });
+      confirmarImportar();
     });
   };
 
@@ -129,16 +134,66 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
 
   const nombreArchivo = () => `appollo-respaldo-${hoyLocal()}.json`;
 
+  /* En el WebView de Capacitor (la app instalada) `a.download` con un blob no hace nada: ahí el respaldo se
+     muestra en una hoja para copiarlo. Nunca se avisa de éxito sin que haya ocurrido. */
+  const esNativo = () => { try { return !!(window.Capacitor && typeof Capacitor.isNativePlatform === 'function' && Capacitor.isNativePlatform()); } catch (e) { return false; } };
+
+  async function copiarTexto(ta) {
+    try { await navigator.clipboard.writeText(ta.value); return true; } catch (e) { /* respaldo: seleccionar y copiar */ }
+    try { ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); return !!document.execCommand('copy'); } catch (e) { return false; }
+  }
+
+  function hojaRespaldo(json) {
+    App.abrirHoja({ titulo: 'Copiar respaldo', contenido: `<div class="aj-confirmar">
+  <p>Esta app no puede guardar archivos en el teléfono. Toca <b>Copiar respaldo</b> y pégalo en tus notas o envíalo a ti mismo (WhatsApp, correo). Para recuperarlo, en Ajustes usa <b>Pegar respaldo</b>.</p>
+  <textarea class="reg-texto rep-texto aj-respaldo-texto" id="aj-respaldo-texto" readonly aria-label="Texto del respaldo" spellcheck="false"></textarea>
+  <p id="aj-copia-msg" role="status" hidden></p>
+  ${Boton({ texto: 'Copiar respaldo', icono: 'copiar', variante: 'primario', accion: 'aj-copiar-respaldo', clase: 'btn-ancho btn-grande' })}</div>` });
+    const ta = document.getElementById('aj-respaldo-texto');
+    if (ta) ta.value = json;
+  }
+
+  ACCIONES['aj-copiar-respaldo'] = async () => {
+    const ta = document.getElementById('aj-respaldo-texto'), m = document.getElementById('aj-copia-msg');
+    if (!ta || !m) return;
+    const ok = await copiarTexto(ta);
+    m.hidden = false;
+    m.classList.toggle('aj-ok', ok); m.classList.toggle('reg-error', !ok);
+    m.textContent = ok ? 'Respaldo copiado. Pégalo en tus notas o envíatelo: sin esa copia, tus datos solo viven en este teléfono.'
+      : 'No se pudo copiar solo. El texto quedó seleccionado: mantén pulsado y elige Copiar.';
+    if (!ok) { try { ta.focus(); ta.select(); } catch (e) { /* sin foco */ } }
+  };
+
   ACCIONES['aj-exportar'] = async () => {
+    let json;
+    try { json = await DB.exportar(); } catch (e) { msg('aj-respaldo-msg', 'No se pudo crear el respaldo.'); return; }
+    if (esNativo()) { msg('aj-respaldo-msg', ''); hojaRespaldo(json); return; }
     try {
-      const url = URL.createObjectURL(new Blob([await DB.exportar()], { type: 'application/json' }));
+      const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
       const a = document.createElement('a');
       a.href = url; a.download = nombreArchivo(); a.style.display = 'none';
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 4000);
-      msg('aj-respaldo-msg', 'Respaldo descargado', true);
+      msg('aj-respaldo-msg', 'Respaldo descargado', true); // el clic ya se envió al navegador
       App.toast('Respaldo descargado');
     } catch (e) { msg('aj-respaldo-msg', 'No se pudo crear el respaldo.'); }
+  };
+
+  ACCIONES['aj-pegar'] = () => {
+    msg('aj-respaldo-msg', '');
+    App.abrirHoja({ titulo: 'Pegar respaldo', contenido: `<div class="aj-confirmar">
+  <p>Pega aquí el texto del respaldo que copiaste antes.</p>
+  <textarea class="reg-texto rep-texto aj-respaldo-texto" id="aj-pegado" spellcheck="false" aria-label="Texto del respaldo" aria-describedby="aj-pegado-msg"></textarea>
+  <p id="aj-pegado-msg" class="reg-error" role="alert" hidden></p>
+  <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'aj-cancelar-importar' })}${Boton({ texto: 'Revisar', variante: 'primario', accion: 'aj-pegar-revisar' })}</div></div>` });
+  };
+
+  ACCIONES['aj-pegar-revisar'] = () => {
+    const ta = document.getElementById('aj-pegado'), m = document.getElementById('aj-pegado-msg');
+    const t = ta ? ta.value.trim() : '';
+    if (!t) { if (m) { m.hidden = false; m.textContent = 'Pega primero el texto del respaldo.'; } if (ta) ta.focus(); return; }
+    textoRespaldo = t;
+    confirmarImportar();
   };
 
   ACCIONES['aj-compartir-respaldo'] = async () => {
