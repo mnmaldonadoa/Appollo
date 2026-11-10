@@ -3,6 +3,8 @@ Uso: python3 build.py && python3 tests/e2e/reportes.py"""
 import json, socket, subprocess, sys, tempfile, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from util import esperar
 
 RAIZ = Path(__file__).resolve().parents[2]
 SDD = RAIZ / ".superpowers/sdd/2026-11-03-appollo-gestion"
@@ -95,14 +97,14 @@ def main():
             check("nombre vacío se rechaza con mensaje", "nombre" in pg.inner_text("#aj-granja-msg").lower() and pg.is_visible("#aj-granja-msg"), pg.inner_text("#aj-granja-msg"))
             check("nombre vacío no guarda", pg.evaluate("DB.obtener('granja','granja')")["nombre"] == "Granja Vieja")
             pg.fill("#aj-nombre", "La <b>Esperanza</b>"); pg.click("[data-accion=aj-tipo][data-tipo=ambas]"); pg.click("[data-accion=aj-guardar-granja]")
-            pg.wait_for_function("DB.obtener('granja','granja').then(g => g.tipo === 'ambas')", timeout=3000)
+            esperar(pg, "DB.obtener('granja','granja').then(g => g.tipo === 'ambas')", 3000)
             check("granja guardada con nombre y tipo", pg.evaluate("DB.obtener('granja','granja')")["nombre"] == "La <b>Esperanza</b>")
             pg.fill("#aj-nombre", "La Esperanza"); pg.click("[data-accion=aj-tipo][data-tipo=postura]"); pg.click("[data-accion=aj-guardar-granja]")
-            pg.wait_for_function("DB.obtener('granja','granja').then(g => g.nombre === 'La Esperanza')", timeout=3000)
+            esperar(pg, "DB.obtener('granja','granja').then(g => g.nombre === 'La Esperanza')", 3000)
             pg.fill("#aj-p-cubeta", "abc"); pg.click("[data-accion=aj-guardar-precios]")
             check("precio no numérico se rechaza", pg.is_visible("#aj-precios-msg") and "números" in pg.inner_text("#aj-precios-msg"))
             pg.fill("#aj-p-cubeta", "4"); pg.fill("#aj-p-kgAlimento", "0,5"); pg.fill("#aj-p-kgPeso", ""); pg.click("[data-accion=aj-guardar-precios]")
-            pg.wait_for_function("DB.obtener('granja','granja').then(g => g.precios && g.precios.cubeta === 4)", timeout=3000)
+            esperar(pg, "DB.obtener('granja','granja').then(g => g.precios && g.precios.cubeta === 4)", 3000)
             check("precios guardados como números", pg.evaluate("DB.obtener('granja','granja')")["precios"] == {"cubeta": 4, "kgAlimento": 0.5})
             pg.reload(); pg.wait_for_selector("#view .ajustes")
             check("precios y granja persisten tras recargar", pg.input_value("#aj-p-cubeta") == "4" and pg.input_value("#aj-p-kgAlimento") == "0,5"

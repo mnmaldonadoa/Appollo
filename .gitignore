@@ -8,3 +8,5 @@ android/capacitor-cordova-android-plugins/
 *.zip
 node_modules
 .superpowers/
+__pycache__/
+dist/_kit.html

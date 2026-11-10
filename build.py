@@ -66,16 +66,16 @@ def iconos(destino):
     destino.mkdir(parents=True, exist_ok=True)
 
     def dibujar(tam, margen):
-        img = Image.new("RGBA", (tam, tam), (23, 32, 27, 255))
+        img = Image.new("RGBA", (tam, tam), (40, 90, 49, 255))
         d = ImageDraw.Draw(img)
         s = tam / 512
         cx = tam / 2
         alto, ancho = (330 - margen) * s, (250 - margen * 0.75) * s
         top = tam / 2 - alto * 0.52
-        d.ellipse([cx - ancho / 2, top, cx + ancho / 2, top + alto], fill=(242, 244, 239, 255))
+        d.ellipse([cx - ancho / 2, top, cx + ancho / 2, top + alto], fill=(246, 241, 231, 255))
         r = ancho * 0.30
         cy = top + alto * 0.60
-        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(231, 161, 27, 255))
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(232, 163, 23, 255))
         return img
 
     dibujar(512, 0).resize((192, 192), Image.LANCZOS).save(destino / "icon-192.png")
@@ -103,7 +103,8 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Appollo</title>
 <meta name="description" content="Manejo de gallinas por genética y proyección de huevos o carne. Funciona sin internet.">
-<meta name="theme-color" content="#17201B">
+<meta name="theme-color" content="#F6F1E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121A14" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -133,8 +134,8 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
         "scope": "./",
         "display": "standalone",
         "orientation": "portrait",
-        "background_color": "#F2F4EF",
-        "theme_color": "#17201B",
+        "background_color": "#F6F1E7",
+        "theme_color": "#F6F1E7",
         "icons": [
             {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
             {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},

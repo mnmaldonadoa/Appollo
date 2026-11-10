@@ -22,8 +22,10 @@ function icono(nombre, clase) {
 
 /* Ilustraciones de pantalla vacía (diseño propio, trazo 3 px redondeado como los íconos; colores por tokens).
    nombre: 'gallina' (gallina junto a su huevo), 'huevo' (huevo con palomita), 'campo' (huevos que crecen). */
+let _ilN = 0; // id único por ilustración: dos en la misma página no deben compartir el recorte
 function ilustracion(nombre) {
-  const fondo = '<clipPath id="il-recorte"><rect width="160" height="132" rx="30"/></clipPath><circle class="il-sol" cx="124" cy="30" r="14"/><g clip-path="url(#il-recorte)"><path class="il-colina" d="M0 112C34 90 70 98 92 108s46 0 68-10v34H0z"/><path class="il-colina il-colina-2" d="M0 124c40-14 76-6 104 2s40 0 56-6v12H0z"/></g>';
+  const rid = 'il-recorte-' + (++_ilN);
+  const fondo = `<clipPath id="${rid}"><rect width="160" height="132" rx="30"/></clipPath><circle class="il-sol" cx="124" cy="30" r="14"/><g clip-path="url(#${rid})"><path class="il-colina" d="M0 112C34 90 70 98 92 108s46 0 68-10v34H0z"/><path class="il-colina il-colina-2" d="M0 124c40-14 76-6 104 2s40 0 56-6v12H0z"/></g>`;
   const brote = (x, y, s) => `<g class="il-brote" transform="translate(${x} ${y}) scale(${s})"><path d="M0 0V-16"/><path d="M0-12c-8 0-12-5-12-11 8 0 12 5 12 11z"/><path d="M0-16c7 0 11-4 11-10-7 0-11 4-11 10z"/></g>`;
   let motivo;
   if (nombre === 'huevo') {

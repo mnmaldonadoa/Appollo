@@ -3,6 +3,8 @@ Uso: python3 build.py && python3 tests/e2e/lotes.py"""
 import socket, subprocess, sys, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from util import esperar, cumple
 
 RAIZ = Path(__file__).resolve().parents[2]
 SDD = RAIZ / ".superpowers/sdd/2026-11-03-appollo-gestion"
@@ -161,8 +163,8 @@ def main():
             check("tras 3 muertes Inicio muestra 97 aves", cifra(pg, "aves", "97"), pg.evaluate(CIFRA, "aves"))
             check("tras 3 muertes mortalidad 3 %", cifra(pg, "mortalidad", "3"), pg.evaluate(CIFRA, "mortalidad"))
             check("3 % de muertes en un día pone el estado en rojo", pg.get_attribute("#view [data-t=sanitario]", "data-estado") == "rojo")
-            pg.click("#view [data-t=alertas]"); pg.wait_for_function("location.hash === '#/alertas'")
-            check("tarjeta de alertas lleva a #/alertas", True)
+            pg.click("#view [data-t=alertas]")
+            check("tarjeta de alertas lleva a #/alertas", cumple(lambda: pg.wait_for_function("location.hash === '#/alertas'")))
 
             # Segundo lote: el selector suma con "Todos"
             pg.click("#nav [data-nav=lotes]"); pg.wait_for_selector("#view h1:has-text('Lotes')"); pg.click("#view [data-accion=nuevo-lote]")
@@ -200,22 +202,22 @@ def main():
             check("historial con el registro de mortalidad", pg.locator("#view .dl-reg").count() == 1)
             n_regs = lambda: len(pg.evaluate(f"DB.listar('registros', {{loteId: '{lid}'}})"))
             pg.click("#view .dl-reg [data-accion=dl-borrar]")
-            pg.wait_for_function(f"DB.listar('registros', {{loteId: '{lid}'}}).then(r => r.length === 0)", timeout=3000)
+            esperar(pg, f"DB.listar('registros', {{loteId: '{lid}'}}).then(r => r.length === 0)", 3000)
             pg.wait_for_selector("#toast:not([hidden]) [data-accion=deshacer]")
             check("Borrar quita el registro y ofrece Deshacer", pg.locator("#view .dl-reg").count() == 0)
             pg.click("#toast [data-accion=deshacer]")
-            pg.wait_for_function(f"DB.listar('registros', {{loteId: '{lid}'}}).then(r => r.length === 1)", timeout=3000)
+            esperar(pg, f"DB.listar('registros', {{loteId: '{lid}'}}).then(r => r.length === 1)", 3000)
             pg.wait_for_selector("#view .dl-reg")
             check("Deshacer restaura el registro borrado", n_regs() == 1)
             pend = lambda: pg.evaluate(f"DB.listar('vacunasPlan', {{loteId: '{lid}'}}).then(v => v.filter(x => !x.fechaAplicada).length)")
             antes = pend()
             pg.click("#view [data-accion=dl-aplicar] >> nth=0")
-            pg.wait_for_function(f"DB.listar('vacunasPlan', {{loteId: '{lid}'}}).then(v => v.filter(x => !x.fechaAplicada).length === {antes - 1})", timeout=3000)
+            esperar(pg, f"DB.listar('vacunasPlan', {{loteId: '{lid}'}}).then(v => v.filter(x => !x.fechaAplicada).length === {antes - 1})", 3000)
             vreg = pg.evaluate(f"DB.listar('registros', {{loteId: '{lid}', tipo: 'vacuna'}})")
             check("Marcar aplicada escribe fechaAplicada y un registro de vacuna", len(vreg) == 1 and vreg[0]["fecha"] == pg.evaluate("hoyLocal()")
                   and vreg[0]["datos"].get("planId"), vreg)
             pg.wait_for_selector("#toast:not([hidden]) [data-accion=deshacer]"); pg.click("#toast [data-accion=deshacer]")
-            pg.wait_for_function(f"DB.listar('vacunasPlan', {{loteId: '{lid}'}}).then(v => v.filter(x => !x.fechaAplicada).length === {antes})", timeout=3000)
+            esperar(pg, f"DB.listar('vacunasPlan', {{loteId: '{lid}'}}).then(v => v.filter(x => !x.fechaAplicada).length === {antes})", 3000)
             check("Deshacer desmarca la vacuna y borra su registro", len(pg.evaluate(f"DB.listar('registros', {{loteId: '{lid}', tipo: 'vacuna'}})")) == 0)
             quieto(pg)
             medir(pg, "detalle")
@@ -225,16 +227,14 @@ def main():
             check("Cerrar lote pide confirmación sin cerrar aún", pg.evaluate(f"DB.obtener('lotes', '{lid}')")["estado"] == "activo")
             medir(pg, "confirmar cierre")
             pg.click("#view [data-accion=dl-cerrar-si]")
-            pg.wait_for_function(f"DB.obtener('lotes', '{lid}').then(l => l.estado === 'cerrado')", timeout=3000)
-            pg.wait_for_selector("#view [data-accion=dl-reabrir]")
-            check("lote cerrado muestra Reabrir", True)
+            esperar(pg, f"DB.obtener('lotes', '{lid}').then(l => l.estado === 'cerrado')", 3000)
+            check("lote cerrado muestra Reabrir", cumple(lambda: pg.wait_for_selector("#view [data-accion=dl-reabrir]")))
             pg.click("#nav [data-nav=lotes]"); pg.wait_for_selector("#view .lotes-cerrados .lote-item")
             check("lote cerrado aparece en Cerrados", pg.locator("#view .lotes-cerrados .lote-item").count() == 1
                   and pg.locator("#view .lotes-activos .lote-item").count() == 1)
             pg.click(f"#view .lote-item[data-ruta='#/lote/{lid}']"); pg.wait_for_selector("#view [data-accion=dl-reabrir]")
             pg.click("#view [data-accion=dl-reabrir]")
-            pg.wait_for_function(f"DB.obtener('lotes', '{lid}').then(l => l.estado === 'activo')", timeout=3000)
-            check("Reabrir vuelve el lote a activo", True)
+            check("Reabrir vuelve el lote a activo", cumple(lambda: esperar(pg, f"DB.obtener('lotes', '{lid}').then(l => l.estado === 'activo')", 3000)))
             r = pg.evaluate(NAV_GAP)
             check("barra inferior: separación >= 8 px entre objetivos", r["css"] >= 8 and r["min"] >= 7.5, r)
             check("barra inferior: objetivos >= 56 px y textos sin cortar a 360 px", r["alto"] >= 56 and r["texto"], r)

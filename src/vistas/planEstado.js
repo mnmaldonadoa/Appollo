@@ -177,7 +177,10 @@ const PlanEstado = (function () {
       for (const k of ['v', 'u']) if (el.dataset[k] !== undefined) sel += `[data-${k}="${CSS.escape(el.dataset[k])}"]`;
     }
     await App.refrescar();
-    const nuevo = sel && document.querySelector('#view ' + sel);
+    // Si el control exacto ya no existe (p. ej. cambiaron los atajos), se cae a otro de la misma acción y,
+    // en último caso, a la vista misma (tabindex -1), nunca a <body>.
+    const base = el && el.dataset && el.dataset.accion ? `[data-accion="${CSS.escape(el.dataset.accion)}"]` : null;
+    const nuevo = (sel && document.querySelector('#view ' + sel)) || (base && document.querySelector('#view ' + base)) || document.getElementById('view');
     if (nuevo) { try { nuevo.focus({ preventScroll: true }); } catch (e) { /* sin foco */ } }
   }
 

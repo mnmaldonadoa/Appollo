@@ -2,5 +2,5 @@
   "appId": "ec.appollo.app",
   "appName": "Appollo",
   "webDir": "dist",
-  "android": { "backgroundColor": "#17201B" }
+  "android": { "backgroundColor": "#F6F1E7" }
 }

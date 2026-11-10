@@ -2,6 +2,8 @@
 import socket, subprocess, sys, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from util import esperar, cumple
 
 RAIZ = Path(__file__).resolve().parents[2]
 fallos = 0
@@ -80,8 +82,7 @@ def main():
             medir(pg, "inicio vacío")
             pg.screenshot(path=str(RAIZ / ".superpowers/sdd/2026-11-03-appollo-gestion/t5-inicio.png"))
             boton.click()
-            pg.wait_for_function("location.hash === '#/nuevo-lote'")
-            check("botón del Inicio lleva a #/nuevo-lote", True)
+            check("botón del Inicio lleva a #/nuevo-lote", cumple(lambda: pg.wait_for_function("location.hash === '#/nuevo-lote'")))
             pg.click("#nav [data-nav=lotes]")
             pg.wait_for_selector("#view h1:has-text('Lotes')")
             check("barra navega a Lotes y lo resalta", pg.get_attribute("#nav [data-nav=lotes]", "aria-current") == "page"
@@ -94,11 +95,9 @@ def main():
             pg.wait_for_selector(".hoja")
             check("＋ sin lotes dice 'Primero crea un lote'", pg.locator(".hoja").get_by_text("Primero crea un lote").count() == 1)
             pg.click(".hoja [data-ruta='#/nuevo-lote']")
-            pg.wait_for_function("location.hash === '#/nuevo-lote' && !document.querySelector('.hoja-capa')")
-            check("botón de la hoja lleva a #/nuevo-lote y la cierra", True)
+            check("botón de la hoja lleva a #/nuevo-lote y la cierra", cumple(lambda: pg.wait_for_function("location.hash === '#/nuevo-lote' && !document.querySelector('.hoja-capa')")))
             pg.goto(url + "#/no-existe")
-            pg.wait_for_function("location.hash === '#/inicio'")
-            check("ruta desconocida va a #/inicio", True)
+            check("ruta desconocida va a #/inicio", cumple(lambda: pg.wait_for_function("location.hash === '#/inicio'")))
             ctx.close()
 
             # ---------- 2. Con un lote: registro rápido ----------
@@ -128,19 +127,17 @@ def main():
             medir(pg, "hoja mortalidad")
             pg.screenshot(path=str(RAIZ / ".superpowers/sdd/2026-11-03-appollo-gestion/t5-valor.png"))
             toque(".hoja [data-accion=reg-guardar]")
-            pg.wait_for_function(f"({REGS})('mortalidad').then(r => r.length === 1)", timeout=3000)
+            esperar(pg, f"({REGS})('mortalidad').then(r => r.length === 1)", 3000)
             r = pg.evaluate(REGS, "mortalidad")
             check(f"mortalidad guardada en {toques} toques (<= 3)", toques <= 3 and len(r) == 1 and r[0]["datos"]["cantidad"] == 1, r)
             check("registro con forma {id, loteId, fecha, tipo, datos, creado}",
                   set(r[0]) >= {"id", "loteId", "fecha", "tipo", "datos", "creado"}, r[0])
             pg.wait_for_selector("#toast:not([hidden]) [data-accion=deshacer]")
             check("toast 'Guardado' con Deshacer", "Guardado" in pg.inner_text("#toast"))
-            pg.wait_for_function("!document.querySelector('.hoja-capa')", timeout=3000)
-            check("hoja se cierra tras guardar", True)
+            check("hoja se cierra tras guardar", cumple(lambda: pg.wait_for_function("!document.querySelector('.hoja-capa')", timeout=3000)))
             medir(pg, "toast")
             pg.click("#toast [data-accion=deshacer]")
-            pg.wait_for_function(f"({REGS})('mortalidad').then(r => r.length === 0)", timeout=3000)
-            check("Deshacer borra el registro", True)
+            check("Deshacer borra el registro", cumple(lambda: esperar(pg, f"({REGS})('mortalidad').then(r => r.length === 0)", 3000)))
 
             # Toast desaparece a los 5 s
             pg.click("#nav [data-accion=registrar]"); pg.click(".hoja [data-tipo=huevos]")
@@ -180,8 +177,7 @@ def main():
             check("Sumar deja un solo registro con los kg sumados",
                   len(r) == 1 and abs(r[0]["datos"]["kg"] - 2 * kg) < 1e-6, r)
             pg.click("#toast [data-accion=deshacer]")
-            pg.wait_for_function(f"({REGS})('alimento').then(r => r.length === 1 && Math.abs(r[0].datos.kg - {kg}) < 1e-6)", timeout=3000)
-            check("Deshacer tras Sumar restaura el registro previo", True)
+            check("Deshacer tras Sumar restaura el registro previo", cumple(lambda: esperar(pg, f"({REGS})('alimento').then(r => r.length === 1 && Math.abs(r[0].datos.kg - {kg}) < 1e-6)", 3000)))
 
             # Reemplazar
             pg.click("#nav [data-accion=registrar]"); pg.click(".hoja [data-tipo=alimento]")
@@ -198,29 +194,26 @@ def main():
             pg.wait_for_selector("#reg-valor")
             pg.fill("#reg-valor", "101")
             pg.click(".hoja [data-accion=reg-guardar]")
-            pg.wait_for_selector(".hoja .reg-error:has-text('Solo quedan 100 aves en el lote')")
-            check("mortalidad 101 muestra 'Solo quedan 100 aves en el lote'", True)
+            check("mortalidad 101 muestra 'Solo quedan 100 aves en el lote'", cumple(lambda: pg.wait_for_selector(".hoja .reg-error:has-text('Solo quedan 100 aves en el lote')")))
             check("mortalidad inválida no escribe nada y no cierra", len(pg.evaluate(REGS, "mortalidad")) == 0
                   and pg.locator(".hoja").count() == 1)
 
             # Escape cierra y devuelve el foco
             pg.keyboard.press("Escape")
-            pg.wait_for_function("!document.querySelector('.hoja-capa')", timeout=3000)
-            check("Escape cierra la hoja", True)
+            check("Escape cierra la hoja", cumple(lambda: pg.wait_for_function("!document.querySelector('.hoja-capa')", timeout=3000)))
             check("foco vuelve al botón ＋", pg.evaluate("document.activeElement && document.activeElement.dataset.accion") == "registrar")
             # Fondo cierra
             pg.click("#nav [data-accion=registrar]")
             pg.wait_for_selector(".hoja")
             pg.mouse.click(180, 30)
-            pg.wait_for_function("!document.querySelector('.hoja-capa')", timeout=3000)
-            check("tocar el fondo cierra la hoja", True)
+            check("tocar el fondo cierra la hoja", cumple(lambda: pg.wait_for_function("!document.querySelector('.hoja-capa')", timeout=3000)))
 
             # Sanidad y vacuna libre
             pg.click("#nav [data-accion=registrar]"); pg.click(".hoja [data-tipo=sanidad]")
             pg.wait_for_selector("#reg-enfermedad")
             pg.fill("#reg-enfermedad", "Coriza"); pg.fill("#reg-tratamiento", "Enrofloxacina")
             pg.click(".hoja [data-accion=reg-guardar]")
-            pg.wait_for_function(f"({REGS})('sanidad').then(r => r.length === 1)", timeout=3000)
+            esperar(pg, f"({REGS})('sanidad').then(r => r.length === 1)", 3000)
             pg.wait_for_function("!document.querySelector('.hoja-capa')", timeout=3000)
             r = pg.evaluate(REGS, "sanidad")[0]["datos"]
             check("sanidad guarda enfermedad, tratamiento y retiroDias", r.get("enfermedad") == "Coriza" and r.get("retiroDias") == 0, r)
@@ -232,12 +225,12 @@ def main():
             pg.wait_for_selector(".hoja [data-accion=reg-vacuna]")
             check("vacuna lista solo las pendientes", pg.locator(".hoja [data-accion=reg-vacuna]").count() == 1)
             pg.click(".hoja [data-accion=reg-guardar]")
-            pg.wait_for_function("DB.obtener('vacunasPlan', 'V1').then(v => !!v.fechaAplicada)", timeout=3000)
+            esperar(pg, "DB.obtener('vacunasPlan', 'V1').then(v => !!v.fechaAplicada)", 3000)
             r = pg.evaluate(REGS, "vacuna")
             check("Marcar aplicada escribe registro de vacuna", len(r) == 1 and r[0]["datos"]["nombre"] == "Newcastle", r)
             pg.wait_for_function("!document.querySelector('.hoja-capa')", timeout=3000)
             pg.click("#toast [data-accion=deshacer]")
-            pg.wait_for_function("DB.obtener('vacunasPlan', 'V1').then(v => !v.fechaAplicada)", timeout=3000)
+            esperar(pg, "DB.obtener('vacunasPlan', 'V1').then(v => !v.fechaAplicada)", 3000)
             check("Deshacer vacuna desmarca el plan y borra el registro", len(pg.evaluate(REGS, "vacuna")) == 0)
 
             # Error de vista
@@ -246,13 +239,11 @@ def main():
             check("vista que falla muestra 'Algo salió mal'", "Algo salió mal" in pg.inner_text("#view"))
             check("error de vista no borra datos", len(pg.evaluate("async () => DB.listar('lotes')")) == 1)
             pg.click("#nav [data-nav=lotes]")
-            pg.wait_for_selector("#view h1:has-text('Lotes')")
-            check("la barra sigue funcionando tras el error", True)
+            check("la barra sigue funcionando tras el error", cumple(lambda: pg.wait_for_selector("#view h1:has-text('Lotes')")))
             pg.evaluate("location.hash = '#/test'")
             pg.wait_for_selector("#view .vista-error")
             pg.click("#view [data-ruta='#/inicio']")
-            pg.wait_for_function("location.hash === '#/inicio'")
-            check("'Volver al inicio' funciona", True)
+            check("'Volver al inicio' funciona", cumple(lambda: pg.wait_for_function("location.hash === '#/inicio'")))
             ctx.close()
 
             # ---------- 3. Dos lotes: cambiar de lote ----------
@@ -266,8 +257,7 @@ def main():
             pg.click(".hoja [data-accion=reg-elegir-lote][data-lote=L2]")
             pg.wait_for_selector(".hoja .reg-lote:has-text('Galpón 2')")
             pg.click(".hoja [data-accion=reg-guardar]")
-            pg.wait_for_function("DB.listar('registros', {loteId:'L2'}).then(r => r.length === 1)", timeout=3000)
-            check("con 2 lotes se puede cambiar el lote del registro", True)
+            check("con 2 lotes se puede cambiar el lote del registro", cumple(lambda: esperar(pg, "DB.listar('registros', {loteId:'L2'}).then(r => r.length === 1)", 3000)))
             check("lote usado se recuerda", pg.evaluate("localStorage.getItem('appollo.v2.loteActivo')") == "L2")
             ctx.close()
 
@@ -277,8 +267,7 @@ def main():
             pg.wait_for_selector("#franja-offline:not([hidden])", timeout=3000)
             check("franja 'Sin conexión' aparece", "Sin conexión, tus datos se guardan en el teléfono" in pg.inner_text("#franja-offline"))
             ctx.set_offline(False)
-            pg.wait_for_selector("#franja-offline", state="hidden", timeout=3000)
-            check("franja 'Sin conexión' se oculta al volver la red", True)
+            check("franja 'Sin conexión' se oculta al volver la red", cumple(lambda: pg.wait_for_selector("#franja-offline", state="hidden", timeout=3000)))
             ctx.close()
             ctx, pg = nueva("Object.defineProperty(window, 'indexedDB', {value: undefined, configurable: true});")
             pg.wait_for_selector("#franja-memoria:not([hidden])", timeout=3000)
@@ -289,8 +278,7 @@ def main():
             pg.evaluate(SEMBRAR); pg.reload(); pg.wait_for_selector("#view .pantalla")
             pg.click("#nav [data-accion=registrar]"); pg.click(".hoja [data-tipo=mortalidad]")
             pg.click(".hoja [data-accion=reg-guardar]")
-            pg.wait_for_function("!document.querySelector('.hoja-capa')", timeout=400)
-            check("movimiento reducido: la hoja se cierra al instante", True)
+            check("movimiento reducido: la hoja se cierra al instante", cumple(lambda: pg.wait_for_function("!document.querySelector('.hoja-capa')", timeout=400)))
             pg.click("#nav [data-nav=lotes]")
             anim = pg.evaluate("document.getAnimations().filter(a => a.playState === 'running').length")
             check("movimiento reducido: sin transición de pantalla", anim == 0, anim)

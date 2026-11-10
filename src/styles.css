@@ -13,6 +13,7 @@
   --r-s: 14px;
   --r: 20px;
   --r-l: 24px;
+  --r-xl: 28px;                 /* hoja inferior */
   /* escala de espacio (4/8) */
   --e1: 4px; --e2: 8px; --e3: 12px; --e4: 16px; --e5: 24px; --e6: 32px; --e7: 48px;
   --presion: .97;               /* escala al tocar; 1 con movimiento reducido */
@@ -103,7 +104,7 @@ p { margin: 0; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 3px solid var(--foco); outline-offset: 3px; }
-[tabindex="-1"]:focus-visible { outline: none; } /* contenedores con foco programático (vista, hoja) */
+#view:focus-visible, .hoja:focus-visible { outline: none; } /* contenedores con foco programático (vista, hoja) */
 .num { font-variant-numeric: tabular-nums lining-nums; }
 .solo-lector { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .ic { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
@@ -195,7 +196,7 @@ button { cursor: pointer; }
   position: relative; max-height: 88%; overflow: auto; overscroll-behavior: contain;
   width: 100%; max-width: 560px; margin: 0 auto;
   background: var(--superficie); color: var(--texto);
-  border-radius: 28px 28px 0 0; box-shadow: var(--sombra-alta);
+  border-radius: var(--r-xl) var(--r-xl) 0 0; box-shadow: var(--sombra-alta);
   padding: 8px 20px calc(24px + env(safe-area-inset-bottom, 0px));
   animation: subir 420ms var(--rebote) both;
 }
@@ -244,7 +245,7 @@ button { cursor: pointer; }
 .pantalla-entra { animation: entrar var(--dur) var(--curva) both; }
 
 /* ---------- Shell: vista, franjas, barra inferior, toast ---------- */
-.vista { display: block; overflow-x: clip; min-height: 100vh; min-height: 100dvh; padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); outline: none; }
+.vista { padding-top: env(safe-area-inset-top, 0px); display: block; overflow-x: clip; min-height: 100vh; min-height: 100dvh; padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); outline: none; }
 .vista-raiz { width: 100%; max-width: 640px; margin: 0 auto; }
 .pantalla { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--e4); padding: var(--e5) max(var(--e4), env(safe-area-inset-right)) var(--e2) max(var(--e4), env(safe-area-inset-left)); }
 .pantalla-texto { color: var(--secundario); }
@@ -650,6 +651,8 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .gen-opcion, .lote-item, .reg-opcion { box-shadow: var(--sombra-1); }
 .tarjeta, .lote-item { box-shadow: var(--sombra); }
 .lotes-cerrados .lote-item { box-shadow: none; }
-.hoja { border-radius: 28px 28px 0 0; border-top: 1px solid var(--linea); }
+.hoja { border-radius: var(--r-xl) var(--r-xl) 0 0; border-top: 1px solid var(--linea); }
 .reg-pregunta, .dl-confirmar, .rep-aviso { box-shadow: var(--sombra-1); }
+/* Con franja visible ella ya reserva la zona segura superior: no se duplica. */
+.franjas:has(.franja:not([hidden])) ~ .vista { padding-top: 0; }
 @media (min-width: 600px) { .pantalla { padding-top: var(--e6); } }

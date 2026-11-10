@@ -3,6 +3,8 @@ Uso: python3 build.py && python3 tests/e2e/alertas.py"""
 import socket, subprocess, sys, time, urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import util as U
 
 RAIZ = Path(__file__).resolve().parents[2]
 SDD = RAIZ / ".superpowers/sdd/2026-11-03-appollo-gestion"
@@ -60,13 +62,8 @@ def main():
                 pg.wait_for_function("document.getAnimations().every(a => a.playState !== 'running' || a.effect.getTiming().iterations === Infinity)", timeout=4000)
 
             def esperar(f, ms=3000):
-                """Espera de verdad a que la condición asíncrona `f` (fuente de una función) devuelva algo verdadero.
-                (wait_for_function NO sirve aquí: si el predicado devuelve una Promesa, retorna en cuanto ésta se
-                resuelve, aunque sea a false, y deja pasar la lectura antes de que la app termine de escribir.)"""
-                ok = pg.evaluate("""async ([f, n]) => { const fn = (0, eval)(f);
-                  for (let i = 0; i < n; i++) { if (await fn()) return true; await new Promise(r => setTimeout(r, 25)); }
-                  return false; }""", [f, ms // 25])
-                if not ok: raise AssertionError("tiempo agotado esperando: " + f)
+                """Espera de verdad la condición asíncrona `f` (fuente de una función); ver util.esperar."""
+                U.esperar(pg, f"({f})()", ms)
 
             def inv_es(item, cant): esperar(f"() => DB.obtener('inventario', '{item}').then(i => i.cantidad === {cant})")
 
