@@ -272,6 +272,7 @@ ${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'reg-cancelar-dup',
         .sort((a, b) => String(a.creado || '').localeCompare(String(b.creado || '')))[0];
       if (ex) { preguntar(ex); return; }
     }
+    App.ocultarToast(); // el Deshacer del guardado anterior ya no vale: borraría datos sumados después
     st.guardando = true;
     const cuerpo = $h('.hoja-cuerpo');
     if (cuerpo) cuerpo.querySelectorAll('button, input, select').forEach(b => { b.disabled = true; });

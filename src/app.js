@@ -228,7 +228,7 @@ const App = (function () {
     actualizarAlertas();
   }
 
-  return { ir, estado, refrescar, toast, actualizarAlertas, abrirHoja, cerrarHoja, hojaAbierta, fijarLote, arrancar };
+  return { ir, estado, refrescar, toast, ocultarToast, actualizarAlertas, abrirHoja, cerrarHoja, hojaAbierta, fijarLote, arrancar };
 })();
 
 App.arrancar();
