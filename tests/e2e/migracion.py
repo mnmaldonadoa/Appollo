@@ -151,6 +151,47 @@ def main():
         check("navegador: toast Respaldo descargado", "Respaldo descargado" in pg.inner_text("#toast"))
         check("navegador: no abre la hoja de copiar", pg.locator(".hoja").count() == 0)
         ctx.close()
+        # ---------- 6. Base IndexedDB versión 1 (cinco almacenes, con datos) -> la app nueva (versión 2) la migra sin perder nada ----------
+        ctx = nuevo_contexto(br, viewport={"width": 360, "height": 740})
+        pg = ctx.new_page()
+        pg.on("pageerror", lambda e: errores.append("pageerror: " + str(e)))
+        pg.on("console", lambda m: m.type == "error" and errores.append("console: " + m.text))
+        pg.goto(url + "manifest.webmanifest")  # mismo origen que la app, sin cargar la app: aquí se crea la base antigua
+        pg.evaluate("""() => new Promise((ok, mal) => {
+          const rq = indexedDB.open('appollo', 1);
+          rq.onupgradeneeded = () => {
+            const db = rq.result;
+            ['granja', 'lotes', 'registros', 'inventario', 'vacunasPlan'].forEach(s => {
+              const st = db.createObjectStore(s, { keyPath: 'id' });
+              if (s === 'registros') st.createIndex('loteId+fecha', ['loteId', 'fecha']);
+              if (s === 'vacunasPlan') st.createIndex('loteId', 'loteId');
+            });
+          };
+          rq.onerror = () => mal(rq.error);
+          rq.onsuccess = () => {
+            const db = rq.result, tx = db.transaction(['lotes', 'registros', 'vacunasPlan', 'inventario'], 'readwrite');
+            tx.objectStore('lotes').put({ id: 'V1L', nombre: 'Lote viejo', genetica: 'isa-brown', avesInicio: 30, fechaLlegada: '2026-01-02', edadLlegadaDias: 0, estado: 'activo' });
+            tx.objectStore('registros').put({ id: 'V1R', loteId: 'V1L', fecha: '2026-01-03', tipo: 'mortalidad', datos: { cantidad: 2 } });
+            tx.objectStore('vacunasPlan').put({ id: 'V1V', loteId: 'V1L', nombre: 'Newcastle', fechaPrevista: '2026-01-10' });
+            tx.objectStore('inventario').put({ id: 'V1I', nombre: 'Maiz', cantidad: 5 });
+            tx.oncomplete = () => { db.close(); ok(); };
+            tx.onerror = () => mal(tx.error);
+          };
+        })""")
+        check("la base antigua quedó en versión 1 sin planTareas", pg.evaluate("""() => new Promise(ok => { const r = indexedDB.open('appollo'); r.onsuccess = () => { const d = r.result, o = [d.version, [...d.objectStoreNames].includes('planTareas')]; d.close(); ok(o); }; })""") == [1, False])
+        pg.goto(url); pg.wait_for_selector("#view .pantalla, #view .vista-error", timeout=5000)
+        esperar(pg, "() => DB.listar('lotes').then(l => l.some(x => x.id === 'V1L'))")
+        check("v1 -> v2: el lote sigue", pg.evaluate("DB.obtener('lotes', 'V1L')")["nombre"] == "Lote viejo")
+        check("v1 -> v2: registro, vacuna e inventario siguen",
+              pg.evaluate("DB.obtener('registros', 'V1R')") is not None and pg.evaluate("DB.obtener('vacunasPlan', 'V1V')") is not None and pg.evaluate("DB.obtener('inventario', 'V1I')") is not None)
+        check("v1 -> v2: planTareas existe y está vacío", pg.evaluate("DB.listar('planTareas')") == [])
+        info = pg.evaluate("""() => new Promise(ok => { const r = indexedDB.open('appollo'); r.onsuccess = () => { const d = r.result, tx = d.transaction('planTareas'), st = tx.objectStore('planTareas'),
+          o = { v: d.version, stores: [...d.objectStoreNames].sort(), idx: [...st.indexNames], reg: [...d.transaction('registros').objectStore('registros').indexNames] }; d.close(); ok(o); }; })""")
+        check("versión 2, seis almacenes, índice loteId en planTareas y el índice de registros intacto",
+              info == {"v": 2, "stores": ["granja", "inventario", "lotes", "planTareas", "registros", "vacunasPlan"], "idx": ["loteId"], "reg": ["loteId+fecha"]}, info)
+        pg.evaluate("DB.guardar('planTareas', {id: 'pt1', loteId: 'V1L', titulo: 'x', hechas: []})")
+        check("planTareas se puede guardar y consultar por loteId", len(pg.evaluate("DB.listar('planTareas', {loteId: 'V1L'})")) == 1)
+        ctx.close()
         br.close()
     check("sin errores de consola ni de página", not errores, errores[:5])
     print("TODO OK" if not fallos else f"{fallos} FALLOS")

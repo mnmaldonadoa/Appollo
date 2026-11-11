@@ -3250,8 +3250,8 @@ function generarAlertas(datos, ahora) {
    ========================================================================= */
 const DB = (function () {
   'use strict';
-  const NOMBRE = 'appollo', VERSION = 1;
-  const STORES = ['granja', 'lotes', 'registros', 'inventario', 'vacunasPlan'];
+  const NOMBRE = 'appollo', VERSION = 2;
+  const STORES = ['granja', 'lotes', 'registros', 'inventario', 'vacunasPlan', 'planTareas'];
   const K_V1 = 'appollo.v1.lotes', K_MIGRADO = 'appollo.v2.migrado';
   let impl = null, abriendo = null;
 
@@ -3283,10 +3283,12 @@ const DB = (function () {
       try { req = indexedDB.open(NOMBRE, VERSION); } catch (e) { mal(e); return; }
       req.onupgradeneeded = () => {
         const db = req.result;
+        // Crea solo los almacenes que faltan: una base v1 conserva sus datos y recibe planTareas (v2).
         STORES.forEach(s => {
+          if (db.objectStoreNames.contains(s)) return;
           const st = db.createObjectStore(s, { keyPath: 'id' });
           if (s === 'registros') st.createIndex('loteId+fecha', ['loteId', 'fecha']);
-          if (s === 'vacunasPlan') st.createIndex('loteId', 'loteId');
+          if (s === 'vacunasPlan' || s === 'planTareas') st.createIndex('loteId', 'loteId');
         });
       };
       req.onsuccess = () => ok(req.result);
@@ -3388,6 +3390,7 @@ const DB = (function () {
       if (r.datos && typeof r.datos === 'object' && r.datos.planId !== undefined && r.datos.planId !== null) r.datos = Object.assign({}, r.datos, { planId: String(r.datos.planId) });
     });
     (out.vacunasPlan || []).forEach(v => { v.loteId = sid(v.loteId); });
+    (out.planTareas || []).forEach(t => { t.loteId = sid(t.loteId); });
     (out.lotes || []).forEach(l => {
       const conocida = typeof l.genetica === 'string' && typeof GENETICAS !== 'undefined' && GENETICAS.some(g => g.id === l.genetica);
       if (!conocida && l.genetica !== null && l.genetica !== undefined) { l.geneticaOriginal = l.genetica; l.genetica = null; }

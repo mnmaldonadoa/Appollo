@@ -85,7 +85,7 @@ def main():
               return {antes, despues, vacio, res, ver:j.version, fecha:typeof j.exportado, stores:Object.keys(j.datos).sort()};
             }""")
             check("exportar tiene formato version 1", r["ver"] == 1 and r["fecha"] == "string" and
-                  r["stores"] == ["granja", "inventario", "lotes", "registros", "vacunasPlan"], r)
+                  r["stores"] == ["granja", "inventario", "lotes", "planTareas", "registros", "vacunasPlan"], r)
             check("borrar vacia", r["vacio"] == 0, r)
             check("importar restaura", r["res"] == {"ok": True} and r["antes"] == r["despues"] == ["L1", "L2"], r)
 

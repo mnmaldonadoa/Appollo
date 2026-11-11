@@ -86,5 +86,35 @@ module.exports = (async () => {
   const dd = J(JSON.parse(await c2.DB.exportar()).datos), d0 = J(JSON.parse(txt).datos);
   const orden = o => { for (const k of Object.keys(o)) o[k].sort((a, b) => String(a.id).localeCompare(String(b.id))); return o; };
   assert.deepStrictEqual(orden(dd), orden(d0), 'el respaldo conserva todo el contenido');
-  assert.deepStrictEqual(orden(dd), orden(J(origen)), 'y coincide con lo importado originalmente');
+  assert.deepStrictEqual(orden(dd), orden({ planTareas: [], ...J(origen) }), 'y coincide con lo importado originalmente (planTareas ausente queda [])');
+
+  /* ---- planTareas: almacén nuevo (v2 de la base) ---- */
+  c = nuevo();
+  const T = { id: 't1', loteId: 'L1', origen: 'catalogo', catalogoId: 'cat-x', categoria: 'sanidad', titulo: 'Vacuna', detalle: 'd', desdeDia: 7, cadaDias: 14, hastaDia: 90, fechaBase: '2026-01-01', estado: 'activa', hechas: [{ fecha: '2026-01-08', nota: 'ok', producto: 'P' }], creado: '2026-01-01T10:00:00.000Z' };
+  assert.ok(c.DB.STORES.includes('planTareas'));
+  await c.DB.guardar('planTareas', T);
+  await c.DB.guardar('planTareas', { ...T, id: 't2', loteId: 'L2', origen: 'propia', estado: 'quitada', quitadaEn: '2026-01-20', hechas: [] });
+  assert.strictEqual((await c.DB.listar('planTareas', { loteId: 'L1' })).length, 1, 'guardar/listar planTareas por loteId');
+  assert.deepStrictEqual(J(await c.DB.obtener('planTareas', 't1')), T);
+  assert.ok(Array.isArray(JSON.parse(await c.DB.exportar()).datos.planTareas), 'exportar incluye planTareas');
+  assert.strictEqual(JSON.parse(await c.DB.exportar()).datos.planTareas.length, 2);
+  // Respaldo anterior sin planTareas: no falla y deja []
+  c = nuevo();
+  await c.DB.guardar('planTareas', T);
+  r = await importar(c, { lotes: [L] });
+  assert.ok(r.ok, JSON.stringify(r));
+  assert.deepStrictEqual(J(await c.DB.listar('planTareas')), [], 'sin planTareas en el respaldo queda []');
+  // ids numéricos a texto
+  r = await importar(c, { planTareas: [{ ...T, id: 9, loteId: 5 }] });
+  assert.ok(r.ok);
+  const pt = J((await c.DB.listar('planTareas'))[0]);
+  assert.strictEqual(pt.id, '9'); assert.strictEqual(pt.loteId, '5');
+  assert.strictEqual((await c.DB.listar('planTareas', { loteId: '5' })).length, 1);
+  // ida y vuelta idéntica
+  const conPlan = { lotes: [{ ...L, id: 'L1', genetica: 'isa-brown' }], planTareas: [T, { ...T, id: 't2', origen: 'propia', catalogoId: undefined, estado: 'quitada', quitadaEn: '2026-02-01', hechas: [] }].map(J) };
+  assert.ok((await importar(c, conPlan)).ok);
+  const txtP = await c.DB.exportar(), c3 = nuevo();
+  assert.ok((await c3.DB.importar(txtP)).ok);
+  assert.deepStrictEqual(orden(J(JSON.parse(await c3.DB.exportar()).datos)), orden(J(JSON.parse(txtP).datos)), 'planTareas ida y vuelta idéntico');
+  assert.deepStrictEqual(orden(J(JSON.parse(txtP).datos)).planTareas, orden(J(conPlan)).planTareas);
 })();
