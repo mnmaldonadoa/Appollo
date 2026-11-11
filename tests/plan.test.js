@@ -239,6 +239,19 @@ module.exports = (async () => {
   assert.ok(!('proxima' in rf), 'marcarHecha borra proxima');
   assert.strictEqual(c.proximaFecha(rf, hoy), dias(hoy, 7));
 
+  // rechazos de mover: fecha <= última hecha (fila intacta) y tarea quitada
+  const antesRech = J(await c.DB.obtener('planTareas', rep.tarea.id));
+  for (const d of [-10, -2]) {
+    const m = await P.mover(rep.tarea.id, dias(hoy, d));
+    assert.strictEqual(m.mensaje, 'No se puede mover esta tarea a esa fecha', 'dia ' + d);
+  }
+  assert.deepStrictEqual(J(await c.DB.obtener('planTareas', rep.tarea.id)), antesRech);
+  assert.strictEqual(typeof (await P.mover(rep.tarea.id, dias(hoy, 3))), 'function');
+  await P.quitar(rep.tarea.id);
+  const quitRech = J(await c.DB.obtener('planTareas', rep.tarea.id));
+  assert.strictEqual((await P.mover(rep.tarea.id, dias(hoy, 20))).mensaje, 'La tarea está quitada: reactívala primero');
+  assert.deepStrictEqual(J(await c.DB.obtener('planTareas', rep.tarea.id)), quitRech);
+
   // Reportes: un registro 'plan' no rompe ni cuenta
   {
     const lr = { id: 'R', genetica: 'isa-brown', avesInicio: 50, fechaLlegada: dias(hoy, -5), edadLlegadaDias: 0, estado: 'activo' };

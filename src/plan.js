@@ -130,9 +130,11 @@ const Plan = (function () {
       const c = await cargar(tareaId);
       if (c.mensaje) return c;
       if (!fechaValida(nuevaFecha)) return no('La fecha no es válida');
+      if (c.t.estado === 'quitada') return no('La tarea está quitada: reactívala primero');
       const previo = copia(c.t), f = copia(c.t);
       f.fechaBase = masDias(nuevaFecha, -(Number(f.desdeDia) || 0));
       if (Number(f.cadaDias) > 0) f.proxima = nuevaFecha; // las repetitivas con hechas se rigen por `proxima`
+      if (proximaFecha(f, hoyLocal()) !== nuevaFecha) return no('No se puede mover esta tarea a esa fecha');
       await DB.guardar('planTareas', f);
       return restaurar(previo);
     });
