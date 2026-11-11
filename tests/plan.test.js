@@ -218,6 +218,37 @@ module.exports = (async () => {
   assert.strictEqual(c.proximaFecha(J(await c.DB.obtener('planTareas', mvCat.id)), hoy), dias(hoy, 5));
   assert.ok((await P.mover(mvCat.id, 'mal')).mensaje);
 
+  // mover una repetitiva con hechas
+  const l6 = await mkLote({ fechaLlegada: dias(hoy, -30) });
+  const rep = await P.agregarPropia(l6, { titulo: 'rep', categoria: 'limpieza', fecha: dias(hoy, -20), cadaDias: 7 });
+  await P.marcarHecha(rep.tarea.id, { fecha: dias(hoy, -2) });
+  const repPrev = J(await c.DB.obtener('planTareas', rep.tarea.id));
+  assert.strictEqual(c.proximaFecha(repPrev, hoy), dias(hoy, 5));
+  const dr = await P.mover(rep.tarea.id, dias(hoy, 10));
+  assert.strictEqual(typeof dr, 'function');
+  let rf = J(await c.DB.obtener('planTareas', rep.tarea.id));
+  assert.strictEqual(c.proximaFecha(rf, hoy), dias(hoy, 10)); assert.strictEqual(c.estadoTarea(rf, hoy), 'proxima');
+  await dr();
+  assert.deepStrictEqual(J(await c.DB.obtener('planTareas', rep.tarea.id)), repPrev, 'deshacer mover restaura la fila exacta');
+  await P.mover(rep.tarea.id, dias(hoy, -1));
+  rf = J(await c.DB.obtener('planTareas', rep.tarea.id));
+  assert.strictEqual(c.proximaFecha(rf, hoy), dias(hoy, -1)); assert.strictEqual(c.estadoTarea(rf, hoy), 'atrasada');
+  await P.mover(rep.tarea.id, dias(hoy, 10));
+  await P.marcarHecha(rep.tarea.id, { fecha: hoy });
+  rf = J(await c.DB.obtener('planTareas', rep.tarea.id));
+  assert.ok(!('proxima' in rf), 'marcarHecha borra proxima');
+  assert.strictEqual(c.proximaFecha(rf, hoy), dias(hoy, 7));
+
+  // Reportes: un registro 'plan' no rompe ni cuenta
+  {
+    const lr = { id: 'R', genetica: 'isa-brown', avesInicio: 50, fechaLlegada: dias(hoy, -5), edadLlegadaDias: 0, estado: 'activo' };
+    const base = [{ id: 'a', loteId: 'R', fecha: dias(hoy, -1), tipo: 'alimento', datos: { kg: 5 } }];
+    const conPlan = base.concat([{ id: 'p', loteId: 'R', fecha: dias(hoy, -1), tipo: 'plan', datos: { tareaId: 't', titulo: '<b>x</b>' } }]);
+    const r1 = c.resumenReporte(lr, base, dias(hoy, -4), hoy, {}), r2 = c.resumenReporte(lr, conPlan, dias(hoy, -4), hoy, {});
+    assert.strictEqual(JSON.stringify(r2), JSON.stringify(r1));
+    assert.ok(c.textoReporte(r2, lr, 'periodo', { nombre: 'G' }));
+  }
+
   // lote cerrado: nada cambia
   let lc = await mkLote({ estado: 'cerrado' });
   const tc = await P.agregarCatalogo(l5, 'agua-bebederos'); // fila del lote activo para operaciones por id

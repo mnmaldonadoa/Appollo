@@ -112,6 +112,7 @@ const Plan = (function () {
       if (nota) h.nota = nota;
       if (producto) h.producto = producto;
       f.hechas = (f.hechas || []).concat([h]);
+      delete f.proxima; // la fecha movida ya cumplió su papel
       let reg = null;
       try {
         reg = await DB.guardar('registros', { loteId: c.t.loteId, fecha, tipo: 'plan', datos, creado: ahora() });
@@ -131,8 +132,7 @@ const Plan = (function () {
       if (!fechaValida(nuevaFecha)) return no('La fecha no es válida');
       const previo = copia(c.t), f = copia(c.t);
       f.fechaBase = masDias(nuevaFecha, -(Number(f.desdeDia) || 0));
-      // Con hechas, una tarea repetitiva se rige por la última hecha: la fecha base no la mueve.
-      if (proximaFecha(f, hoyLocal()) !== nuevaFecha) return no('No se puede mover esta tarea a esa fecha');
+      if (Number(f.cadaDias) > 0) f.proxima = nuevaFecha; // las repetitivas con hechas se rigen por `proxima`
       await DB.guardar('planTareas', f);
       return restaurar(previo);
     });

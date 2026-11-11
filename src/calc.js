@@ -347,7 +347,8 @@ function textoReporte(resumen, lote, periodo, granja) {
 
 /* =========================================================================
    Plan del ciclo — lógica pura (sin DOM). Fechas locales 'YYYY-MM-DD'.
-   Fila de tarea: { fechaBase, desdeDia, cadaDias?, hastaDia?, estado, hechas:[{fecha,...}], quimico? }
+   Fila de tarea: { fechaBase, desdeDia, cadaDias?, hastaDia?, proxima?, estado, hechas:[{fecha,...}], quimico? }
+   `proxima` (opcional, solo repetitivas): fecha elegida con «Mover fecha»; vale mientras sea posterior a la última hecha.
    ========================================================================= */
 const PLAN_GRACIA_DIAS = 3; // una ocurrencia sin hacer sigue "atrasada" hasta 3 días; después se salta a la siguiente
 
@@ -368,6 +369,7 @@ function proximaFecha(t, hoy) {
   const hechas = (t.hechas || []).map(h => h && h.fecha).filter(fechaValida).sort();
   let cand;
   if (!cada) cand = inicio;
+  else if (fechaValida(t.proxima) && (!hechas.length || t.proxima > hechas[hechas.length - 1])) cand = t.proxima; // «Mover fecha»
   else if (hechas.length) cand = _masDias(hechas[hechas.length - 1], cada);
   else if (hoy <= inicio) cand = inicio;
   else {
