@@ -129,6 +129,13 @@ module.exports = (async () => {
   const roe = f30.find(f => f.catalogoId === 'qui-roedores');
   assert.strictEqual(roe.proxima, dias(hoy, 5), 'roedores: día 0 + 7k; la primera desde la llegada (día 30) es el 35');
   assert.strictEqual(c.proximaFecha(roe, hoy), dias(hoy, 5));
+  // llegada pasada (hace 20 días con 30 días; hoy tienen 50): ninguna atrasada y ninguna `proxima` en el pasado
+  const lp = await mkLote({ fechaLlegada: dias(hoy, -20), edadLlegadaDias: 30 });
+  const fp = J(await P.crearInicial(lp, g, 'huevos', todoIsa));
+  assert.strictEqual(fp.filter(f => c.estadoTarea(f, hoy) === 'atrasada').length, 0, 'llegada pasada: 0 atrasadas');
+  assert.ok(fp.every(f => !('proxima' in f) || f.proxima >= hoy), 'nunca una próxima pasada');
+  const roeP = fp.find(f => f.catalogoId === 'qui-roedores'); // serie desde hace 50 días cada 7: 50 = 7*7+1 -> la siguiente en 6 días
+  assert.strictEqual(c.proximaFecha(roeP, hoy), dias(hoy, 6));
   const l0 = await mkLote({ edadLlegadaDias: 0 });
   const f0 = J(await P.crearInicial(l0, g, 'huevos', todoIsa));
   assert.ok(f0.some(f => f.catalogoId === 'lle-precalentar') && f0.some(f => f.catalogoId === 'lle-alimento-papel'), 'E=0: las de antes/al llegar se crean');

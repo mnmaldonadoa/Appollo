@@ -21,6 +21,7 @@ const tareas = [
   T({ id: 'hec', titulo: 'Ya hecha', desdeDia: 2, hechas: [{ fecha: '2026-11-03', nota: 'listo' }] }),
   T({ id: 'rep', titulo: 'Repetitiva', desdeDia: 0, cadaDias: 7, hechas: [{ fecha: '2026-11-08' }] }), // próxima 15/11
   T({ id: 'omi', titulo: 'Omitida', desdeDia: 1, hastaDia: 3 }),
+  T({ id: 'fin', titulo: 'Serie terminada', desdeDia: 1, cadaDias: 7, hastaDia: 10, hechas: [{ fecha: '2026-11-02' }, { fecha: '2026-11-09' }] }),
   T({ id: 'qui', titulo: 'Quitada', desdeDia: 12, estado: 'quitada', quitadaEn: '2026-11-09T10:00:00Z' }),
   T({ id: 'xss', origen: 'propia', titulo: '<img src=x onerror=alert(1)>', detalle: '"><script>x</script>', desdeDia: 0, fechaBase: '2026-11-12' }),
   T({ id: 'quim', categoria: 'quimico', titulo: 'Desparasitar', desdeDia: 3, hechas: [{ fecha: hoy, producto: 'Flubenol <b>' }],
@@ -38,7 +39,7 @@ const ids = k => JSON.parse(JSON.stringify(s[k].map(x => x.dato.id)));
 assert.deepStrictEqual(ids('atrasadas'), ['v3', 'atr'], 'atrasadas por fecha: vacuna 05/11, tarea 06/11');
 assert.deepStrictEqual(ids('semana'), ['hoy', 'xss', 'v1', 'rep', 'sem'], 'esta semana: hoy..hoy+7 por fecha');
 assert.deepStrictEqual(ids('proximas'), ['pro', 'v4']);
-assert.deepStrictEqual(ids('hechas').sort(), ['hec', 'omi', 'quim', 'v2'].sort(), 'hechas: únicas hechas, omitidas y vacunas aplicadas');
+assert.deepStrictEqual(ids('hechas').sort(), ['fin', 'hec', 'omi', 'quim', 'v2'].sort(), 'hechas: únicas hechas, omitidas y vacunas aplicadas');
 assert.strictEqual(ids('hechas')[0], 'quim', 'las hechas más recientes primero');
 assert.deepStrictEqual(ids('quitadas'), ['qui']);
 assert.strictEqual(s.hechas.find(x => x.dato.id === 'omi').estado, 'omitida');
@@ -59,6 +60,8 @@ assert.ok(tiene('pc-hecho', 'atr') && tiene('pc-quitar', 'atr') && tiene('pc-mov
 assert.ok(!tiene('pc-hecho', 'hec') && !tiene('pc-mover', 'hec'), 'única ya hecha: ni Hecho ni Mover');
 assert.ok(tiene('pc-quitar', 'hec') && tiene('pc-editar', 'hec'), 'única ya hecha: sí Quitar y Editar');
 assert.ok(tiene('pc-hecho', 'rep') && tiene('pc-mover', 'rep'), 'repetitiva con hechas: Hecho y Mover');
+assert.strictEqual(s.hechas.find(x => x.dato.id === 'fin').estado, 'hecha', '(preparación) serie terminada = hecha');
+assert.ok(!tiene('pc-hecho', 'fin') && !tiene('pc-mover', 'fin') && tiene('pc-quitar', 'fin') && tiene('pc-editar', 'fin'), 'serie terminada: sin Hecho ni Mover');
 assert.ok(!tiene('pc-mover', 'omi'), 'omitida: sin Mover');
 assert.ok(tiene('pc-reactivar', 'qui') && !tiene('pc-hecho', 'qui') && !tiene('pc-quitar', 'qui'), 'quitada: solo Reactivar');
 assert.ok(tiene('dl-aplicar', 'v1') && tiene('dl-aplicar', 'v3') && !tiene('dl-aplicar', 'v2'), 'vacunas pendientes con Marcar aplicada');

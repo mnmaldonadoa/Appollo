@@ -171,6 +171,13 @@ def main():
         filas = pg.evaluate("id => DB.listar('planTareas', {loteId: id})", lid)
         check("del catálogo agrega una fila nueva y la marca En el plan", len(filas) == n0 + 1 and any(x.get("catalogoId") == "agua-analisis" for x in filas))
         check("la hoja sigue abierta y el foco queda en la tarjeta", pg.is_visible(".hoja") and pg.evaluate(FOCO_OK))
+        rid = next(x["id"] for x in filas if x.get("catalogoId") == "agua-analisis")
+        pg.evaluate("id => Plan.quitar(id)", rid); pg.fill("#pc-buscar", "analizala")
+        esperar("!!document.querySelector('.hoja [data-cat-item=\"agua-analisis\"] [data-accion=pc-reactivar]')")
+        pg.click(".hoja [data-cat-item='agua-analisis'] [data-accion=pc-reactivar]"); toast("Labor reactivada")
+        check("Reactivar desde el catálogo: toast con Deshacer y la fila activa", pg.is_visible("#toast [data-accion=deshacer]") and fila(rid)["estado"] == "activa")
+        check("las pestañas de la hoja usan aria-selected (sin aria-pressed)", pg.locator(".hoja [data-accion=pc-hoja-pestana][aria-pressed]").count() == 0
+              and pg.get_attribute(".hoja #pc-tab-catalogo", "aria-selected") == "true")
 
         # ---------- Propia: título con HTML y título vacío ----------
         pg.click(".hoja [data-accion=pc-hoja-pestana][data-id=propia]")

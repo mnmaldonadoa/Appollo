@@ -96,7 +96,7 @@ const PlanCiclo = (function () {
   }
 
   function tareaHtml(it, hoy, activo) {
-    const t = it.dato, c = catDe(t.categoria), id = t.id, unicaHecha = it.estado === 'hecha' && !(Number(t.cadaDias) > 0);
+    const t = it.dato, c = catDe(t.categoria), id = t.id, unicaHecha = it.estado === 'hecha'; // única hecha o serie terminada: nada que marcar ni mover
     const ret = t.quimico ? textoRetiro(retiroVigente([t], [], hoy)) : [];
     let acciones = '';
     if (activo) {
@@ -362,7 +362,7 @@ ${pie('pc-editar-guardar', t.id, 'Guardar')}` });
     await pintarCatalogo();
     const it = id ? $h(`[data-cat-item="${cssq(id)}"]`) : null;
     if (it) enfocar(it.querySelector('button') || it);
-    App.toast(msg);
+    App.toast(msg, typeof r === 'function' ? { deshacer: r } : undefined); // Reactivar devuelve su deshacer
   }
 
   ACCIONES['pc-agregar'] = async el => {
@@ -371,7 +371,7 @@ ${pie('pc-editar-guardar', t.id, 'Guardar')}` });
     if (!lote || lote.estado !== 'activo') { App.refrescar(); return; }
     const g = gen(lote), hoy = hoyLocal();
     hojaLote = { lote, g, edad: edadDias(lote, hoy) };
-    const pest = (id, texto, sel) => `<button type="button" class="segmento-btn" role="tab" id="pc-tab-${id}" aria-controls="pc-panel-${id}" aria-selected="${sel}" aria-pressed="${sel}" data-accion="pc-hoja-pestana" data-id="${id}">${texto}</button>`;
+    const pest = (id, texto, sel) => `<button type="button" class="segmento-btn" role="tab" id="pc-tab-${id}" aria-controls="pc-panel-${id}" aria-selected="${sel}" data-accion="pc-hoja-pestana" data-id="${id}">${texto}</button>`;
     App.abrirHoja({ titulo: 'Agregar labor', contenido: `<div class="segmento pc-hoja-pestanas" role="tablist" aria-label="Origen de la labor">${pest('catalogo', 'Del catálogo', true)}${pest('propia', 'Propia', false)}</div>
 <div class="pc-panel" id="pc-panel-catalogo" role="tabpanel" aria-labelledby="pc-tab-catalogo">
   ${campo('pc-buscar', 'Buscar en el catálogo', '<input class="reg-texto" id="pc-buscar" type="search" autocomplete="off" placeholder="Ej.: agua, cama, piojos">')}
@@ -394,7 +394,7 @@ ${pie('pc-editar-guardar', t.id, 'Guardar')}` });
     if (!c) return;
     c.querySelectorAll('[data-accion="pc-hoja-pestana"]').forEach(b => {
       const sel = b === el;
-      b.setAttribute('aria-selected', String(sel)); b.setAttribute('aria-pressed', String(sel));
+      b.setAttribute('aria-selected', String(sel));
       const p = c.querySelector('#' + b.getAttribute('aria-controls'));
       if (p) p.hidden = !sel;
     });

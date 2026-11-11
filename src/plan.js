@@ -44,7 +44,7 @@ const Plan = (function () {
   function crearInicial(lote, genetica, modo, ids) {
     return serie(async () => {
       if (cerrado(lote)) return CERRADO;
-      const quiere = new Set(Array.isArray(ids) ? ids : []), edad = edadDias(lote, hoyLocal()), out = [];
+      const hoy = hoyLocal(), quiere = new Set(Array.isArray(ids) ? ids : []), edad = edadDias(lote, hoy), out = [];
       const llegadaE = Number(lote.edadLlegadaDias) || 0;
       const existentes = await listar(lote.id);
       for (const t of tareasDelCatalogo(genetica, modo)) {
@@ -53,12 +53,14 @@ const Plan = (function () {
         if (!sugeribleAlLlegar(t, llegadaE)) continue; // única que ya pasó antes de la llegada
         if (existentes.some(e => e.catalogoId === t.id)) continue;
         const f = filaCatalogo(lote, t);
-        // Repetitiva que empezó antes de la llegada: la primera ocurrencia es la primera de su serie desde la llegada
-        // (no una "atrasada" de días en que las aves aún no estaban).
-        if (Number(f.cadaDias) > 0 && fechaValida(lote.fechaLlegada)) {
+        // Repetitiva cuya serie empezó antes de que existiera este plan (antes de la llegada o antes de hoy): la primera
+        // ocurrencia es la primera de su serie en o después de max(llegada, hoy). Nunca queda una `proxima` pasada,
+        // y el plan recién creado no trae atrasadas de días en que no existía (ni aves ni plan).
+        if (Number(f.cadaDias) > 0) {
           const inicio = masDias(f.fechaBase, Number(f.desdeDia) || 0);
-          if (inicio < lote.fechaLlegada) {
-            const d = Math.round((fechaADate(lote.fechaLlegada) - fechaADate(inicio)) / 86400000);
+          const desde = fechaValida(lote.fechaLlegada) && lote.fechaLlegada > hoy ? lote.fechaLlegada : hoy;
+          if (inicio < desde) {
+            const d = Math.round((fechaADate(desde) - fechaADate(inicio)) / 86400000);
             f.proxima = masDias(inicio, Math.ceil(d / f.cadaDias) * f.cadaDias);
           }
         }
