@@ -14,7 +14,19 @@ Aplicación móvil (PWA) que funciona **sin internet**. Sirve para llevar el dí
 4. **Registrar** (hoja inferior): mortalidad, alimento, huevos, peso, vacuna o sanidad en 3 toques o menos, con **Deshacer**.
 5. **Lotes** y **detalle del lote:** historial, gráfica frente al estándar, vacunas pendientes, cerrar o reabrir el lote.
 6. **Alertas:** mortalidad alta, atraso de registros, vacunas, retiros, cambio de fase e inventario bajo. La insignia de la barra cuenta las urgentes.
-7. **Más:** Inventario (el alimento registrado descuenta del stock), Reportes (resumen por periodo, copiar o compartir), Planificar y Ajustes (granja, precios, tema claro/oscuro, respaldo y restauración).
+7. **Plan del ciclo** (pestaña del detalle del lote): ver abajo.
+8. **Más:** Inventario (el alimento registrado descuenta del stock), Reportes (resumen por periodo, copiar o compartir), Planificar y Ajustes (granja, precios, tema claro/oscuro, respaldo y restauración).
+
+## Plan del ciclo
+
+Cada lote nuevo puede llevar un plan de labores para todo su ciclo, tomado de un catálogo de referencia (`src/catalogo.js`; fuentes en `docs/fuentes-catalogo.md`). Se elige al crear el lote y se ve en la pestaña **Plan** del detalle del lote.
+
+- Las labores se agrupan en **Esta semana**, **Próximas**, **Hechas** y **Quitadas**, con su fecha según la edad del lote.
+- **Hecho** guarda la labor (con producto y nota si es un químico) y deja un registro de tipo `plan` en el historial; **Deshacer** lo revierte.
+- **Quitar** saca una labor del plan sin borrarla y **Reactivar** la devuelve. **Agregar** permite sumar labores del catálogo o **propias**.
+- Los químicos hechos con retiro mueven las alertas: **No vender huevos hasta…** y **No vender carne hasta…**.
+- Las labores viajan en el respaldo (exportar e importar) y funcionan sin conexión.
+- Un lote sin plan sigue funcionando igual que antes.
 
 ## Estructura
 
@@ -50,14 +62,14 @@ node tests/run.js             # pruebas unitarias: cálculos, alertas, validaci�
 python3 tests/e2e/todo.py     # recorrido completo, sin conexión, claro y oscuro, objetivos táctiles
 ```
 
-Las demás pruebas de extremo a extremo (`tests/e2e/lotes.py`, `registro.py`, `alertas.py`, `reportes.py`, `planificar.py`, `planificar_golden.py`, `db.py`, `migracion.py`, `visual.py`) se ejecutan igual: `python3 tests/e2e/<nombre>.py`. Cada una levanta su propio servidor `http.server` sobre `dist/` (el service worker y IndexedDB necesitan `http`, no `file://`) y usa un teléfono de 360×740. `visual.py` necesita antes `python3 build.py --kit`.
+Las demás pruebas de extremo a extremo (`tests/e2e/lotes.py`, `registro.py`, `alertas.py`, `reportes.py`, `planificar.py`, `planificar_golden.py`, `plan.py`, `db.py`, `migracion.py`, `visual.py`) se ejecutan igual: `python3 tests/e2e/<nombre>.py`. Cada una levanta su propio servidor `http.server` sobre `dist/` (el service worker y IndexedDB necesitan `http`, no `file://`) y usa un teléfono de 360×740. `visual.py` necesita antes `python3 build.py --kit`.
 
 Reglas que las pruebas vigilan: ningún botón o campo de menos de 56 px de alto, sin desborde horizontal ni en claro ni en oscuro, contraste de texto de al menos 7:1, cero errores de consola y la app completa sin conexión. Para esperar un resultado asíncrono (una escritura en la base) usa `esperar()` de `tests/e2e/util.py`; no uses `wait_for_function` con un predicado que devuelva una Promesa.
 
 ## PWA y uso sin conexión
 
-- La primera vez la app debe abrirse desde una dirección `https` (o `http://localhost`). El service worker guarda `index.html`, el manifest, los íconos y las cuatro tipografías en el caché `appollo-v4`; desde entonces abre sin internet y los datos se escriben en el teléfono.
-- **Sube el número de `CACHE` en `src/sw.js` en cada versión que publiques** (`appollo-v4` → `appollo-v5`…): sin eso los teléfonos que ya instalaron la app siguen con los archivos viejos. La instalación del service worker descarga los archivos con `cache: 'reload'`, así que nunca guarda copias viejas del caché HTTP.
+- La primera vez la app debe abrirse desde una dirección `https` (o `http://localhost`). El service worker guarda `index.html`, el manifest, los íconos y las cuatro tipografías en el caché `appollo-v5`; desde entonces abre sin internet y los datos se escriben en el teléfono.
+- **Sube el número de `CACHE` en `src/sw.js` en cada versión que publiques** (`appollo-v5` → `appollo-v6`…): sin eso los teléfonos que ya instalaron la app siguen con los archivos viejos. La instalación del service worker descarga los archivos con `cache: 'reload'`, así que nunca guarda copias viejas del caché HTTP.
 - La barra de estado y la pantalla de arranque usan el color crema de la app (`#F6F1E7`; `#121A14` en modo oscuro).
 - Si el navegador no deja guardar datos (modo privado), aparece un aviso y conviene exportar un respaldo desde **Ajustes**.
 
@@ -94,6 +106,18 @@ Para Play Store se necesita un APK/AAB firmado (*release*) con tu propia llave. 
 - El margen superior de pantalla usa `:has()` (Chrome 105 o más); en un WebView más viejo aparece un poco de espacio extra arriba.
 - Los colores del ícono de Android (`ic_launcher_background.xml`) los ajusta quien genera el APK.
 - Un respaldo con una genética desconocida se importa, pero el lote queda sin genética y sin alertas.
+
+### Plan del ciclo
+
+- **Sin dosis:** el plan muestra el ingrediente activo y el retiro, nunca la dosis. Confirma producto, dosis y retiro con la etiqueta y con tu veterinario.
+- **Inconsistencia conocida:** el Planificador original sí muestra dosis en sus tratamientos reactivos; el plan del ciclo no.
+- El catálogo es una referencia general y no sustituye al veterinario.
+- Los tiempos de retiro del catálogo provienen de fuentes de la Unión Europea, el Reino Unido y Estados Unidos; en Ecuador rige la etiqueta del producto registrado en Agrocalidad.
+- Ningún químico del catálogo tiene retiro de huevo mayor que 0 (en `src/catalogo.js` es 0 días o no hay dato en la fuente), así que con el catálogo actual el aviso «No vender huevos hasta…» no se genera; el retiro de carne sí (por ejemplo, 7 días para flubendazol).
+- **Programa de luz:** el texto de `src/model.js` (`programaLuz`) dice subir 15–30 min por semana; la guía Hy-Line Max da pasos de 30–60 min (la HL 2018 no da minutos). Pendiente de armonizar.
+- **Huecos del catálogo:** criolla, campero, doble propósito (Rhode Island, Plymouth Rock) solo tienen la labor general de acceso al alimento, sin cambios de fase de alimento; Hisex Brown solo tiene las dos labores de peso de postura; para Ross 308 solo hay dos cambios (día 11 a Crecimiento, día 25 a Engorde) y no hay un segundo Finalizador.
+- Las pestañas del detalle del lote no se recorren con las flechas del teclado.
+- El estilo visual nuevo está pendiente (subproyecto aparte).
 
 ## Sobre los datos
 

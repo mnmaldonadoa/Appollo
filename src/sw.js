@@ -1,5 +1,5 @@
 /* Appollo · Service worker: guarda la app en el teléfono para usarla sin internet */
-const CACHE = 'appollo-v4';
+const CACHE = 'appollo-v5';
 const ARCHIVOS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png',
   './fonts/atkinson-hyperlegible-latin-400-normal.woff2', './fonts/atkinson-hyperlegible-latin-700-normal.woff2',
   './fonts/zilla-slab-latin-600-normal.woff2', './fonts/zilla-slab-latin-700-normal.woff2'];
