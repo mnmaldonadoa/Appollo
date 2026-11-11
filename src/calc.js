@@ -340,3 +340,98 @@ function textoReporte(resumen, lote, periodo, granja) {
     `Margen: ${dinero(resumen.margen)}`
   ].join('\n');
 }
+
+
+/* =========================================================================
+   Plan del ciclo — lógica pura (sin DOM). Fechas locales 'YYYY-MM-DD'.
+   Fila de tarea: { fechaBase, desdeDia, cadaDias?, hastaDia?, estado, hechas:[{fecha,...}], quimico? }
+   ========================================================================= */
+const PLAN_GRACIA_DIAS = 3; // una ocurrencia sin hacer sigue "atrasada" hasta 3 días; después se salta a la siguiente
+
+function _planDiffDias(a, b) { // días enteros de a a b (b − a), tolerante al cambio de hora
+  return Math.round((fechaADate(b) - fechaADate(a)) / 86400000);
+}
+
+/* Próxima fecha de la tarea, o null si está quitada o ya pasó hastaDia (contado desde fechaBase).
+   - Con hechas y cadaDias: la última hecha + cadaDias.
+   - Única (sin cadaDias): fechaBase + desdeDia.
+   - Repetitiva sin hechas: ocurrencia de la rejilla fechaBase + desdeDia + k·cadaDias; la más reciente <= hoy
+     si dista <= 3 días (sale atrasada/hoy, una sola vez), si no la siguiente > hoy. Nunca antes de fechaBase + desdeDia. */
+function proximaFecha(t, hoy) {
+  if (!t || t.estado === 'quitada' || !fechaValida(t.fechaBase)) return null;
+  if (!fechaValida(hoy)) hoy = hoyLocal();
+  const inicio = _masDias(t.fechaBase, Number(t.desdeDia) || 0);
+  const cada = Number(t.cadaDias) > 0 ? Number(t.cadaDias) : 0;
+  const hechas = (t.hechas || []).map(h => h && h.fecha).filter(fechaValida).sort();
+  let cand;
+  if (!cada) cand = inicio;
+  else if (hechas.length) cand = _masDias(hechas[hechas.length - 1], cada);
+  else if (hoy <= inicio) cand = inicio;
+  else {
+    const k = Math.floor(_planDiffDias(inicio, hoy) / cada);
+    const previa = _masDias(inicio, k * cada); // <= hoy
+    cand = _planDiffDias(previa, hoy) <= PLAN_GRACIA_DIAS ? previa : _masDias(previa, cada);
+  }
+  if (t.hastaDia != null && t.hastaDia !== '' && cand > _masDias(t.fechaBase, Number(t.hastaDia))) return null;
+  return cand;
+}
+
+/* 'hecha' (única ya hecha, o serie con hechas que ya terminó) | 'atrasada' | 'hoy' | 'proxima' | 'quitada'
+   | 'omitida' (pasó hastaDia sin ninguna hecha). */
+function estadoTarea(t, hoy) {
+  if (!t) return 'quitada';
+  if (t.estado === 'quitada') return 'quitada';
+  if (!fechaValida(hoy)) hoy = hoyLocal();
+  const conHechas = Array.isArray(t.hechas) && t.hechas.length > 0;
+  const repetitiva = Number(t.cadaDias) > 0;
+  if (conHechas && !repetitiva) return 'hecha';
+  const p = proximaFecha(t, hoy);
+  if (p === null) return conHechas ? 'hecha' : 'omitida';
+  return p < hoy ? 'atrasada' : p === hoy ? 'hoy' : 'proxima';
+}
+
+/* Retiro vigente: máximo de fechaHecha + retiroXDias de todas las aplicaciones químicas hechas (también de
+   tareas quitadas) cuya fecha de fin sea > hoy. Las tareas químicas llevan sus días de retiro en `t.quimico`
+   ({retiroHuevoDias, retiroCarneDias, ...}, copiado del catálogo). `vacunasPlanAplicadas` se acepta solo por
+   compatibilidad de API: las vacunas del plan no tienen retiro aquí y se ignoran. */
+function retiroVigente(tareas, vacunasPlanAplicadas, hoy) {
+  if (!fechaValida(hoy)) hoy = hoyLocal();
+  const out = { huevo: null, carne: null };
+  for (const t of tareas || []) {
+    const q = t && t.quimico;
+    if (!q) continue;
+    for (const h of t.hechas || []) {
+      if (!h || !fechaValida(h.fecha)) continue;
+      for (const [campo, dias] of [['huevo', q.retiroHuevoDias], ['carne', q.retiroCarneDias]]) {
+        if (!(Number(dias) > 0)) continue;
+        const fin = _masDias(h.fecha, Number(dias));
+        if (fin > hoy && (out[campo] === null || fin > out[campo])) out[campo] = fin;
+      }
+    }
+  }
+  return out;
+}
+
+/* Tarea propia: { titulo, categoria, fecha, cadaDias?, detalle? } -> {mensaje} | {tarea}.
+   El título se guarda tal cual (el escape es de la vista). CATEGORIAS_PLAN vive en catalogo.js (se carga después):
+   se lee en el momento de la llamada. */
+function validarTareaPropia(o) {
+  const no = mensaje => ({ mensaje });
+  if (!o || typeof o !== 'object') return no('Faltan los datos de la tarea');
+  const titulo = typeof o.titulo === 'string' ? o.titulo.trim() : '';
+  if (!titulo) return no('Escribe un título para la tarea');
+  if (titulo.length > 80) return no('El título admite hasta 80 caracteres');
+  if (!CATEGORIAS_PLAN.some(x => x.id === o.categoria)) return no('Elige una categoría');
+  if (!fechaValida(o.fecha)) return no('La fecha no es válida');
+  let cadaDias;
+  const raw = typeof o.cadaDias === 'string' ? o.cadaDias.trim() : o.cadaDias;
+  if (raw !== '' && raw != null) {
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n < 1 || n > 365) return no('La repetición debe ser un número entero de 1 a 365 días');
+    cadaDias = n;
+  }
+  const tarea = { origen: 'propia', categoria: o.categoria, titulo,
+    detalle: typeof o.detalle === 'string' ? o.detalle.trim() : '', desdeDia: 0, fechaBase: o.fecha };
+  if (cadaDias) tarea.cadaDias = cadaDias;
+  return { tarea };
+}
