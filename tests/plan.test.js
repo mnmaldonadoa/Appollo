@@ -48,14 +48,14 @@ assert.strictEqual(estadoTarea(T({ cadaDias: 7, hastaDia: 30, hechas: [{ fecha: 
 
 // --- retiroVigente
 const quim = T({ categoria: 'quimico', quimico: { retiroHuevoDias: 7, retiroCarneDias: 0 }, hechas: [{ fecha: '2026-11-01', producto: 'p' }] });
-assert.deepStrictEqual(retiroVigente([quim], [], '2026-11-05'), { huevo: '2026-11-08', carne: null });
-assert.deepStrictEqual(retiroVigente([Object.assign({}, quim, { estado: 'quitada' })], [], '2026-11-05'), { huevo: '2026-11-08', carne: null });
-assert.deepStrictEqual(retiroVigente([quim], [], '2026-11-08'), { huevo: null, carne: null }, 'el día del vencimiento ya no está vigente');
-assert.deepStrictEqual(retiroVigente([quim], [], '2026-11-09'), { huevo: null, carne: null });
+assert.strictEqual(JSON.stringify(retiroVigente([quim], [], '2026-11-05')), JSON.stringify({ huevo: '2026-11-08', carne: null }));
+assert.strictEqual(JSON.stringify(retiroVigente([Object.assign({}, quim, { estado: 'quitada' })], [], '2026-11-05')), JSON.stringify({ huevo: '2026-11-08', carne: null }));
+assert.strictEqual(JSON.stringify(retiroVigente([quim], [], '2026-11-08')), JSON.stringify({ huevo: null, carne: null }), 'el día del vencimiento ya no está vigente');
+assert.strictEqual(JSON.stringify(retiroVigente([quim], [], '2026-11-09')), JSON.stringify({ huevo: null, carne: null }));
 const q2 = T({ quimico: { retiroHuevoDias: 3, retiroCarneDias: 10 }, hechas: [{ fecha: '2026-11-04' }, { fecha: '2026-11-02' }] });
-assert.deepStrictEqual(retiroVigente([quim, q2, T()], [{ fechaAplicada: '2026-11-03' }], '2026-11-05'), { huevo: '2026-11-08', carne: '2026-11-14' });
-assert.deepStrictEqual(retiroVigente([T({ quimico: { retiroHuevoDias: 7 } })], [], '2026-11-05'), { huevo: null, carne: null }, 'sin hechas no hay retiro');
-assert.deepStrictEqual(retiroVigente(null, null, '2026-11-05'), { huevo: null, carne: null });
+assert.strictEqual(JSON.stringify(retiroVigente([quim, q2, T()], [{ fechaAplicada: '2026-11-03' }], '2026-11-05')), JSON.stringify({ huevo: '2026-11-08', carne: '2026-11-14' }));
+assert.strictEqual(JSON.stringify(retiroVigente([T({ quimico: { retiroHuevoDias: 7 } })], [], '2026-11-05')), JSON.stringify({ huevo: null, carne: null }), 'sin hechas no hay retiro');
+assert.strictEqual(JSON.stringify(retiroVigente(null, null, '2026-11-05')), JSON.stringify({ huevo: null, carne: null }));
 
 // --- validarTareaPropia
 const ok = { titulo: 'Revisar bebederos', categoria: 'agua', fecha: '2026-11-10', cadaDias: '' };
