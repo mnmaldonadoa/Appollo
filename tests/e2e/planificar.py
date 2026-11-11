@@ -328,6 +328,7 @@ def main():
             check("la genética queda elegida en el paso 1", pg.get_attribute("#view [data-accion=nl-genetica][data-id=hyline-brown]", "aria-pressed") == "true")
             pg.click("#view [data-accion=nl-genetica][data-id=hyline-brown]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='2']")
             pg.click("#view [data-accion=nl-siguiente]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='3']")
+            pg.click("#view [data-accion=nl-plan-siguiente]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='4']")
             check("altitud precargada", pg.input_value("#nl-altitud") == "2800"
                   and pg.get_attribute("#view [data-accion=nl-altitud][data-valor='2800']", "aria-pressed") == "true", pg.input_value("#nl-altitud"))
             pg.click("#view [data-accion=nl-crear]")

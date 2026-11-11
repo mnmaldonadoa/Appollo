@@ -413,6 +413,17 @@ button { cursor: pointer; }
 .paso-hecho .paso-barra { background: var(--ok-viva); }
 .paso[aria-current="step"] { color: var(--texto); }
 .paso[aria-current="step"] .paso-barra { background: var(--huevo); }
+.pasos-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.nl-contador { margin: 0; font-size: 1.25rem; }
+.nl-cats { display: grid; gap: 10px; }
+.nl-cat { display: grid; gap: 10px; min-width: 0; }
+.nl-cat-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 56px; padding: 8px 16px; border-radius: var(--r); text-align: left;
+  background: var(--superficie); color: var(--texto); border: 2px solid var(--linea-fuerte); touch-action: manipulation; }
+.nl-cat-cab[aria-expanded="true"] { border-color: var(--primario); }
+.nl-cat-cuenta { flex: none; color: var(--secundario); font-weight: 700; }
+.nl-cat-cuerpo { display: grid; gap: 10px; min-width: 0; }
+.nl-cat-botones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.nl-detalle { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .paso-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .gen-lista { display: grid; gap: 10px; }

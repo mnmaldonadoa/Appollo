@@ -97,7 +97,7 @@ def main():
             pg.wait_for_selector("#view .nuevo-lote[data-paso='1']")
             n_gen = pg.evaluate("GENETICAS.length")
             check("paso 1 muestra todas las genéticas", pg.locator("#view [data-accion=nl-genetica]").count() == n_gen)
-            check("indicador de 3 pasos", pg.locator("#view .pasos .paso").count() == 3)
+            check("indicador de 4 pasos", pg.locator("#view .pasos .paso").count() == 4)
             quieto(pg)
             medir(pg, "nuevo lote 1")
             pg.screenshot(path=str(SDD / "t6-nuevo-lote.png"))
@@ -130,6 +130,7 @@ def main():
             check("los lotes rechazados no se guardaron", len(pg.evaluate("DB.listar('lotes')")) == 0)
             pg.click("#view [data-accion=nl-modo][data-modo=edad]"); pg.fill("#nl-edad", "30")
             pg.click("#view [data-accion=nl-siguiente]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='3']")
+            pg.click("#view [data-accion=nl-plan-siguiente]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='4']")
             check("primera vez: la altitud no viene supuesta", pg.input_value("#nl-altitud") == ""
                   and pg.locator("#view [data-accion=nl-altitud][aria-pressed=true]").count() == 0)
             check("altitud con 5 opciones rápidas", pg.locator("#view [data-accion=nl-altitud]").count() == 5)
@@ -171,6 +172,7 @@ def main():
             pg.wait_for_selector("#view .nuevo-lote[data-paso='1']"); pg.click("#view [data-accion=nl-genetica][data-id=cobb500]")
             pg.fill("#nl-aves", "50"); pg.click("#view [data-accion=nl-modo][data-modo=edad]"); pg.fill("#nl-edad", "10")
             pg.click("#view [data-accion=nl-siguiente]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='3']")
+            pg.click("#view [data-accion=nl-plan-siguiente]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='4']")
             check("altitud se precarga la segunda vez", pg.input_value("#nl-altitud") == "2800"
                   and pg.locator("#view [data-accion=nl-altitud][data-valor='2800'][aria-pressed=true]").count() == 1)
             pg.click("#view [data-accion=nl-crear]"); pg.wait_for_function("location.hash.startsWith('#/lote/')", timeout=4000)
@@ -285,6 +287,131 @@ def main():
             check("Lotes vacío ofrece Nuevo lote", pg.locator("#view [data-accion=nuevo-lote]").count() >= 1)
             medir(pg, "lotes vacío")
             ctx.close()
+            # ---------- 8. Paso «¿Qué vas a hacer en este ciclo?» ----------
+            ctx, pg = nueva()
+            pg.evaluate("DB.guardar('granja', {id: 'granja', nombre: 'Plan', tipo: 'postura', altitud: 2800, tema: 'auto'})")
+            pg.goto(url + "#/nuevo-lote"); pg.reload(); pg.wait_for_selector("#view .nuevo-lote[data-paso='1']")
+            MARCADAS = "[...document.querySelectorAll('#view [data-accion=nl-plan-tarea]:checked')].map(e => e.dataset.id).sort()"
+            TODAS = "[...document.querySelectorAll('#view [data-accion=nl-plan-tarea]')].map(e => e.dataset.id).sort()"
+            CONTADOR = "(document.querySelector('#view .nl-contador') || {textContent: ''}).textContent.trim()"
+
+            def abrir_todas(pg):
+                for i in range(pg.locator("#view .nl-cat-cab").count()):
+                    c = pg.locator("#view .nl-cat-cab").nth(i)
+                    if c.get_attribute("aria-expanded") != "true": c.click()
+
+            def ir_paso3(pg, gid, edad):
+                pg.click(f"#view [data-accion=nl-genetica][data-id={gid}]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='2']")
+                pg.fill("#nl-aves", "100"); pg.click("#view [data-accion=nl-modo][data-modo=edad]")
+                pg.click("#view [data-accion=nl-unidad][data-unidad=dias]"); pg.fill("#nl-edad", str(edad))
+                pg.click("#view [data-accion=nl-siguiente]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='3']")
+
+            def por_defecto(gid, edad):
+                return sorted(pg.evaluate(f"NuevoLote.planSugerido(GENETICAS.find(g => g.id === '{gid}'), {edad})"))
+
+            ir_paso3(pg, "hyline-brown", 30)
+            check("indicador del paso 3 de 4", "Paso 3 de 4" in pg.inner_text("#view .eyebrow") and pg.locator("#view .pasos .paso").count() == 4)
+            check("título del paso 3", pg.locator("#view h1").inner_text() == "¿Qué vas a hacer en este ciclo?")
+            ncat = pg.locator("#view .nl-cat").count()
+            check("hay una sección por categoría con tareas (>= 3)", ncat >= 3, ncat)
+            check("solo la primera sección viene abierta", pg.locator("#view .nl-cat-cab[aria-expanded=true]").count() == 1
+                  and pg.locator("#view .nl-cat").first.locator(".nl-cat-cab").get_attribute("aria-expanded") == "true")
+            abrir_todas(pg)
+            check("cada sección muestra k/n y Todo / Ninguno",
+                  pg.locator("#view .nl-cat-cuenta").count() == ncat and pg.locator("#view [data-accion=nl-plan-todo]").count() == ncat
+                  and pg.locator("#view [data-accion=nl-plan-ninguno]").count() == ncat)
+            pred = por_defecto("hyline-brown", 30)
+            check("selección inicial = tareas sugeridas para postura a los 30 días", pg.evaluate(MARCADAS) == pred, (len(pg.evaluate(MARCADAS)), len(pred)))
+            n0 = len(pred)
+            check("contador «N tareas elegidas»", pg.evaluate(CONTADOR) == f"{n0} tareas elegidas", pg.evaluate(CONTADOR))
+            nop = pg.evaluate("[...document.querySelectorAll('#view [data-accion=nl-plan-tarea]:disabled')].map(e => e.dataset.id)")
+            check("las tareas noPostura están deshabilitadas y sin marcar", len(nop) >= 1 and not set(nop) & set(pg.evaluate(MARCADAS)), nop)
+            check("las noPostura explican por qué", pg.locator("#view .nl-tarea:has(input:disabled)").first.inner_text().count("No se usa en gallinas de postura de huevo para consumo") == 1)
+            check("las tareas químicas muestran retiro y aviso",
+                  pg.locator("#view .nl-tarea", has_text="Retiro huevo:").count() >= 1
+                  and pg.locator("#view .nl-tarea", has_text="Confirma producto, dosis y retiro con la etiqueta y tu veterinario.").count() >= 1)
+            check("las tareas con retiro desconocido dicen 'ver etiqueta'", pg.locator("#view .nl-tarea", has_text="ver etiqueta").count() >= 1)
+            check("todas las sugeridas (no noPostura) son las visibles menos las noPostura", sorted(set(pg.evaluate(TODAS)) - set(nop)) == pred)
+            medir(pg, "paso 3 claro (todo abierto)")
+            pg.evaluate("document.documentElement.setAttribute('data-tema', 'oscuro')")
+            medir(pg, "paso 3 oscuro (todo abierto)")
+            pg.screenshot(path=str(SDD / "t7-paso3-oscuro.png"))
+            pg.evaluate("document.documentElement.removeAttribute('data-tema')")
+            # Ninguno en una categoría
+            cat0 = pg.locator("#view .nl-cat").first
+            cid = cat0.get_attribute("data-cat")
+            en_cat = pg.evaluate(f"[...document.querySelectorAll('#view [data-cat={cid}] [data-accion=nl-plan-tarea]:checked')].length")
+            check("la primera categoría tenía tareas marcadas", en_cat >= 1, en_cat)
+            pg.click(f"#view [data-cat={cid}] [data-accion=nl-plan-ninguno]")
+            check("«Ninguno» desmarca todas las tareas de la categoría",
+                  pg.evaluate(f"document.querySelectorAll('#view [data-cat={cid}] [data-accion=nl-plan-tarea]:checked').length") == 0)
+            check("«Ninguno» baja el contador y la cuenta k/n", pg.evaluate(CONTADOR) == f"{n0 - en_cat} tareas elegidas"
+                  and cat0.locator(".nl-cat-cuenta").inner_text().startswith("0/"), pg.evaluate(CONTADOR))
+            check("«Ninguno» no toca las otras categorías", len(pg.evaluate(MARCADAS)) == n0 - en_cat)
+            pg.click(f"#view [data-cat={cid}] [data-accion=nl-plan-todo]")
+            check("«Todo» vuelve a marcar las sugeridas de la categoría (sin las noPostura)", pg.evaluate(MARCADAS) == pred)
+            # Una tarea
+            tid = pred[0]
+            pg.click(f"#view [data-accion=nl-plan-tarea][data-id='{tid}']")
+            check("tocar una tarea la desmarca y el contador baja en 1", tid not in pg.evaluate(MARCADAS)
+                  and pg.evaluate(CONTADOR) == f"{n0 - 1} tareas elegidas", pg.evaluate(CONTADOR))
+            pg.click(f"#view [data-accion=nl-plan-tarea][data-id='{tid}']")
+            check("tocar de nuevo la tarea la vuelve a marcar", tid in pg.evaluate(MARCADAS) and pg.evaluate(CONTADOR) == f"{n0} tareas elegidas")
+            pg.click(f"#view [data-accion=nl-plan-tarea][data-id='{tid}']")
+            pg.click(f"#view [data-cat={cid}] [data-accion=nl-plan-ninguno]")
+            elegida = pg.evaluate(MARCADAS)
+            # Atrás y adelante conserva la selección
+            pg.click("#view [data-accion=nl-atras]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='2']")
+            check("Atrás desde el paso 3 vuelve al 2 con los datos", pg.input_value("#nl-aves") == "100" and pg.input_value("#nl-edad") == "30")
+            pg.click("#view [data-accion=nl-siguiente]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='3']")
+            check("Atrás y adelante conserva la selección", pg.evaluate(MARCADAS) == elegida and pg.evaluate(CONTADOR) == f"{len(elegida)} tareas elegidas",
+                  (len(pg.evaluate(MARCADAS)), len(elegida)))
+            # Cambiar la edad cambia lo sugerido y reinicia
+            pg.click("#view [data-accion=nl-atras]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='2']")
+            pg.fill("#nl-edad", "200"); pg.click("#view [data-accion=nl-siguiente]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='3']")
+            abrir_todas(pg)
+            check("cambiar la edad reinicia la selección a lo sugerido para esa edad", pg.evaluate(MARCADAS) == por_defecto("hyline-brown", 200))
+            # Cambiar la genética reinicia
+            pg.click(f"#view [data-cat={pg.locator('#view .nl-cat').first.get_attribute('data-cat')}] [data-accion=nl-plan-ninguno]")
+            check("(preparación) hay una selección modificada", pg.evaluate(MARCADAS) != por_defecto("hyline-brown", 200))
+            pg.click("#view [data-accion=nl-atras]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='2']")
+            pg.click("#view [data-accion=nl-atras]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='1']")
+            pg.click("#view [data-accion=nl-genetica][data-id=isa-brown]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='2']")
+            pg.click("#view [data-accion=nl-siguiente]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='3']"); abrir_todas(pg)
+            check("cambiar la genética reinicia la selección", pg.evaluate(MARCADAS) == por_defecto("isa-brown", 200), (len(pg.evaluate(MARCADAS)), len(por_defecto("isa-brown", 200))))
+            # Crear con lo elegido
+            pg.click(f"#view [data-cat={pg.locator('#view .nl-cat').first.get_attribute('data-cat')}] [data-accion=nl-plan-ninguno]")
+            elegida = pg.evaluate(MARCADAS)
+            check("(preparación) quedan tareas elegidas", len(elegida) >= 1)
+            pg.click("#view [data-accion=nl-plan-siguiente]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='4']")
+            pg.click("#view [data-accion=nl-altitud][data-valor='2800']"); pg.fill("#nl-galpon", "PL1")
+            pg.click("#view [data-accion=nl-crear]"); pg.wait_for_function("location.hash.startsWith('#/lote/')", timeout=4000)
+            lid = pg.evaluate("location.hash.split('/')[2]")
+            filas = pg.evaluate("id => DB.listar('planTareas', {loteId: id})", lid)
+            check("el lote tiene exactamente las tareas elegidas", sorted(f["catalogoId"] for f in filas) == elegida, (len(filas), len(elegida)))
+            check("las filas del plan son activas y del lote", all(f["loteId"] == lid and f["estado"] == "activa" for f in filas))
+            # Crear con todo desmarcado
+            pg.goto(url + "#/nuevo-lote"); pg.wait_for_selector("#view .nuevo-lote[data-paso='1']")
+            ir_paso3(pg, "hyline-brown", 30); abrir_todas(pg)
+            for i in range(pg.locator("#view [data-accion=nl-plan-ninguno]").count()):
+                pg.locator("#view [data-accion=nl-plan-ninguno]").nth(i).click()
+            check("todo desmarcado: contador en 0", pg.evaluate(CONTADOR) == "0 tareas elegidas" and pg.evaluate(MARCADAS) == [], pg.evaluate(CONTADOR))
+            medir(pg, "paso 3 vacío")
+            check("Continuar no se bloquea con 0 tareas", not pg.is_disabled("#view [data-accion=nl-plan-siguiente]"))
+            pg.click("#view [data-accion=nl-plan-siguiente]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='4']")
+            pg.fill("#nl-galpon", "VACIO"); pg.click("#view [data-accion=nl-crear]"); pg.wait_for_function("location.hash.startsWith('#/lote/')", timeout=4000)
+            lid0 = pg.evaluate("location.hash.split('/')[2]")
+            check("sin tareas: el lote se crea y no tiene filas de plan",
+                  pg.evaluate("id => DB.obtener('lotes', id).then(l => !!l)", lid0) and len(pg.evaluate("id => DB.listar('planTareas', {loteId: id})", lid0)) == 0)
+            check("el otro lote conserva sus tareas", len(pg.evaluate("id => DB.listar('planTareas', {loteId: id})", lid)) == len(elegida))
+            # Carne: las noPostura sí se pueden elegir
+            pg.goto(url + "#/nuevo-lote"); pg.wait_for_selector("#view .nuevo-lote[data-paso='1']")
+            ir_paso3(pg, "cobb500", 10); abrir_todas(pg)
+            check("en carne no hay tareas deshabilitadas por noPostura", pg.locator("#view [data-accion=nl-plan-tarea]:disabled").count() == 0)
+            check("en carne la selección inicial es la sugerida", pg.evaluate(MARCADAS) == por_defecto("cobb500", 10))
+            medir(pg, "paso 3 carne")
+            ctx.close()
+
             br.close()
         check("sin errores de consola ni de página", not errores, errores[:5])
     finally:

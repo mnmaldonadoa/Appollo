@@ -60,4 +60,23 @@ assert.deepStrictEqual(r.map(x => x.vacunaId), ['b_vir', 'b_nd2']);
 // 7. Criolla repite Newcastle cada 63 días (140 + 63k) como la de postura
 r = plan('criolla', 0);
 assert.ok(de(r, 'v_ref').length >= 2 && dias(de(r, 'v_ref')[0], de(r, 'v_ref')[1]) === 63);
+
+// 8. planSugerido: ids por defecto según genética, modo y edad
+const G = id => ctx.GENETICAS.find(g => g.id === id);
+const sug = (id, edad) => JSON.parse(JSON.stringify(NuevoLote.planSugerido(G(id), edad)));
+const cat = (id, modo) => JSON.parse(JSON.stringify(ctx.tareasDelCatalogo(G(id), modo)));
+const np = t => t.quimico && t.quimico.noPostura;
+let s0 = sug('hyline-brown', 0), todas = cat('hyline-brown', 'huevos');
+assert.ok(s0.length > 0 && todas.some(np), 'hay tareas noPostura en el catálogo de huevos');
+assert.deepStrictEqual(s0, todas.filter(t => !np(t)).map(t => t.id), 'en huevos: todas menos noPostura');
+assert.ok(todas.some(t => t.hastaDia != null), 'el catálogo de huevos tiene tareas con hastaDia');
+const pasada = todas.find(t => t.hastaDia != null && !np(t));
+assert.ok(s0.includes(pasada.id), 'con edad 0 la tarea con hastaDia sigue');
+assert.ok(!sug('hyline-brown', pasada.hastaDia + 1).includes(pasada.id), 'pasado su hastaDia se excluye');
+assert.ok(sug('hyline-brown', pasada.hastaDia).includes(pasada.id), 'justo en hastaDia aún entra');
+assert.deepStrictEqual(sug('hyline-brown', null), s0, 'edad inválida (null): todas las sugeridas');
+// carne: noPostura sí entra
+const carne = cat('cobb500', 'carne');
+assert.ok(carne.some(np) && sug('cobb500', 0).some(id => np(carne.find(t => t.id === id))), 'en carne las noPostura se sugieren');
+assert.deepStrictEqual(JSON.parse(JSON.stringify(NuevoLote.tareasVisibles(G('hyline-brown'), 0))).map(t => t.id), todas.map(t => t.id), 'tareasVisibles(0) lista todas (incluye noPostura)');
 console.log('ok   nuevolote.test.js');
