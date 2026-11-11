@@ -46,11 +46,17 @@ assert.strictEqual(proximaFecha(h, mas(11)), mas(14));
 assert.strictEqual(estadoTarea(T({ desdeDia: 40, hastaDia: 30 }), mas(45)), 'omitida');
 assert.strictEqual(estadoTarea(T({ cadaDias: 7, hastaDia: 30, hechas: [{ fecha: mas(28) }] }), mas(45)), 'hecha', 'serie con hechas que terminó no es omitida');
 
+const ua = T({ desdeDia: 3, hastaDia: 30 });
+assert.strictEqual(proximaFecha(ua, mas(59)), null);
+assert.strictEqual(estadoTarea(ua, mas(59)), 'omitida');
+assert.strictEqual(estadoTarea(ua, mas(30)), 'atrasada');
+assert.strictEqual(proximaFecha(ua, mas(30)), mas(3));
+
 // --- retiroVigente
 const quim = T({ categoria: 'quimico', quimico: { retiroHuevoDias: 7, retiroCarneDias: 0 }, hechas: [{ fecha: '2026-11-01', producto: 'p' }] });
 assert.strictEqual(JSON.stringify(retiroVigente([quim], [], '2026-11-05')), JSON.stringify({ huevo: '2026-11-08', carne: null }));
 assert.strictEqual(JSON.stringify(retiroVigente([Object.assign({}, quim, { estado: 'quitada' })], [], '2026-11-05')), JSON.stringify({ huevo: '2026-11-08', carne: null }));
-assert.strictEqual(JSON.stringify(retiroVigente([quim], [], '2026-11-08')), JSON.stringify({ huevo: null, carne: null }), 'el día del vencimiento ya no está vigente');
+assert.strictEqual(JSON.stringify(retiroVigente([quim], [], '2026-11-08')), JSON.stringify({ huevo: '2026-11-08', carne: null }), 'el día del vencimiento sigue bloqueado (hasta inclusive)');
 assert.strictEqual(JSON.stringify(retiroVigente([quim], [], '2026-11-09')), JSON.stringify({ huevo: null, carne: null }));
 const q2 = T({ quimico: { retiroHuevoDias: 3, retiroCarneDias: 10 }, hechas: [{ fecha: '2026-11-04' }, { fecha: '2026-11-02' }] });
 assert.strictEqual(JSON.stringify(retiroVigente([quim, q2, T()], [{ fechaAplicada: '2026-11-03' }], '2026-11-05')), JSON.stringify({ huevo: '2026-11-08', carne: '2026-11-14' }));
@@ -77,5 +83,7 @@ assert.ok(validarTareaPropia(Object.assign({}, ok, { fecha: '2026-02-30' })).men
 assert.ok(validarTareaPropia(Object.assign({}, ok, { fecha: '' })).mensaje);
 for (const bad of [0, '0', -3, 366, 1.5, 'abc']) assert.ok(validarTareaPropia(Object.assign({}, ok, { cadaDias: bad })).mensaje, 'cadaDias ' + bad);
 assert.strictEqual(validarTareaPropia(Object.assign({}, ok, { cadaDias: 365 })).tarea.cadaDias, 365);
+for (const bad of [true, '1e1', '0x10', '-3', {}]) assert.ok(validarTareaPropia(Object.assign({}, ok, { cadaDias: bad })).mensaje, 'cadaDias ' + String(bad));
+for (const good of [7, '7', ' 7 ', null, '', undefined]) assert.ok(validarTareaPropia(Object.assign({}, ok, { cadaDias: good })).tarea, 'cadaDias ' + String(good));
 assert.ok(validarTareaPropia(null).mensaje);
 console.log('plan (puro) OK');

@@ -372,7 +372,11 @@ function proximaFecha(t, hoy) {
     const previa = _masDias(inicio, k * cada); // <= hoy
     cand = _planDiffDias(previa, hoy) <= PLAN_GRACIA_DIAS ? previa : _masDias(previa, cada);
   }
-  if (t.hastaDia != null && t.hastaDia !== '' && cand > _masDias(t.fechaBase, Number(t.hastaDia))) return null;
+  if (t.hastaDia != null && t.hastaDia !== '') {
+    const limite = _masDias(t.fechaBase, Number(t.hastaDia));
+    if (cand > limite) return null;
+    if (!hechas.length && hoy > limite) return null; // nadie la hizo y ya pasó su ventana: omitida
+  }
   return cand;
 }
 
@@ -391,7 +395,8 @@ function estadoTarea(t, hoy) {
 }
 
 /* Retiro vigente: máximo de fechaHecha + retiroXDias de todas las aplicaciones químicas hechas (también de
-   tareas quitadas) cuya fecha de fin sea > hoy. Las tareas químicas llevan sus días de retiro en `t.quimico`
+   tareas quitadas) cuya fecha de fin sea >= hoy. La fecha devuelta es el último día bloqueado ('hasta' inclusive:
+   se puede vender desde el día siguiente), igual que estadoSanitario/alertaRetiro. Las tareas químicas llevan sus días de retiro en `t.quimico`
    ({retiroHuevoDias, retiroCarneDias, ...}, copiado del catálogo). `vacunasPlanAplicadas` se acepta solo por
    compatibilidad de API: las vacunas del plan no tienen retiro aquí y se ignoran. */
 function retiroVigente(tareas, vacunasPlanAplicadas, hoy) {
@@ -405,7 +410,7 @@ function retiroVigente(tareas, vacunasPlanAplicadas, hoy) {
       for (const [campo, dias] of [['huevo', q.retiroHuevoDias], ['carne', q.retiroCarneDias]]) {
         if (!(Number(dias) > 0)) continue;
         const fin = _masDias(h.fecha, Number(dias));
-        if (fin > hoy && (out[campo] === null || fin > out[campo])) out[campo] = fin;
+        if (fin >= hoy && (out[campo] === null || fin > out[campo])) out[campo] = fin;
       }
     }
   }
@@ -426,6 +431,7 @@ function validarTareaPropia(o) {
   let cadaDias;
   const raw = typeof o.cadaDias === 'string' ? o.cadaDias.trim() : o.cadaDias;
   if (raw !== '' && raw != null) {
+    if (typeof raw !== 'number' && !(typeof raw === 'string' && /^\d+$/.test(raw))) return no('La repetición debe ser un número entero de 1 a 365 días');
     const n = Number(raw);
     if (!Number.isInteger(n) || n < 1 || n > 365) return no('La repetición debe ser un número entero de 1 a 365 días');
     cadaDias = n;
