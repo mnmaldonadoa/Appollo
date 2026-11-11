@@ -161,6 +161,9 @@ function validarRegistro(tipo, datos, lote, registros, fecha) {
       if (d.retiroDias !== undefined && d.retiroDias !== null && d.retiroDias !== '' &&
         (!entero(d.retiroDias) || Number(d.retiroDias) < 0)) return no('Los días de retiro deben ser un número entero de 0 o más');
       break;
+    case 'plan': // labor del plan del ciclo (la crea Plan.marcarHecha)
+      if (!texto(d.titulo)) return no('Falta el título de la labor');
+      break;
     default:
       return no('Tipo de registro desconocido');
   }

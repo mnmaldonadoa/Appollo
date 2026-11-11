@@ -117,4 +117,24 @@ module.exports = (async () => {
   assert.ok((await c3.DB.importar(txtP)).ok);
   assert.deepStrictEqual(orden(J(JSON.parse(await c3.DB.exportar()).datos)), orden(J(JSON.parse(txtP).datos)), 'planTareas ida y vuelta idéntico');
   assert.deepStrictEqual(orden(J(JSON.parse(txtP).datos)).planTareas, orden(J(conPlan)).planTareas);
+
+  /* ---- Modo: memoria marcada; IndexedDB bloqueada un momento se espera y no cae a memoria ---- */
+  c = nuevo();
+  assert.strictEqual(c.DB.modo, null, 'sin abrir aún');
+  await c.DB.abrir();
+  assert.strictEqual(c.DB.modo, 'memoria');
+  c = nuevo(); c.setTimeout = setTimeout; c.clearTimeout = clearTimeout;
+  const bd = { closed: false, close() { this.closed = true; } };
+  let intentos = 0;
+  c.indexedDB = { open() {
+    intentos++;
+    const req = { result: bd };
+    setTimeout(() => { if (req.onblocked) req.onblocked(); }, 5);
+    setTimeout(() => { if (req.onsuccess) req.onsuccess(); }, 60); // la otra pestaña cierra la v1 a los 60 ms
+    return req;
+  } };
+  assert.strictEqual((await c.DB.abrir()).modo, 'indexeddb', 'esperó el cierre de la conexión anterior');
+  assert.strictEqual(intentos, 1);
+  assert.strictEqual(typeof bd.onversionchange, 'function');
+  bd.onversionchange(); assert.ok(bd.closed, 'onversionchange cierra la conexión');
 })();

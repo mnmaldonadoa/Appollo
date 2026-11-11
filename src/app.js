@@ -210,7 +210,7 @@ const App = (function () {
     franjaRed();
 
     try { estado.modo = (await DB.abrir()).modo; } catch (e) { estado.modo = 'memoria'; }
-    if (estado.modo === 'memoria') $('#franja-memoria').hidden = false;
+    if (estado.modo === 'memoria') { $('#franja-memoria').hidden = false; toast('No se pudo guardar en este dispositivo: tus datos se perderán al cerrar'); }
     if (legado) { try { await DB.migrarLS(); } catch (e) { /* la app sigue sin migrar */ } }
     try {
       estado.granja = await DB.obtener('granja', 'granja') ||

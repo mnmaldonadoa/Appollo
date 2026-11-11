@@ -88,6 +88,7 @@ const NuevoLote = (function () {
       for (const p of planVacunas(g, lote)) hechos.push((await DB.guardar('vacunasPlan', p)).id);
     } catch (e) {
       for (const id of hechos) { try { await DB.borrar('vacunasPlan', id); } catch (x) { /* sigue */ } }
+      if (lote) { try { await Plan.borrarDeLote(lote.id); } catch (x) { /* sigue */ } }
       if (lote) { try { await DB.borrar('lotes', lote.id); } catch (x) { /* sigue */ } }
       throw new Error('No se pudo guardar el lote. Intenta de nuevo.');
     }

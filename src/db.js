@@ -31,10 +31,21 @@ const DB = (function () {
     tx.onabort = () => mal(tx.error || new Error('Transacción cancelada'));
   });
 
-  function abrirIDB() {
+  const ESPERA_BLOQUEO_MS = 3000;
+  /* Abre la base. Si otra pestaña aún tiene abierta una versión anterior, `onblocked` no es un fallo: la petición
+     sigue pendiente y se resuelve en cuanto esa conexión se cierra (db.onversionchange la cierra en las pestañas
+     nuevas). Se espera hasta ~3 s; pasado ese tiempo se rechaza para que abrir() reintente una vez. */
+  function abrirIDB(espera) {
     return new Promise((ok, mal) => {
-      let req;
-      try { req = indexedDB.open(NOMBRE, VERSION); } catch (e) { mal(e); return; }
+      let req, fin = false, timer = 0;
+      const resolver = db => {
+        if (fin) { try { db.close(); } catch (e) { /* ya cerrada */ } return; } // llegó tarde: no deja conexiones colgadas
+        fin = true; clearTimeout(timer);
+        db.onversionchange = () => { try { db.close(); } catch (e) { /* ya cerrada */ } };
+        ok(db);
+      };
+      const fallar = e => { if (fin) return; fin = true; clearTimeout(timer); mal(e); };
+      try { req = indexedDB.open(NOMBRE, VERSION); } catch (e) { fallar(e); return; }
       req.onupgradeneeded = () => {
         const db = req.result;
         // Crea solo los almacenes que faltan: una base v1 conserva sus datos y recibe planTareas (v2).
@@ -45,9 +56,9 @@ const DB = (function () {
           if (s === 'vacunasPlan' || s === 'planTareas') st.createIndex('loteId', 'loteId');
         });
       };
-      req.onsuccess = () => ok(req.result);
-      req.onerror = () => mal(req.error || new Error('No se pudo abrir IndexedDB'));
-      req.onblocked = () => mal(new Error('IndexedDB bloqueada'));
+      req.onsuccess = () => resolver(req.result);
+      req.onerror = () => fallar(req.error || new Error('No se pudo abrir IndexedDB'));
+      req.onblocked = () => { if (!timer) timer = setTimeout(() => fallar(new Error('IndexedDB bloqueada')), espera === undefined ? ESPERA_BLOQUEO_MS : espera); };
     }).then(db => ({
       modo: 'indexeddb',
       async todos(s) { return pedido(db.transaction(s).objectStore(s).getAll()); },
@@ -87,7 +98,7 @@ const DB = (function () {
   function abrir() {
     if (impl) return Promise.resolve({ modo: impl.modo });
     if (!abriendo) {
-      abriendo = (typeof indexedDB === 'undefined' || !indexedDB ? Promise.reject(new Error('Sin IndexedDB')) : abrirIDB())
+      abriendo = (typeof indexedDB === 'undefined' || !indexedDB ? Promise.reject(new Error('Sin IndexedDB')) : abrirIDB().catch(() => abrirIDB()))
         .catch(() => abrirMemoria())
         .then(i => { impl = i; return { modo: i.modo }; });
     }
@@ -196,5 +207,5 @@ const DB = (function () {
     return n;
   }
 
-  return { abrir, listar, obtener, guardar, borrar, exportar, importar, migrarLS, STORES };
+  return { get modo() { return impl ? impl.modo : null; }, abrir, listar, obtener, guardar, borrar, exportar, importar, migrarLS, STORES };
 })();

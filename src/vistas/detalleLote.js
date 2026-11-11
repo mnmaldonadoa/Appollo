@@ -15,7 +15,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   const n = x => (Number.isFinite(Number(x)) ? formatoNumero(Number(x)) : '—');
   const copia = o => JSON.parse(JSON.stringify(o));
   const TIPO = { mortalidad: ['Mortalidad', 'cruz'], alimento: ['Alimento', 'saco'], huevos: ['Huevos', 'huevo'],
-    peso: ['Peso', 'balanza'], vacuna: ['Vacuna', 'jeringa'], sanidad: ['Sanidad', 'termo'] };
+    peso: ['Peso', 'balanza'], vacuna: ['Vacuna', 'jeringa'], sanidad: ['Sanidad', 'termo'], plan: ['Labor', 'hoja'] };
 
   function valorReg(r) {
     const d = r.datos || {};
@@ -25,6 +25,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
       case 'huevos': return `${n(d.cantidad)} huevos${Number(d.rotos) > 0 ? ' · ' + n(d.rotos) + ' rotos' : ''}`;
       case 'peso': return `${n(d.gramos)} g por ave`;
       case 'vacuna': return d.nombre || 'Vacuna';
+      case 'plan': return d.titulo || 'Labor del plan';
       case 'sanidad': return [d.enfermedad, d.tratamiento].filter(Boolean).join(' · ') + (Number(d.retiroDias) > 0 ? ` · retiro ${n(d.retiroDias)} días` : '');
     }
     return '';
@@ -93,7 +94,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   <h2 class="seccion-titulo">Historial</h2>
   ${orden.length ? `<ul class="dl-lista">${orden.slice(0, lim).map(r => {
     const t = TIPO[r.tipo] || [r.tipo, 'hoja'];
-    return `<li class="dl-reg"><span class="dl-icono">${icono(t[1])}</span><div class="dl-fila-texto"><b>${esc(t[0])} · ${esc(valorReg(r))}</b><span>${esc(fechaTxt(r.fecha))}</span></div>
+    return `<li class="dl-reg"><span class="dl-icono">${icono(t[1])}</span><div class="dl-fila-texto"><b>${r.tipo === 'plan' ? esc(t[0] + ': ' + valorReg(r)) : esc(t[0] + ' · ' + valorReg(r))}</b><span>${esc(fechaTxt(r.fecha))}</span></div>
   ${Boton({ texto: 'Borrar', variante: 'secundario', accion: 'dl-borrar', datos: { id: r.id }, clase: 'dl-borrar' })}</li>`;
   }).join('')}</ul>${orden.length > lim ? Boton({ texto: `Ver más (${formatoNumero(orden.length - lim)})`, variante: 'secundario', accion: 'dl-mas', datos: { id: l.id }, clase: 'btn-ancho' }) : ''}`
     : '<p class="pantalla-texto">Aún no hay registros. Usa ＋ Registrar en la barra de abajo.</p>'}
@@ -149,13 +150,21 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     const previo = copia(r), kg = r.tipo === 'alimento' ? Number(r.datos && r.datos.descontadoKg) || 0 : 0;
     const plan = r.tipo === 'vacuna' && r.datos && r.datos.planId ? await DB.obtener('vacunasPlan', r.datos.planId) : null;
     const planPrevio = plan ? copia(plan) : null;
+    const tarea = r.tipo === 'plan' && r.datos && r.datos.tareaId ? await DB.obtener('planTareas', r.datos.tareaId) : null;
+    const tareaPrevia = tarea ? copia(tarea) : null;
     await hacer(async () => {
       await DB.borrar('registros', r.id);
+      if (tarea) { // la labor ya no consta como hecha
+        const t = copia(tarea), i = (t.hechas || []).findIndex(h => h.fecha === r.fecha);
+        if (i >= 0) t.hechas.splice(i, 1);
+        await DB.guardar('planTareas', t);
+      }
       if (plan) { const p = copia(plan); delete p.fechaAplicada; await DB.guardar('vacunasPlan', p); }
       await inventario(-kg);
     }, 'Registro borrado', async () => {
       await DB.guardar('registros', previo);
       if (planPrevio) await DB.guardar('vacunasPlan', planPrevio);
+      if (tareaPrevia) await DB.guardar('planTareas', tareaPrevia);
       const ap = await inventario(kg);
       if (kg && ap !== kg) await DB.guardar('registros', Object.assign({}, previo, { datos: Object.assign({}, previo.datos, { descontadoKg: ap }) }));
     });
@@ -213,6 +222,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
       const [regs, vacs] = await Promise.all([DB.listar('registros', { loteId: id }), DB.listar('vacunasPlan', { loteId: id })]);
       for (const r of regs) await DB.borrar('registros', r.id);
       for (const v of vacs) await DB.borrar('vacunasPlan', v.id);
+      await Plan.borrarDeLote(id);
       await DB.borrar('lotes', id);
       if (App.estado.loteActivoId === id) App.fijarLote(null);
     } catch (e) { el.disabled = false; App.toast('No se pudo borrar. Intenta de nuevo.'); return; }

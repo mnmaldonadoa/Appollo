@@ -192,6 +192,40 @@ def main():
         pg.evaluate("DB.guardar('planTareas', {id: 'pt1', loteId: 'V1L', titulo: 'x', hechas: []})")
         check("planTareas se puede guardar y consultar por loteId", len(pg.evaluate("DB.listar('planTareas', {loteId: 'V1L'})")) == 1)
         ctx.close()
+        # ---------- 7. Una pestaña vieja mantiene abierta la base v1: la app nueva espera y NO cae a memoria ----------
+        ctx = nuevo_contexto(br, viewport={"width": 360, "height": 740})
+        vieja = ctx.new_page()
+        vieja.on("pageerror", lambda e: errores.append("pageerror vieja: " + str(e)))
+        vieja.goto(url + "manifest.webmanifest")
+        vieja.evaluate("""() => new Promise((ok, mal) => {
+          const rq = indexedDB.open('appollo', 1);
+          rq.onupgradeneeded = () => {
+            const db = rq.result;
+            ['granja', 'lotes', 'registros', 'inventario', 'vacunasPlan'].forEach(s => {
+              const st = db.createObjectStore(s, { keyPath: 'id' });
+              if (s === 'registros') st.createIndex('loteId+fecha', ['loteId', 'fecha']);
+              if (s === 'vacunasPlan') st.createIndex('loteId', 'loteId');
+            });
+          };
+          rq.onerror = () => mal(rq.error);
+          rq.onsuccess = () => {
+            const db = rq.result, tx = db.transaction('lotes', 'readwrite');
+            tx.objectStore('lotes').put({ id: 'BL', nombre: 'Lote bloqueado', genetica: 'isa-brown', avesInicio: 9, fechaLlegada: '2026-01-02', edadLlegadaDias: 0, estado: 'activo' });
+            tx.oncomplete = () => { window.__conexion = db; ok(); };   // la pestaña vieja la deja abierta, sin onversionchange
+            tx.onerror = () => mal(tx.error);
+          };
+        })""")
+        vieja.evaluate("() => { setTimeout(() => window.__conexion.close(), 1200); }")  # la pestaña vieja la cierra a los 1,2 s
+        nueva_pg = ctx.new_page()
+        nueva_pg.on("pageerror", lambda e: errores.append("pageerror: " + str(e)))
+        nueva_pg.goto(url); nueva_pg.wait_for_selector("#view .pantalla, #view .vista-error", timeout=8000)
+        esperar(nueva_pg, "() => DB.listar('lotes').then(l => l.some(x => x.id === 'BL'))", 6000)
+        check("base v1 bloqueada: la app termina en indexeddb (no memoria)", nueva_pg.evaluate("DB.modo") == "indexeddb" and nueva_pg.evaluate("App.estado.modo") == "indexeddb")
+        check("base v1 bloqueada: los datos siguen y no hay aviso de pérdida", nueva_pg.evaluate("DB.obtener('lotes', 'BL')")["nombre"] == "Lote bloqueado" and nueva_pg.locator("#franja-memoria").is_hidden())
+        nueva_pg.evaluate("DB.guardar('lotes', {id: 'BL2', nombre: 'Otro', estado: 'activo'})")
+        nueva_pg.reload(); nueva_pg.wait_for_selector("#view .pantalla, #view .vista-error", timeout=8000)
+        check("base v1 bloqueada: lo guardado persiste tras recargar", nueva_pg.evaluate("DB.obtener('lotes', 'BL2')") is not None)
+        ctx.close()
         br.close()
     check("sin errores de consola ni de página", not errores, errores[:5])
     print("TODO OK" if not fallos else f"{fallos} FALLOS")
