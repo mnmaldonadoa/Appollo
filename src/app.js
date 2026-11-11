@@ -155,8 +155,14 @@ const App = (function () {
     const quitar = () => { capa.remove(); };
     if (inmediato || reducirMovimiento()) quitar();
     else { capa.classList.add('cerrando'); setTimeout(quitar, 220); }
-    if (previo && document.contains(previo) && typeof previo.focus === 'function') {
-      try { previo.focus({ preventScroll: true }); } catch (e) { /* sin foco */ }
+    // Si la vista se redibujó con la hoja abierta, el foco vuelve al control equivalente (mismo data-accion y data-id).
+    let destino = previo;
+    if (destino && !document.contains(destino) && destino.dataset && destino.dataset.accion) {
+      const q = v => (window.CSS && CSS.escape ? CSS.escape(v) : String(v).replace(/["\\]/g, '\\$&'));
+      destino = document.querySelector(`#view [data-accion="${q(destino.dataset.accion)}"]` + (destino.dataset.id ? `[data-id="${q(destino.dataset.id)}"]` : ''));
+    }
+    if (destino && document.contains(destino) && typeof destino.focus === 'function') {
+      try { destino.focus({ preventScroll: true }); } catch (e) { /* sin foco */ }
     }
   }
   const hojaAbierta = () => (hoja ? hoja.capa : null);

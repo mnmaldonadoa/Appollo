@@ -1,6 +1,6 @@
 /* =========================================================================
-   APPOLLO · Detalle de lote: resumen, gráfica real vs proyectado, historial (Borrar + Deshacer),
-   calendario de vacunas (Marcar aplicada + Deshacer) y Cerrar / Reabrir lote.
+   APPOLLO · Detalle de lote: pestañas Resumen (gráfica real vs proyectado, historial con Borrar + Deshacer,
+   calendario de vacunas con Marcar aplicada + Deshacer, Cerrar / Reabrir / Borrar lote) y Plan del ciclo (planCiclo.js).
    ========================================================================= */
 var VISTAS = window.VISTAS || (window.VISTAS = {});
 var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
@@ -65,7 +65,9 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   <h1>Este lote no existe</h1><p class="pantalla-texto">Quizá fue borrado o el enlace está mal.</p>
   ${Boton({ texto: 'Ver mis lotes', icono: 'lotes', variante: 'primario', accion: 'ir', datos: { ruta: '#/lotes' }, clase: 'btn-ancho' })}</section>`;
     }
-    const [regs, vacs] = await Promise.all([DB.listar('registros', { loteId: l.id }), DB.listar('vacunasPlan', { loteId: l.id })]);
+    const pestana = params.partes && params.partes[1] === 'plan' ? 'plan' : 'resumen';
+    const [regs, vacs, tareas] = await Promise.all([DB.listar('registros', { loteId: l.id }), DB.listar('vacunasPlan', { loteId: l.id }),
+      pestana === 'plan' ? Plan.listar(l.id) : Promise.resolve([])]);
     const hoy = hoyLocal(), activo = l.estado === 'activo', hasta = activo ? hoy : (l.fechaCierre || hoy);
     const alt = App.estado.granja && App.estado.granja.altitud;
     const res = resumenLote(l, regs, vacs, hasta), mort = res.ok ? fin(mortalidadPct(l, regs, hasta)) : null;
@@ -83,6 +85,10 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     <p class="pantalla-texto">${esc(res.g ? res.g.nombre : l.genetica || 'Genética desconocida')}${l.galpon ? ' · ' + esc(l.galpon) : ''} · llegó el ${esc(fechaTxt(l.fechaLlegada))}</p>
     ${activo ? chipEstado(res.estado) : ''}
   </header>
+  <div class="segmento dl-pestanas" role="tablist" aria-label="Secciones del lote">${[['resumen', 'Resumen'], ['plan', 'Plan del ciclo']].map(([k, t]) =>
+    `<button type="button" class="segmento-btn" role="tab" id="dl-tab-${k}" aria-controls="dl-panel" aria-selected="${pestana === k}" data-accion="dl-pestana" data-id="${k}" data-lote="${esc(l.id)}">${t}</button>`).join('')}</div>
+  <div class="dl-panel" id="dl-panel" role="tabpanel" aria-labelledby="dl-tab-${pestana}">
+  ${pestana === 'plan' ? PlanCiclo.html(l, tareas, vacs, hoy) : `
   <div class="dl-datos">
     ${dato('Aves vivas', res.vivas === null ? '—' : formatoNumero(res.vivas) + ' / ' + n(l.avesInicio))}
     ${dato('Edad', esc(textoEdad(res.edad)))}
@@ -115,8 +121,19 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   ${Boton({ texto: 'Borrar lote', icono: 'cruz', variante: 'secundario', accion: 'dl-borrar-lote', clase: 'btn-ancho dl-borrar-lote-btn' })}
   <div class="dl-confirmar-borrar" hidden><p><b>¿Borrar este lote?</b> Se borran también sus ${formatoNumero(regs.length)} registros y ${formatoNumero(vacs.length)} vacunas. No se puede deshacer.</p>
     <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'dl-borrar-lote-no' })}${Boton({ texto: 'Sí, borrar lote', variante: 'peligro', accion: 'dl-borrar-lote-si', datos: { id: l.id } })}</div></div>
+  </div>`}
   </div>
 </section>`;
+  };
+  /* Tras cada dibujo: el foco vuelve al control que se tocó (ver PlanCiclo.montar). */
+  VISTAS.detalleLote.montar = raiz => PlanCiclo.montar(raiz);
+
+  /* Pestañas Resumen | Plan del ciclo: la elegida vive en la ruta (#/lote/id o #/lote/id/plan) sin sumar historial. */
+  ACCIONES['dl-pestana'] = el => {
+    const ruta = '#/lote/' + encodeURIComponent(el.dataset.lote) + (el.dataset.id === 'plan' ? '/plan' : '');
+    if (location.hash === ruta) return;
+    history.replaceState(null, '', ruta);
+    App.refrescar();
   };
 
   /* ------------------------------ Acciones ------------------------------ */

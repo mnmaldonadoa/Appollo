@@ -140,11 +140,30 @@ const Plan = (function () {
     });
   }
 
+  /* Cambia el título y el detalle (nota) de una tarea activa. No toca fechas, hechas ni el químico. */
+  function editar(tareaId, datos) {
+    return serie(async () => {
+      const c = await cargar(tareaId);
+      if (c.mensaje) return c;
+      if (c.t.estado === 'quitada') return no('La tarea está quitada: reactívala primero');
+      const o = datos || {};
+      const titulo = typeof o.titulo === 'string' ? o.titulo.trim() : '';
+      const detalle = typeof o.detalle === 'string' ? o.detalle.trim() : '';
+      if (!titulo) return no('Escribe un título para la tarea');
+      if (titulo.length > 80) return no('El título admite hasta 80 caracteres');
+      if (detalle.length > 500) return no('La nota admite hasta 500 caracteres');
+      const previo = copia(c.t), f = copia(c.t);
+      f.titulo = titulo; f.detalle = detalle;
+      await DB.guardar('planTareas', f);
+      return restaurar(previo);
+    });
+  }
+
   function borrarDeLote(loteId) {
     return serie(async () => {
       for (const f of await listar(loteId)) await DB.borrar('planTareas', f.id);
     });
   }
 
-  return { crearInicial, agregarCatalogo, agregarPropia, quitar, reactivar, marcarHecha, mover, listar, borrarDeLote };
+  return { crearInicial, agregarCatalogo, agregarPropia, quitar, reactivar, marcarHecha, mover, editar, listar, borrarDeLote };
 })();

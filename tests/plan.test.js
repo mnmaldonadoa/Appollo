@@ -285,6 +285,28 @@ module.exports = (async () => {
   assert.strictEqual((await filas(l3.id)).length, antesL3);
   await P.borrarDeLote('inexistente');
 
+  // editar: título y detalle; valida; deshacer restaura exacto; quitada y cerrado rechazan
+  const lEd = await mkLote();
+  const ed = (await P.agregarPropia(lEd, { titulo: 'Original', categoria: 'agua', fecha: hoy, detalle: 'd0' })).tarea;
+  const edPrev = J(await c.DB.obtener('planTareas', ed.id));
+  const de1 = await P.editar(ed.id, { titulo: '  <b>Nuevo</b>  ', detalle: '  nota  ' });
+  assert.strictEqual(typeof de1, 'function');
+  let edF = J(await c.DB.obtener('planTareas', ed.id));
+  assert.strictEqual(edF.titulo, '<b>Nuevo</b>'); assert.strictEqual(edF.detalle, 'nota');
+  assert.strictEqual(edF.fechaBase, edPrev.fechaBase); assert.deepStrictEqual(edF.hechas, edPrev.hechas);
+  await de1();
+  assert.deepStrictEqual(J(await c.DB.obtener('planTareas', ed.id)), edPrev, 'deshacer editar restaura exacto');
+  assert.ok((await P.editar(ed.id, { titulo: '   ', detalle: '' })).mensaje, 'título vacío');
+  assert.ok((await P.editar(ed.id, { titulo: 'x'.repeat(81) })).mensaje, 'título largo');
+  assert.ok((await P.editar(ed.id, { titulo: 'ok', detalle: 'y'.repeat(501) })).mensaje, 'detalle largo');
+  assert.deepStrictEqual(J(await c.DB.obtener('planTareas', ed.id)), edPrev, 'rechazos no tocan nada');
+  await P.quitar(ed.id);
+  assert.ok((await P.editar(ed.id, { titulo: 'z' })).mensaje, 'quitada no se edita');
+  await P.reactivar(ed.id);
+  await c.DB.guardar('lotes', Object.assign({}, lEd, { estado: 'cerrado' }));
+  assert.strictEqual((await P.editar(ed.id, { titulo: 'z' })).mensaje, 'El lote está cerrado');
+  assert.ok((await P.editar('nope', { titulo: 'z' })).mensaje);
+
   // tareas inexistentes
   assert.ok((await P.quitar('nope')).mensaje); assert.ok((await P.marcarHecha('nope', {})).mensaje);
 
