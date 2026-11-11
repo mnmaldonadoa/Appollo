@@ -31,111 +31,116 @@ Borrador de la Task 1 del plan del ciclo. Cada tarea de `docs/catalogo-borrador.
 | UT | University of Tennessee Extension, D 166 Rodent Control on Poultry Farms (2022). https://utia.tennessee.edu/publications/wp-content/uploads/sites/269/2023/10/D166.pdf |
 | UMD | University of Maryland Extension, FS 985 Rodent Control on Small Poultry Farms (sin año visible). https://extension.umd.edu/node/5341 |
 | UF | UF/IFAS Extension, PI284 Rodenticides (2019). https://ask.ifas.ufl.edu/publication/PI284/pdf |
+| COBB500 | Cobb-Vantress, Cobb500 Broiler Performance & Nutrition Supplement (2022, L-054-01-22 EN). https://cobbgenetics.com/assets/Cobb-Files/2022-Cobb500-Broiler-Performance-Nutrition-Supplement.pdf |
 | NMSU | New Mexico State University, Guía E-218 Fresh Egg Safety (2023). https://pubs.nmsu.edu/_e/E218/index.html |
 
 ## Tareas
 
-| id | fuente | fecha de consulta | nota |
-| --- | --- | --- | --- |
-| lle-precalentar | ROSS, COBB, HLMAX | 2026-11-10 | Ross: mínimo 24 h; Cobb: 48 h; Hy-Line: 24/48/72 h según clima. |
-| lle-lineas-agua | ROSS, COBB, HLMAX | 2026-11-10 | Ross: desinfectante al menos 4 h, vaciar y enjuagar; Cobb: purgar antes de la llegada. |
-| lle-cama | ROSS, WOAHBIO | 2026-11-10 | Profundidad 2–5 cm según Ross. |
-| lle-alimento-papel | HLMAX, COBB, ROSS | 2026-11-10 | — |
-| lle-buche-carne | ROSS, COBB | 2026-11-10 | Metas de llenado de buche de Ross (2 h 75 %, 8 h >80 %, 24 h >95 %). |
-| lle-buche-postura | HLMAX, LOH | 2026-11-10 | Hy-Line Max: 75/85/100 %. Lohmann revisa 50 aves a las 4, 14 y 24 h. |
-| lle-temperatura-pollito | ROSS, HLMAX | 2026-11-10 | Ross: 10 pollitos en 5 sitios; rango 39,4–40,8 °C. Hy-Line: 39,4–40,5 °C. |
-| lle-tetinas | HLMAX | 2026-11-10 | — |
-| lle-retiro-apoyo-carne | ROSS | 2026-11-10 | — |
-| lle-retiro-apoyo-postura | HLMAX | 2026-11-10 | — |
-| lle-mortalidad-7 | COBB | 2026-11-10 | — |
-| amb-temperatura | ROSS | 2026-11-10 | — |
-| amb-ventilacion | ROSS, WOAHBR | 2026-11-10 | — |
-| amb-luz-carne-inicio | ROSS | 2026-11-10 | — |
-| amb-luz-carne-oscuridad | ROSS, WOAHBR | 2026-11-10 | — |
-| amb-circulos-carne | ROSS | 2026-11-10 | — |
-| amb-galpon-completo-carne | COBB | 2026-11-10 | — |
-| amb-luz-postura-cria | HLMAX | 2026-11-10 | — |
-| amb-circulos-postura | HLMAX | 2026-11-10 | — |
-| amb-luz-postura-bajar | HLMAX, HLSTD | 2026-11-10 | — |
-| amb-perchas | LOH | 2026-11-10 | — |
-| amb-no-manipular | ISA | 2026-11-10 | — |
-| amb-traslado | HLMAX, HL2018 | 2026-11-10 | — |
-| amb-luz-estimulo | HLMAX, HL2018, ISA | 2026-11-10 | — |
-| amb-luz-postura-no-bajar | LOH | 2026-11-10 | — |
-| amb-nidos | LOH, ISA | 2026-11-10 | — |
-| amb-pastoreo | MSDHEL | 2026-11-10 | — |
-| ali-peso-postura-1 | HLMAX | 2026-11-10 | — |
-| ali-peso-postura-2 | HLMAX, LOH, ISA | 2026-11-10 | — |
-| ali-peso-postura-3 | HLMAX | 2026-11-10 | — |
-| ali-hl-inicio2 | HLSTD, HL2018 | 2026-11-10 | — |
-| ali-hl-crecimiento | HLSTD, HL2018 | 2026-11-10 | — |
-| ali-hl-desarrollo | HLSTD, HL2018 | 2026-11-10 | — |
-| ali-hl-prepostura | HLSTD, HLMAX | 2026-11-10 | — |
-| ali-loh-crecimiento | LOH | 2026-11-10 | — |
-| ali-loh-desarrollo | LOH | 2026-11-10 | — |
-| ali-loh-prepostura | LOH | 2026-11-10 | — |
-| ali-isa-crecimiento | ISA | 2026-11-10 | — |
-| ali-isa-polla | ISA | 2026-11-10 | — |
-| ali-isa-prepostura | ISA | 2026-11-10 | — |
-| ali-peso-carne | ROSS, COBB | 2026-11-10 | — |
-| ali-ross-crecimiento | ROSS | 2026-11-10 | — |
-| ali-ross-engorde | ROSS | 2026-11-10 | — |
-| ali-ayuno-carne | COBB, ROSS, WOAHBR | 2026-11-10 | — |
-| ali-acceso-carne | WOAHBR, ROSS | 2026-11-10 | WOAH: acceso diario al alimento y agua continua; Ross: ajustar altura de bebederos a diario. |
-| sel-pico | HL2018, HLMAX | 2026-11-10 | Hy-Line 2018: despique de precisión entre los días 7 y 10; se fija 8–10 para no coincidir con la vacuna del día 7. |
-| sel-pico-vitk | HLMAX, ISA | 2026-11-10 | — |
-| sel-pico-retoque | HL2018 | 2026-11-10 | — |
-| sel-machos | HL2018 | 2026-11-10 | — |
-| sel-emplume | LOH | 2026-11-10 | — |
-| sel-clasificar | HLMAX | 2026-11-10 | — |
-| sel-diaria-postura | HLMAX | 2026-11-10 | — |
-| sel-diaria-carne | WOAHBR | 2026-11-10 | — |
-| lim-vacio | AGRO17, AGRO47, HLMAX | 2026-11-10 | — |
-| lim-pediluvio | AGRO17, WOAHBIO, FAO07 | 2026-11-10 | WOAH: cambiar «con regularidad»; la fuente no da frecuencia, por eso la tarea es revisar a diario. |
-| lim-visitas | AGRO17, WOAHBIO, FAO07 | 2026-11-10 | — |
-| lim-ropa | FAO07, WOAHBIO | 2026-11-10 | — |
-| lim-cama | LOH, WOAHBR, WOAHBIO | 2026-11-10 | — |
-| lim-separar | FAO07, WOAHBIO | 2026-11-10 | — |
-| qui-desinfeccion-broiler | COBB, WOAHBIO, AGRO17, FAO07 | 2026-11-10 | La edad de salida viene de src/data.js (venta o fin de la genética). |
-| qui-desinfeccion-campero | COBB, WOAHBIO, AGRO17, FAO07 | 2026-11-10 | La edad de salida viene de src/data.js (venta o fin de la genética). |
-| qui-desinfeccion-doble-carne | COBB, WOAHBIO, AGRO17, FAO07 | 2026-11-10 | La edad de salida viene de src/data.js (venta o fin de la genética). |
-| qui-desinfeccion-criolla-carne | COBB, WOAHBIO, AGRO17, FAO07 | 2026-11-10 | La edad de salida viene de src/data.js (venta o fin de la genética). |
-| qui-desinfeccion-postura | COBB, WOAHBIO, AGRO17, FAO07 | 2026-11-10 | La edad de salida viene de src/data.js (venta o fin de la genética). |
-| qui-desinfeccion-doble-huevos | COBB, WOAHBIO, AGRO17, FAO07 | 2026-11-10 | La edad de salida viene de src/data.js (venta o fin de la genética). |
-| agua-purga-carne-1 | COBB | 2026-11-10 | — |
-| agua-purga-carne | COBB, ROSS | 2026-11-10 | — |
-| agua-purga-postura | HLMAX | 2026-11-10 | — |
-| agua-bebederos | ISA, HLMAX | 2026-11-10 | — |
-| agua-analisis | AGRO17, HLMAX, WOAHBIO | 2026-11-10 | — |
-| agua-cloro-vacuna-postura | COBB | 2026-11-10 | Cobb: suspender clorador 48 h antes; se fija el día 5 por la primera vacuna en agua (día 7) de src/data.js. |
-| agua-cloro-vacuna-carne | COBB | 2026-11-10 | Se fija el día 6 por la vacuna del día 8 en src/data.js. |
-| reg-diario | LOH, ISA, HLMAX, AGRO17 | 2026-11-10 | — |
-| reg-tratamientos | AGRO17, AGRO47 | 2026-11-10 | — |
-| reg-cloro-ph | AGRO17 | 2026-11-10 | — |
-| reg-heces | HLMAX, MSDHEL | 2026-11-10 | — |
-| reg-peso-huevo | HLMAX | 2026-11-10 | — |
-| reg-recoger-huevos | NMSU, ISA, LOH | 2026-11-10 | — |
-| reg-plano-cebos | AGRO17 | 2026-11-10 | — |
-| pla-franja | HLMAX, UMD | 2026-11-10 | — |
-| pla-alimento | WOAHBIO, UMD | 2026-11-10 | — |
-| pla-malla | FAO07, WOAHBIO | 2026-11-10 | — |
-| pla-estiercol | UKY | 2026-11-10 | — |
-| pla-acaros-revision | LOH, MSU, MSDMIT | 2026-11-10 | — |
-| mor-retirar | WOAHBIO, AGRO47, HLMAX | 2026-11-10 | — |
-| mor-compostera | AGRO17, AGRO47 | 2026-11-10 | — |
-| mor-alerta | AGRO47, AGRO17, FAO07 | 2026-11-10 | — |
-| mor-meta-postura | HLSTD | 2026-11-10 | — |
-| qui-despara-postura | HLMAX, FLUB, MSDHEL | 2026-11-10 | Retiro: flubendazol, huevo 0 días y carne 7 días (SPC VMD). |
-| qui-despara-pastoreo | MSDHEL, FLUB, HLMAX | 2026-11-10 | Retiro: flubendazol, huevo 0 días y carne 7 días (SPC VMD). |
-| qui-piojos-acaros | MSU, UKY, MSDMIT | 2026-11-10 | Retiro: permetrina, 0 días a sacrificio (MSU 2025, UKY 2007); ninguna fuente da retiro en huevo. |
-| qui-acaro-rojo-agua | FLUR, MSDMIT, HLMAX | 2026-11-10 | Retiro UE: huevo 0 días, carne 14 días. EE. UU. (FDA 2025): 0 días en huevo. |
-| qui-acaro-rojo-vacio-postura | HLMAX, MSU, MSDMIT | 2026-11-10 | Hy-Line no nombra producto; la permetrina es un ejemplo de tratamiento de instalaciones en MSU 2025. |
-| qui-acaro-rojo-vacio-doble | HLMAX, MSU, MSDMIT | 2026-11-10 | Hy-Line no nombra producto; la permetrina es un ejemplo de tratamiento de instalaciones en MSU 2025. |
-| qui-cocci-broiler | MSDCOC, MON | 2026-11-10 | Monensina: retiro mínimo 1 día antes del sacrificio; autorizada en pollitas solo hasta 16 semanas (Reg. CE 1356/2004). |
-| qui-cocci-pollitas | HLMAX, MON, MSDCOC | 2026-11-10 | Monensina autorizada en «pollitas criadas para la puesta» hasta 16 semanas (Reg. CE 1356/2004). |
-| qui-cocci-amprolio | AMP, MSDCOC | 2026-11-10 | El 21 CFR 520.100 incluye gallinas ponedoras y no fija retiro para pollos; se deja null. |
-| qui-cocci-toltrazuril | TOLT, MSDCOC | 2026-11-10 | Retiro UE: carne 16 días; prohibido en aves productoras de huevo para consumo. |
-| qui-roedores | UMD, UT, UF, HLMAX, AGRO17 | 2026-11-10 | UMD: revisión semanal; UT: rotar; Agrocalidad: rodenticidas registrados. |
-| qui-moscas | UKY, AGRO17 | 2026-11-10 | UKY 2007; Agrocalidad exige insecticidas registrados. |
-| qui-larvicida-jaula | UKY | 2026-11-10 | UKY 2007: ciromazina como larvicida en alimento para ponedoras en jaula; sin retiro indicado. |
-| qui-escarabajos-cama | ROSS, UKY | 2026-11-10 | Ross: insecticida 2 semanas antes de vaciar; UKY: carbaril para cama, 7 días a sacrificio. |
+| id | fuente | fecha de consulta | nota | criterio propio |
+| --- | --- | --- | --- | --- |
+| lle-precalentar | ROSS, COBB, HLMAX | 2026-11-10 | Ross: mínimo 24 h; Cobb: 48 h; Hy-Line: 24/48/72 h según clima. | — |
+| lle-lineas-agua | ROSS, COBB, HLMAX | 2026-11-10 | Ross: desinfectante al menos 4 h, vaciar y enjuagar; Cobb: purgar antes de la llegada. | — |
+| lle-cama | ROSS, WOAHBIO | 2026-11-10 | Profundidad 2–5 cm según Ross. | — |
+| lle-alimento-papel | HLMAX, COBB, ROSS | 2026-11-10 | — | — |
+| lle-buche-carne | ROSS, COBB | 2026-11-10 | Metas de llenado de buche de Ross (2 h 75 %, 8 h >80 %, 24 h >95 %). | — |
+| lle-buche-postura | HLMAX, LOH | 2026-11-10 | Hy-Line Max: 75/85/100 %. Lohmann revisa 50 aves a las 4, 14 y 24 h. | — |
+| lle-temperatura-pollito | ROSS, HLMAX | 2026-11-10 | Ross: 10 pollitos en 5 sitios; rango 39,4–40,8 °C. Hy-Line: 39,4–40,5 °C. | — |
+| lle-tetinas | HLMAX | 2026-11-10 | — | — |
+| lle-retiro-apoyo-carne | ROSS | 2026-11-10 | — | — |
+| lle-retiro-apoyo-postura | HLMAX | 2026-11-10 | — | — |
+| lle-mortalidad-7 | COBB | 2026-11-10 | — | — |
+| amb-temperatura | ROSS | 2026-11-10 | — | hastaDia 21: Ross pide revisar a diario desde el día 5 sin fecha de fin. |
+| amb-ventilacion | ROSS, WOAHBR | 2026-11-10 | Ross p. 38: ideal <10 ppm, >20 ppm aumenta enfermedades respiratorias; WOAH 7.10: no superar 25 ppm. | Revisión semanal: Ross pide evaluar el aire «con regularidad» sin fijar frecuencia. |
+| amb-luz-carne-inicio | ROSS | 2026-11-10 | — | — |
+| amb-luz-carne-oscuridad | ROSS, WOAHBR | 2026-11-10 | — | — |
+| amb-circulos-carne | ROSS | 2026-11-10 | — | — |
+| amb-galpon-completo-carne | COBB | 2026-11-10 | — | — |
+| amb-luz-postura-cria | HLMAX | 2026-11-10 | — | — |
+| amb-circulos-postura | HLMAX | 2026-11-10 | — | — |
+| amb-luz-postura-bajar | HLMAX, HLSTD | 2026-11-10 | — | — |
+| amb-perchas | LOH | 2026-11-10 | — | — |
+| amb-no-manipular | ISA | 2026-11-10 | — | — |
+| amb-traslado | HLMAX, HL2018 | 2026-11-10 | — | — |
+| amb-luz-estimulo | HLMAX, HL2018, ISA | 2026-11-10 | HL Max: pasos de 30–60 min; HL 2018 no da minutos (16 h hacia la semana 30); src/model.js programaLuz dice 15–30 min (pendiente de armonizar). | desdeDia 112 (semana 16) como edad más temprana; la fuente fija la estimulación por peso, no por edad. |
+| amb-luz-postura-no-bajar | LOH | 2026-11-10 | — | — |
+| amb-nidos | LOH, ISA | 2026-11-10 | Lohmann: 1 nido individual por 4 gallinas; ISA: «Nest boxes must be closed until you see the first egg». | desdeDia 119 (semana 17) como aviso previo a la postura. |
+| amb-pastoreo | MSDHEL | 2026-11-10 | — | desdeDia 42 como recordatorio; la fuente no da edad ni frecuencia. |
+| ali-peso-postura-1 | HLMAX | 2026-11-10 | — | — |
+| ali-peso-postura-2 | HLMAX, LOH, ISA | 2026-11-10 | — | — |
+| ali-peso-postura-3 | HLMAX | 2026-11-10 | — | — |
+| ali-hl-inicio2 | HLSTD, HL2018 | 2026-11-10 | — | — |
+| ali-hl-crecimiento | HLSTD, HL2018 | 2026-11-10 | — | — |
+| ali-hl-desarrollo | HLSTD, HL2018 | 2026-11-10 | — | — |
+| ali-hl-prepostura | HLSTD, HLMAX | 2026-11-10 | — | — |
+| ali-loh-crecimiento | LOH | 2026-11-10 | — | — |
+| ali-loh-desarrollo | LOH | 2026-11-10 | — | — |
+| ali-loh-prepostura | LOH | 2026-11-10 | — | — |
+| ali-isa-crecimiento | ISA | 2026-11-10 | — | — |
+| ali-isa-polla | ISA | 2026-11-10 | — | — |
+| ali-isa-prepostura | ISA | 2026-11-10 | — | — |
+| ali-peso-carne | ROSS, COBB | 2026-11-10 | — | — |
+| ali-ross-crecimiento | ROSS | 2026-11-10 | — | — |
+| ali-ross-engorde | ROSS | 2026-11-10 | — | — |
+| ali-ayuno-carne | COBB, ROSS, WOAHBR | 2026-11-10 | — | — |
+| ali-cobb-crecimiento1 | COBB500 | 2026-11-10 | Suplemento Cobb500 2022, p. 8: «Period (Reference) days 0-12 13-28 29-39 40-49 > 50» (Starter, Grower 1, Grower 2, Finisher 1, Finisher 2). | — |
+| ali-cobb-crecimiento2 | COBB500 | 2026-11-10 | Suplemento Cobb500 2022, p. 8: «Period (Reference) days 0-12 13-28 29-39 40-49 > 50» (Starter, Grower 1, Grower 2, Finisher 1, Finisher 2). | — |
+| ali-cobb-engorde1 | COBB500 | 2026-11-10 | Suplemento Cobb500 2022, p. 8: «Period (Reference) days 0-12 13-28 29-39 40-49 > 50» (Starter, Grower 1, Grower 2, Finisher 1, Finisher 2). | — |
+| ali-cobb-engorde2 | COBB500 | 2026-11-10 | Suplemento Cobb500 2022, p. 8: «Period (Reference) days 0-12 13-28 29-39 40-49 > 50» (Starter, Grower 1, Grower 2, Finisher 1, Finisher 2). | — |
+| ali-acceso-carne | WOAHBR, ROSS | 2026-11-10 | WOAH: acceso diario al alimento y agua continua; Ross: ajustar altura de bebederos a diario. | — |
+| sel-pico | HL2018, HLMAX | 2026-11-10 | Hy-Line 2018: despique de precisión entre los días 7 y 10. | Días 8–10 para no coincidir con la vacuna del día 7. |
+| sel-pico-vitk | HLMAX, ISA | 2026-11-10 | — | — |
+| sel-pico-retoque | HL2018 | 2026-11-10 | — | — |
+| sel-machos | HL2018 | 2026-11-10 | — | — |
+| sel-emplume | LOH | 2026-11-10 | — | — |
+| sel-clasificar | HLMAX | 2026-11-10 | — | Revisión cada 28 días entre los días 42 y 112; la guía lo presenta como medida correctiva sin frecuencia. |
+| sel-diaria-postura | HLMAX | 2026-11-10 | — | — |
+| sel-diaria-carne | WOAHBR | 2026-11-10 | — | — |
+| lim-vacio | AGRO17, AGRO47, HLMAX | 2026-11-10 | — | — |
+| lim-pediluvio | AGRO17, WOAHBIO, FAO07 | 2026-11-10 | WOAH: cambiar «con regularidad»; la fuente no da frecuencia, por eso la tarea es revisar a diario. | Revisión diaria; la OMSA dice «con regularidad». |
+| lim-visitas | AGRO17, WOAHBIO, FAO07 | 2026-11-10 | — | — |
+| lim-ropa | FAO07, WOAHBIO | 2026-11-10 | — | — |
+| lim-cama | LOH, WOAHBR, WOAHBIO | 2026-11-10 | — | — |
+| lim-separar | FAO07, WOAHBIO | 2026-11-10 | — | — |
+| qui-desinfeccion-broiler | COBB, WOAHBIO, AGRO17, FAO07 | 2026-11-10 | La edad de salida viene de src/data.js (venta o fin de la genética). | Día de salida tomado de src/data.js; muévelo si vendes o descartas antes. |
+| qui-desinfeccion-campero | COBB, WOAHBIO, AGRO17, FAO07 | 2026-11-10 | La edad de salida viene de src/data.js (venta o fin de la genética). | Día de salida tomado de src/data.js; muévelo si vendes o descartas antes. |
+| qui-desinfeccion-doble-carne | COBB, WOAHBIO, AGRO17, FAO07 | 2026-11-10 | La edad de salida viene de src/data.js (venta o fin de la genética). | Día de salida tomado de src/data.js; muévelo si vendes o descartas antes. |
+| qui-desinfeccion-criolla-carne | COBB, WOAHBIO, AGRO17, FAO07 | 2026-11-10 | La edad de salida viene de src/data.js (venta o fin de la genética). | Día de salida tomado de src/data.js; muévelo si vendes o descartas antes. |
+| qui-desinfeccion-postura | COBB, WOAHBIO, AGRO17, FAO07 | 2026-11-10 | La edad de salida viene de src/data.js (venta o fin de la genética). | Día de salida tomado de src/data.js; muévelo si vendes o descartas antes. |
+| qui-desinfeccion-doble-huevos | COBB, WOAHBIO, AGRO17, FAO07 | 2026-11-10 | La edad de salida viene de src/data.js (venta o fin de la genética). | Día de salida tomado de src/data.js; muévelo si vendes o descartas antes. |
+| agua-purga-carne-1 | COBB | 2026-11-10 | — | — |
+| agua-purga-carne | COBB, ROSS | 2026-11-10 | Cobb: «daily, but at a minimum of three times per week». | cadaDias 2 para cumplir el mínimo de 3 veces por semana. |
+| agua-purga-postura | HLMAX | 2026-11-10 | — | — |
+| agua-bebederos | ISA, HLMAX | 2026-11-10 | — | — |
+| agua-analisis | AGRO17, HLMAX, WOAHBIO | 2026-11-10 | — | — |
+| agua-cloro-vacuna-postura | COBB | 2026-11-10 | Cobb: suspender clorador 48 h antes. | Día 5 por la primera vacuna en agua (día 7) de src/data.js. |
+| agua-cloro-vacuna-carne | COBB | 2026-11-10 | Cobb: suspender clorador 48 h antes. | Día 6 por la vacuna del día 8 de src/data.js. |
+| reg-diario | LOH, ISA, HLMAX, AGRO17 | 2026-11-10 | — | — |
+| reg-tratamientos | AGRO17, AGRO47 | 2026-11-10 | — | — |
+| reg-cloro-ph | AGRO17 | 2026-11-10 | — | — |
+| reg-heces | HLMAX, MSDHEL | 2026-11-10 | — | desdeDia 56: la guía pide muestreo mensual sin fijar el inicio. |
+| reg-peso-huevo | HLMAX | 2026-11-10 | — | — |
+| reg-recoger-huevos | NMSU, ISA, LOH | 2026-11-10 | — | — |
+| reg-plano-cebos | AGRO17 | 2026-11-10 | — | — |
+| pla-franja | HLMAX, UMD | 2026-11-10 | — | — |
+| pla-alimento | WOAHBIO, UMD | 2026-11-10 | — | — |
+| pla-malla | FAO07, WOAHBIO | 2026-11-10 | — | — |
+| pla-estiercol | UKY | 2026-11-10 | UKY ENT-28: «Manure, spilled feed, and wet bedding should be removed weekly». | — |
+| pla-acaros-revision | LOH, MSU, MSDMIT | 2026-11-10 | — | — |
+| mor-retirar | WOAHBIO, AGRO47, HLMAX | 2026-11-10 | — | — |
+| mor-compostera | AGRO17, AGRO47 | 2026-11-10 | — | — |
+| mor-alerta | AGRO47, AGRO17, FAO07 | 2026-11-10 | — | — |
+| mor-meta-postura | HLSTD | 2026-11-10 | — | — |
+| qui-despara-postura | HLMAX, FLUB, MSDHEL | 2026-11-10 | Retiro: flubendazol, huevo 0 días y carne 7 días (SPC VMD). | — |
+| qui-despara-pastoreo | MSDHEL, FLUB, HLMAX | 2026-11-10 | Retiro: flubendazol, huevo 0 días y carne 7 días (SPC VMD). | desdeDia 57 como edad más temprana (solo con diagnóstico); se evita el día 56, vacuna de la criolla. |
+| qui-piojos-acaros | MSU, UKY, MSDMIT | 2026-11-10 | Retiro: permetrina, 0 días a sacrificio (MSU 2025, UKY 2007); ninguna fuente da retiro en huevo. | desdeDia 28 como edad más temprana (solo si se encuentran). |
+| qui-acaro-rojo-agua | FLUR, MSDMIT, HLMAX | 2026-11-10 | Retiro UE: huevo 0 días, carne 14 días. EE. UU. (FDA 2025): 0 días en huevo. El esquema de tomas no se pudo verificar en la ficha y se quitó. | desdeDia 141 como edad más temprana (solo con diagnóstico); se evita el día 140, vacuna. |
+| qui-acaro-rojo-vacio-postura | HLMAX, MSU, MSDMIT | 2026-11-10 | Hy-Line no nombra producto; la permetrina es un ejemplo de tratamiento de instalaciones en MSU 2025. | Día de fin de postura tomado de src/data.js. |
+| qui-acaro-rojo-vacio-doble | HLMAX, MSU, MSDMIT | 2026-11-10 | Hy-Line no nombra producto; la permetrina es un ejemplo de tratamiento de instalaciones en MSU 2025. | Día de fin de postura tomado de src/data.js. |
+| qui-cocci-broiler | MSDCOC, MON | 2026-11-10 | Monensina: retiro mínimo 1 día antes del sacrificio; autorizada en pollitas solo hasta 16 semanas (Reg. CE 1356/2004). | — |
+| qui-cocci-pollitas | HLMAX, MON, MSDCOC | 2026-11-10 | Monensina autorizada en «pollitas criadas para la puesta» hasta 16 semanas (Reg. CE 1356/2004); esa fila no fija retiro, por eso retiroCarne es null. | — |
+| qui-cocci-amprolio | AMP, MSDCOC | 2026-11-10 | El 21 CFR 520.100 incluye «growing chickens ... and laying hens» y no fija retiro para pollos; se deja null. | desdeDia 15 como edad más temprana (solo con diagnóstico); se evitan los días de vacuna 12 y 14. |
+| qui-cocci-toltrazuril | TOLT, MSDCOC | 2026-11-10 | Retiro UE: carne 16 días; prohibido en aves productoras de huevo para consumo. | desdeDia 15 como edad más temprana (solo con diagnóstico); se evita el día 14, vacuna. |
+| qui-roedores | UMD, UT, UF, HLMAX, AGRO17 | 2026-11-10 | UMD: revisión semanal; UT: rotar; Agrocalidad: rodenticidas registrados. | — |
+| qui-moscas | UKY, AGRO17 | 2026-11-10 | UKY 2007; Agrocalidad exige insecticidas registrados. | desdeDia 15 como recordatorio (la fuente no da edad); se evita el día 14, vacuna. |
+| qui-larvicida-jaula | UKY | 2026-11-10 | UKY 2007: ciromazina como larvicida en alimento para ponedoras en jaula; sin retiro indicado. Registro en Ecuador no verificado. | desdeDia 141 como edad más temprana; se evita el día 140, vacuna. |
+| qui-escarabajos-cama | ROSS, UKY | 2026-11-10 | Ross: insecticida 2 semanas antes de vaciar; UKY: carbaril para cama, 7 días a sacrificio. | Día 28 supone venta al día 42 (venta de src/data.js). |

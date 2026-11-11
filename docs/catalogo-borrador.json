@@ -176,7 +176,7 @@
   {
     "id": "amb-ventilacion",
     "categoria": "ambiente",
-    "titulo": "Cada semana: revisa la ventilación y el amoníaco (debe estar bajo 25 ppm a la altura de las aves)",
+    "titulo": "Cada semana: revisa la ventilación y el amoníaco (ideal bajo 10 ppm; nunca más de 25 ppm a la altura de las aves)",
     "detalle": "La ventilación mínima va desde el primer día. Revisa también la humedad, la condensación y el polvo.",
     "modos": [
       "huevos",
@@ -368,7 +368,7 @@
     "id": "amb-luz-estimulo",
     "categoria": "ambiente",
     "titulo": "Estimulación de luz: sube la luz solo cuando las pollitas lleguen al peso meta y la uniformidad pase del 85 %",
-    "detalle": "Sube 30 a 60 minutos cada semana hasta 16 horas de luz, hacia la semana 25. Si están bajas de peso, espera.",
+    "detalle": "Hy-Line Max indica subir en pasos de 30 a 60 minutos por semana hasta 16 horas, hacia la semana 25; la pantalla de manejo de Appollo dice 15 a 30 minutos. Si dudas, consulta la guía de tu genética. Si están bajas de peso, espera.",
     "modos": [
       "huevos"
     ],
@@ -399,7 +399,7 @@
     "id": "amb-nidos",
     "categoria": "ambiente",
     "titulo": "Antes de la postura: ten listos los nidos, uno por cada 4 gallinas",
-    "detalle": "Ábrelos antes de que empiecen a poner para que aprendan a usarlos y no pongan en el piso.",
+    "detalle": "La guía ISA pide mantenerlos cerrados hasta ver el primer huevo y entonces abrirlos. Sigue la indicación de la guía de tu genética.",
     "modos": [
       "huevos"
     ],
@@ -482,7 +482,7 @@
   {
     "id": "ali-hl-inicio2",
     "categoria": "alimento",
-    "titulo": "Hacia la semana 3: cambia a Iniciador 2 cuando las pollitas pesen unos 190–200 g",
+    "titulo": "Hacia la semana 3: cambia a Iniciador 2 cuando las pollitas pesen unos 186–197 g",
     "detalle": "Cambia por peso, no por edad. Si están bajas de peso o poco parejas, espera.",
     "modos": [
       "huevos"
@@ -496,7 +496,7 @@
   {
     "id": "ali-hl-crecimiento",
     "categoria": "alimento",
-    "titulo": "Hacia la semana 6: cambia a alimento de Crecimiento cuando pesen unos 460–480 g",
+    "titulo": "Hacia la semana 6: cambia a alimento de Crecimiento cuando pesen unos 456–482 g",
     "detalle": "Cambia por peso, no por edad. Si están bajas de peso, sigue con el alimento anterior.",
     "modos": [
       "huevos"
@@ -510,7 +510,7 @@
   {
     "id": "ali-hl-desarrollo",
     "categoria": "alimento",
-    "titulo": "Hacia la semana 12: cambia a alimento de Desarrollo cuando pesen unos 1050–1100 g",
+    "titulo": "Hacia la semana 12: cambia a alimento de Desarrollo cuando pesen unos 1046–1105 g",
     "detalle": "Cambia por peso, no por edad.",
     "modos": [
       "huevos"
@@ -683,6 +683,62 @@
     "fuente": "Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf · Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 7.10 Bienestar de los pollos de engorde (ed. 2024). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2024/en_chapitre_aw_broiler_chicken.htm"
   },
   {
+    "id": "ali-cobb-crecimiento1",
+    "categoria": "alimento",
+    "titulo": "Día 13: cambia de Iniciador a Crecimiento 1",
+    "detalle": "Periodos de referencia de Cobb para pollo mediano y grande: cambia solo si el lote va en el peso esperado. Si vendes pollo pequeño, la guía usa otros periodos (0–8, 9–18, 19–28 y desde el día 29).",
+    "modos": [
+      "carne"
+    ],
+    "geneticas": [
+      "cobb500"
+    ],
+    "desdeDia": 13,
+    "fuente": "Cobb-Vantress, Cobb500 Broiler Performance & Nutrition Supplement (2022, L-054-01-22 EN). https://cobbgenetics.com/assets/Cobb-Files/2022-Cobb500-Broiler-Performance-Nutrition-Supplement.pdf"
+  },
+  {
+    "id": "ali-cobb-crecimiento2",
+    "categoria": "alimento",
+    "titulo": "Día 29: cambia a Crecimiento 2",
+    "detalle": "Periodos de referencia de Cobb para pollo mediano y grande: cambia solo si el lote va en el peso esperado. Si vendes pollo pequeño, la guía usa otros periodos (0–8, 9–18, 19–28 y desde el día 29).",
+    "modos": [
+      "carne"
+    ],
+    "geneticas": [
+      "cobb500"
+    ],
+    "desdeDia": 29,
+    "fuente": "Cobb-Vantress, Cobb500 Broiler Performance & Nutrition Supplement (2022, L-054-01-22 EN). https://cobbgenetics.com/assets/Cobb-Files/2022-Cobb500-Broiler-Performance-Nutrition-Supplement.pdf"
+  },
+  {
+    "id": "ali-cobb-engorde1",
+    "categoria": "alimento",
+    "titulo": "Día 40: cambia a Engorde (Finalizador 1)",
+    "detalle": "Periodos de referencia de Cobb para pollo mediano y grande: cambia solo si el lote va en el peso esperado. Si vendes pollo pequeño, la guía usa otros periodos (0–8, 9–18, 19–28 y desde el día 29).",
+    "modos": [
+      "carne"
+    ],
+    "geneticas": [
+      "cobb500"
+    ],
+    "desdeDia": 40,
+    "fuente": "Cobb-Vantress, Cobb500 Broiler Performance & Nutrition Supplement (2022, L-054-01-22 EN). https://cobbgenetics.com/assets/Cobb-Files/2022-Cobb500-Broiler-Performance-Nutrition-Supplement.pdf"
+  },
+  {
+    "id": "ali-cobb-engorde2",
+    "categoria": "alimento",
+    "titulo": "Día 50: si el lote sigue, cambia a Finalizador 2",
+    "detalle": "Periodos de referencia de Cobb para pollo mediano y grande: cambia solo si el lote va en el peso esperado. Si vendes pollo pequeño, la guía usa otros periodos (0–8, 9–18, 19–28 y desde el día 29).",
+    "modos": [
+      "carne"
+    ],
+    "geneticas": [
+      "cobb500"
+    ],
+    "desdeDia": 50,
+    "fuente": "Cobb-Vantress, Cobb500 Broiler Performance & Nutrition Supplement (2022, L-054-01-22 EN). https://cobbgenetics.com/assets/Cobb-Files/2022-Cobb500-Broiler-Performance-Nutrition-Supplement.pdf"
+  },
+  {
     "id": "ali-acceso-carne",
     "categoria": "alimento",
     "titulo": "Cada día: asegura que todas las aves lleguen al alimento y tengan agua todo el tiempo",
@@ -713,7 +769,7 @@
     "id": "sel-pico-vitk",
     "categoria": "seleccion",
     "titulo": "2 días antes y 2 días después del despique: da electrolitos con vitamina K en el agua",
-    "detalle": "Ayuda a que el pico no sangre. Sigue la etiqueta del producto.",
+    "detalle": "Ayuda a que el pico no sangre. Sigue la etiqueta del producto. El día de una vacuna en el agua (días 7 y 12) no pongas vitaminas ni electrolitos; reanúdalos al día siguiente.",
     "modos": [
       "huevos"
     ],
@@ -1052,8 +1108,8 @@
   {
     "id": "agua-purga-carne",
     "categoria": "agua",
-    "titulo": "Desde el día 8: purga las líneas de agua al menos 3 veces por semana",
-    "detalle": "En días de calor purga más seguido para que el agua llegue fresca.",
+    "titulo": "Desde el día 8: purga las líneas de agua a diario o, como mínimo, 3 veces por semana",
+    "detalle": "Purgar a diario también está bien. En días de calor purga más seguido para que el agua llegue fresca.",
     "modos": [
       "carne"
     ],
@@ -1250,13 +1306,13 @@
   {
     "id": "pla-estiercol",
     "categoria": "plagas",
-    "titulo": "En postura: saca el estiércol al menos 2 veces por semana y mantenlo seco",
+    "titulo": "En postura: saca el estiércol cada semana y mantenlo seco",
     "detalle": "Arregla los bebederos que gotean y retira huevos rotos y aves muertas: así hay menos moscas.",
     "modos": [
       "huevos"
     ],
     "desdeDia": 112,
-    "cadaDias": 3,
+    "cadaDias": 7,
     "fuente": "University of Kentucky Extension, ENT-28 Insect Control on Poultry (2007). https://www.uky.edu/Ag/PAT/recs/livestk/pdf/ENT-28_Poultry.pdf"
   },
   {
@@ -1326,7 +1382,7 @@
     "id": "qui-despara-postura",
     "categoria": "quimico",
     "titulo": "Semanas 13 a 15: desparasitación interna antes del traslado, según el análisis de heces",
-    "detalle": "Si la infestación es fuerte, repite a los 21 días (ciclo de la lombriz). Evita el día de una vacuna.",
+    "detalle": "Si tu veterinario indica repetir, sigue su indicación y la etiqueta. Evita el día de una vacuna. Retiro de referencia en el Reino Unido (VMD). En Ecuador manda la etiqueta del producto registrado en Agrocalidad.",
     "modos": [
       "huevos"
     ],
@@ -1352,7 +1408,7 @@
     "id": "qui-despara-pastoreo",
     "categoria": "quimico",
     "titulo": "Aves de pastoreo: desparasitación interna solo si el análisis de heces sale positivo",
-    "detalle": "Tratar solo cuando hace falta reduce la resistencia. Si la infestación es fuerte, repite a los 21 días.",
+    "detalle": "Tratar solo cuando hace falta reduce la resistencia. Si tu veterinario indica repetir, sigue su indicación y la etiqueta. Evita el día de una vacuna. Retiro de referencia en el Reino Unido (VMD). En Ecuador manda la etiqueta del producto registrado en Agrocalidad.",
     "modos": [
       "huevos",
       "carne"
@@ -1363,7 +1419,7 @@
       "plymouth-rock",
       "criolla"
     ],
-    "desdeDia": 56,
+    "desdeDia": 57,
     "quimico": {
       "tipo": "Antiparasitario interno (lombrices)",
       "ingredienteActivo": "Flubendazol",
@@ -1377,7 +1433,7 @@
     "id": "qui-piojos-acaros",
     "categoria": "quimico",
     "titulo": "Si encuentras piojos o ácaro del norte: aplica el producto a presión en las plumas de la cloaca",
-    "detalle": "Muchas poblaciones ya resisten a los piretroides; si no funciona, consulta otro producto. Puede necesitar repetirse. Para huevo: Sin retiro oficial en la fuente; consulta la etiqueta.",
+    "detalle": "La resistencia a los piretroides está muy extendida (Manual Merck): confirma con tu veterinario que el producto funcione. Puede necesitar repetirse. Retiro en carne de referencia en EE. UU. (extensión universitaria). En Ecuador manda la etiqueta del producto registrado en Agrocalidad. Para huevo: Sin retiro oficial en la fuente; consulta la etiqueta.",
     "modos": [
       "huevos",
       "carne"
@@ -1396,7 +1452,7 @@
     "id": "qui-acaro-rojo-agua",
     "categoria": "quimico",
     "titulo": "Si hay ácaro rojo en las gallinas: tratamiento en el agua de bebida, con receta veterinaria",
-    "detalle": "Se dan dos tomas separadas por 7 días. Trata además las grietas del galpón.",
+    "detalle": "Trata además las grietas del galpón. Retiro de referencia en la Unión Europea (y 0 días en huevo en EE. UU.). En Ecuador manda la etiqueta del producto registrado en Agrocalidad.",
     "modos": [
       "huevos"
     ],
@@ -1414,7 +1470,7 @@
     "id": "qui-acaro-rojo-vacio-postura",
     "categoria": "quimico",
     "titulo": "Al sacar las gallinas (semana 80): trata el galpón vacío contra ácaro rojo en 3 aplicaciones (días 0, 10 y 20)",
-    "detalle": "Aplica de noche, a presión, en grietas y escondites. Así se corta el ciclo de 10 días del ácaro. Sin retiro oficial en la fuente; consulta la etiqueta. Se aplica sin aves.",
+    "detalle": "Aplica de noche, a presión, en grietas y escondites. Así se corta el ciclo de 7 a 10 días del ácaro. La resistencia a los piretroides es común: rota familias químicas. Sin retiro oficial en la fuente; consulta la etiqueta. Se aplica sin aves.",
     "modos": [
       "huevos"
     ],
@@ -1440,7 +1496,7 @@
     "id": "qui-acaro-rojo-vacio-doble",
     "categoria": "quimico",
     "titulo": "Al sacar las gallinas (semana 72): trata el galpón vacío contra ácaro rojo en 3 aplicaciones (días 0, 10 y 20)",
-    "detalle": "Aplica de noche, a presión, en grietas y escondites. Así se corta el ciclo de 10 días del ácaro. Sin retiro oficial en la fuente; consulta la etiqueta. Se aplica sin aves.",
+    "detalle": "Aplica de noche, a presión, en grietas y escondites. Así se corta el ciclo de 7 a 10 días del ácaro. La resistencia a los piretroides es común: rota familias químicas. Sin retiro oficial en la fuente; consulta la etiqueta. Se aplica sin aves.",
     "modos": [
       "huevos"
     ],
@@ -1463,8 +1519,8 @@
   {
     "id": "qui-cocci-broiler",
     "categoria": "quimico",
-    "titulo": "Prevención de coccidiosis: alimento con anticoccidial desde el inicio; suspéndelo antes del sacrificio según la etiqueta",
-    "detalle": "Prevenir es mejor que tratar. No sirve para granjas \"sin antibióticos\". No usar en gallinas que ponen huevo para consumo (por eso no hay retiro en huevo).",
+    "titulo": "Prevención de coccidiosis: usa alimento de inicio con anticoccidial (pregunta a tu proveedor si ya lo trae; no añadas otro)",
+    "detalle": "Suspéndelo antes del sacrificio según la etiqueta. No lo combines con otros medicamentos sin tu veterinario. No sirve para granjas \"sin antibióticos\". No usar en gallinas que ponen huevo para consumo (por eso no hay retiro en huevo). Retiro en carne de referencia en la Unión Europea. En Ecuador manda la etiqueta del producto registrado en Agrocalidad.",
     "modos": [
       "carne"
     ],
@@ -1487,8 +1543,8 @@
   {
     "id": "qui-cocci-pollitas",
     "categoria": "quimico",
-    "titulo": "Crianza de pollitas: prevención de coccidiosis con anticoccidial en el alimento solo hasta la semana 16, o con vacuna",
-    "detalle": "Antes del traslado las pollitas deben haber ganado resistencia. Nunca lo des en postura. Si usas vacuna, no des anticoccidial. No hay retiro en huevo porque no se permite en postura.",
+    "titulo": "Crianza de pollitas: alimento con anticoccidial solo hasta la semana 16 (pregunta a tu proveedor si ya lo trae; no añadas otro), o vacuna",
+    "detalle": "Antes del traslado las pollitas deben haber ganado resistencia. Nunca lo des en postura. Si usas vacuna, no des anticoccidial. No lo combines con otros medicamentos sin tu veterinario. No hay retiro en huevo porque no se permite en postura. Para carne: Sin retiro oficial en la fuente; consulta la etiqueta. Referencia: autorización de la Unión Europea. En Ecuador manda la etiqueta del producto registrado en Agrocalidad.",
     "modos": [
       "huevos"
     ],
@@ -1505,7 +1561,7 @@
       "tipo": "Anticoccidial preventivo en el alimento (ionóforo)",
       "ingredienteActivo": "Monensina sódica",
       "retiroHuevoDias": null,
-      "retiroCarneDias": 1,
+      "retiroCarneDias": null,
       "noPostura": true,
       "advertencia": "Confirma producto, dosis y retiro con la etiqueta y tu veterinario."
     },
@@ -1514,12 +1570,12 @@
   {
     "id": "qui-cocci-amprolio",
     "categoria": "quimico",
-    "titulo": "Coccidiosis en gallinas que ponen: el amprolio en el agua está aprobado para ponedoras; úsalo solo con diagnóstico",
-    "detalle": "Su uso principal es tratar brotes por el agua de bebida. Para huevo y carne: Sin retiro oficial en la fuente; consulta la etiqueta.",
+    "titulo": "Coccidiosis en pollitas o gallinas de postura: amprolio en el agua, solo con diagnóstico (en EE. UU. está aprobado para ponedoras)",
+    "detalle": "Úsalo solo si tu veterinario lo indica. Su uso principal es tratar brotes por el agua de bebida. La aprobación citada es de EE. UU.: confirma el registro y la etiqueta en Ecuador. En Ecuador manda la etiqueta del producto registrado en Agrocalidad. Para huevo y carne: Sin retiro oficial en la fuente; consulta la etiqueta.",
     "modos": [
       "huevos"
     ],
-    "desdeDia": 141,
+    "desdeDia": 15,
     "quimico": {
       "tipo": "Anticoccidial de tratamiento en el agua",
       "ingredienteActivo": "Amprolio",
@@ -1533,7 +1589,7 @@
     "id": "qui-cocci-toltrazuril",
     "categoria": "quimico",
     "titulo": "Coccidiosis en aves de carne: toltrazuril en el agua solo con diagnóstico veterinario",
-    "detalle": "No usar en aves que ponen o pondrán huevo para consumo, ni en las 6 semanas antes de la postura (por eso no hay retiro en huevo).",
+    "detalle": "No usar en aves que ponen o pondrán huevo para consumo, ni en las 6 semanas antes de la postura (por eso no hay retiro en huevo). Retiro en carne de referencia en la Unión Europea. En Ecuador manda la etiqueta del producto registrado en Agrocalidad.",
     "modos": [
       "carne"
     ],
@@ -1577,7 +1633,7 @@
       "huevos",
       "carne"
     ],
-    "desdeDia": 14,
+    "desdeDia": 15,
     "quimico": {
       "tipo": "Insecticida residual para moscas",
       "ingredienteActivo": "Insecticida residual registrado en Agrocalidad (rotar familias químicas)",
@@ -1608,8 +1664,8 @@
   {
     "id": "qui-escarabajos-cama",
     "categoria": "quimico",
-    "titulo": "2 semanas antes de sacar el lote: trata la cama y los equipos contra escarabajos e insectos",
-    "detalle": "Repite al vaciar el galpón, antes de desinfectar. Respeta los días de retiro antes de la venta. Para huevo: Sin retiro oficial en la fuente; consulta la etiqueta.",
+    "titulo": "2 semanas antes de sacar el lote (día 28 si vendes al día 42): trata la cama y los equipos contra escarabajos",
+    "detalle": "Si vendes antes, mueve esta tarea para respetar los días de retiro. Repite al vaciar el galpón, antes de desinfectar. Retiro en carne de referencia en EE. UU. (extensión universitaria); revisa que el producto esté permitido en la lista de Agrocalidad. En Ecuador manda la etiqueta del producto registrado en Agrocalidad. Para huevo: Sin retiro oficial en la fuente; consulta la etiqueta.",
     "modos": [
       "carne"
     ],
