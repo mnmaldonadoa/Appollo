@@ -289,7 +289,13 @@ const PlanCiclo = (function () {
     const c = await cargarTarea(id);
     if (!c) return;
     const { t, l } = c, hoy = hoyLocal(), q = t.quimico, carne = modoLote(l) === 'carne';
-    const num = (id2, et) => `<div class="reg-campo"><label class="reg-etiqueta" for="${id2}">${et}</label><input class="reg-texto" id="${id2}" type="number" inputmode="numeric" min="0" max="365" step="1" placeholder="—"></div>`;
+    // Prefill: los días de la etiqueta de la hecha más reciente de esta tarea que los tenga (huevo y carne aparte).
+    const previoEtq = k => {
+      const hs = (t.hechas || []).filter(h => h && fechaValida(h.fecha) && Number.isInteger(h[k]) && h[k] >= 0);
+      return hs.length ? String(hs.reduce((a, b) => (b.fecha >= a.fecha ? b : a))[k]) : '';
+    };
+    const pre = { 'pc-etq-huevo': previoEtq('etiquetaHuevoDias'), 'pc-etq-carne': previoEtq('etiquetaCarneDias') };
+    const num = (id2, et) => `<div class="reg-campo"><label class="reg-etiqueta" for="${id2}">${et}</label><input class="reg-texto" id="${id2}" type="number" inputmode="numeric" min="0" max="365" step="1" placeholder="—" value="${esc(pre[id2])}"></div>`;
     App.abrirHoja({ titulo: 'Marcar hecha', contenido: `<p class="pc-hoja-tarea"><b>${esc(t.titulo)}</b></p>
 ${q ? quimicoHtml(q) : ''}
 ${q ? campo('pc-fecha', 'Último día de tratamiento (última dosis)', `<input class="reg-texto" id="pc-fecha" type="date" value="${hoy}" max="${hoy}"${fechaValida(l.fechaLlegada) ? ` min="${esc(l.fechaLlegada)}"` : ''}>`, 'El retiro se cuenta desde el último día que las aves recibieron el producto.')

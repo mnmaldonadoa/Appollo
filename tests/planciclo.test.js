@@ -94,7 +94,7 @@ const amp = T({ id: 'amp', categoria: 'quimico', titulo: 'Amprolio <i>', desdeDi
   quimico: { tipo: 'Anticoccidial', ingredienteActivo: 'Amprolio', enAves: true, retiroHuevoDias: null, retiroCarneDias: null, advertencia: c.CATALOGO_AVISO_QUIMICO } });
 const he = PC.html(L, [amp], [], hoy);
 assert.ok(/class="pc-etiqueta" role="note"/.test(he), 'aviso ámbar arriba');
-assert.strictEqual((he.match(/Aplicaste Amprolio &lt;i&gt; el 08\/11: revisa en la etiqueta el retiro en huevos y carne antes de venderlos/g) || []).length, 2, 'arriba y en la tarjeta, escapado');
+assert.strictEqual((he.match(/Aplicaste Amprolio el 08\/11: revisa en la etiqueta el retiro en huevos y carne antes de venderlos/g) || []).length, 2, 'arriba y en la tarjeta (ingrediente activo si no hay producto)');
 assert.ok(!PC.html(L, [amp], [], '2026-11-23').includes('Aplicaste'), 'pasados 14 días ya no');
 assert.ok(PC.html(Object.assign({}, L, { genetica: 'ross308' }), [amp], [], hoy).includes('el retiro en carne antes de venderla'), 'lote de carne: solo carne');
 // única sin hastaDia que pasó 30 días: omitida con su texto

@@ -252,6 +252,21 @@ def main():
         pg.evaluate("App.ocultarToast()"); pg.evaluate("document.querySelector('#view .pc-etiqueta').scrollIntoView({block: 'center'})")
         medir("plan con aviso de etiqueta"); captura("plan-etiqueta-claro.png")
         pg.emulate_media(color_scheme="dark"); pg.wait_for_timeout(100); captura("plan-etiqueta-oscuro.png"); pg.emulate_media(color_scheme="light")
+        # la etiqueta leída el primer día sigue valiendo para el último día (misma tarea), y la hoja la trae de nuevo
+        pg.click(f"#view [data-accion=pc-hecho][data-id='{amp}']"); hoja()
+        check("sin etiqueta anotada la hoja trae los días vacíos", pg.input_value("#pc-etq-huevo") == "" and pg.input_value("#pc-etq-carne") == "")
+        pg.fill("#pc-fecha", "2026-11-09"); pg.fill("#pc-etq-huevo", "10"); pg.fill("#pc-etq-carne", "10")
+        pg.click(".hoja [data-accion=pc-hecho-guardar]"); sin_hoja(); toast("Labor hecha")
+        esperar("!document.querySelector('#view .pc-etiqueta')")
+        check("con la etiqueta anotada desaparece el aviso «revisa en la etiqueta» y el retiro cuenta 09/11 + 10",
+              pg.locator("#view .pc-etiqueta, #view .pc-etiqueta-tarea").count() == 0 and "No vender huevos hasta el 19/11" in pg.inner_text("#view .pc-retiro"), pg.inner_text("#view .pc-retiro"))
+        pg.click(f"#view [data-accion=pc-hecho][data-id='{amp}']"); hoja()
+        check("la siguiente Hecho trae los días de la etiqueta ya anotados", pg.input_value("#pc-etq-huevo") == "10" and pg.input_value("#pc-etq-carne") == "10")
+        pg.fill("#pc-etq-huevo", ""); pg.fill("#pc-etq-carne", "")  # aunque se borren, la etiqueta anterior de la tarea sigue valiendo
+        pg.click(".hoja [data-accion=pc-hecho-guardar]"); sin_hoja(); toast("Labor hecha")
+        esperar("document.querySelector('#view .pc-retiro').innerText.includes('No vender huevos hasta el 20/11')")
+        check("último día 10/11 sin reescribir la etiqueta: retiro hasta el 20/11 y sin aviso de revisar",
+              "No vender huevos hasta el 20/11" in pg.inner_text("#view .pc-retiro") and pg.locator("#view .pc-etiqueta").count() == 0, pg.inner_text("#view .pc-retiro"))
 
         # ---------- oscuro ----------
         pg.emulate_media(color_scheme="dark"); pg.wait_for_timeout(100)

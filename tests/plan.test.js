@@ -89,6 +89,26 @@ assert.strictEqual(JSON.stringify(retiroVigente([etq2], [], '2026-11-05')), JSON
 const etq0 = T({ quimico: { retiroHuevoDias: 3, retiroCarneDias: null }, hechas: [{ fecha: '2026-11-04', etiquetaHuevoDias: 0 }] });
 assert.strictEqual(JSON.stringify(retiroVigente([etq0], [], '2026-11-05')), JSON.stringify({ huevo: null, carne: null }), 'etiqueta 0: sin retiro');
 
+// días de la etiqueta anotados en una hecha anterior de la MISMA tarea siguen valiendo (catálogo sin dato)
+const arr = T({ id: 'amp1', quimico: { enAves: true, retiroHuevoDias: null, retiroCarneDias: null },
+  hechas: [{ fecha: '2026-11-01', etiquetaHuevoDias: 10, etiquetaCarneDias: 10 }, { fecha: '2026-11-07' }] });
+assert.strictEqual(JSON.stringify(retiroVigente([arr], [], '2026-11-08')), JSON.stringify({ huevo: '2026-11-17', carne: '2026-11-17' }), 'última dosis 07/11 + etiqueta 10: hasta el 17/11');
+assert.strictEqual(c.avisosEtiqueta([arr], '2026-11-08', 'huevos').length, 0, 'con etiqueta conocida no hay aviso de revisar');
+const arr2 = Object.assign({}, arr, { hechas: [{ fecha: '2026-11-01', etiquetaHuevoDias: 10 }, { fecha: '2026-11-03', etiquetaHuevoDias: 2 }, { fecha: '2026-11-07' }] });
+assert.strictEqual(retiroVigente([arr2], [], '2026-11-08').huevo, '2026-11-11', 'vale la etiqueta más reciente anterior (2)');
+assert.strictEqual(retiroVigente([arr2], [], '2026-11-08').carne, null, 'carne sin etiqueta sigue sin dato');
+assert.strictEqual(c.avisosEtiqueta([arr2], '2026-11-08', 'huevos')[0].texto, 'Aplicaste x el 07/11: revisa en la etiqueta el retiro en carne antes de venderla');
+const arr3 = Object.assign({}, arr, { hechas: [{ fecha: '2026-11-01', etiquetaHuevoDias: 10 }, { fecha: '2026-11-07', etiquetaHuevoDias: 1 }] });
+assert.strictEqual(retiroVigente([arr3], [], '2026-11-08').huevo, '2026-11-11', 'el valor explícito de la hecha manda (01/11+10 = 11/11 vs 07/11+1 = 08/11: el máximo)');
+const otra = T({ id: 'amp2', quimico: { enAves: true, retiroHuevoDias: null, retiroCarneDias: null }, hechas: [{ fecha: '2026-11-07' }] });
+assert.strictEqual(JSON.stringify(retiroVigente([arr, otra].slice(1), [], '2026-11-08')), JSON.stringify({ huevo: null, carne: null }), 'no pasa de una tarea a otra');
+assert.strictEqual(c.avisosEtiqueta([arr, otra], '2026-11-08', 'huevos').map(a => a.tareaId).join(), 'amp2', 'la otra tarea sí pide revisar');
+const conCat = T({ quimico: { retiroHuevoDias: 3, retiroCarneDias: null }, hechas: [{ fecha: '2026-11-01', etiquetaHuevoDias: 10 }, { fecha: '2026-11-07' }] });
+assert.strictEqual(retiroVigente([conCat], [], '2026-11-08').huevo, '2026-11-11', 'con dato del catálogo, la hecha sin etiqueta usa el catálogo (07/11+3=10/11; 01/11+10=11/11 es mayor)');
+// el nombre del aviso: producto, si no el ingrediente activo, si no el título
+assert.strictEqual(c.avisosEtiqueta([T({ titulo: 'Piojos y ácaros', quimico: { enAves: true, ingredienteActivo: 'Permetrina', retiroHuevoDias: null, retiroCarneDias: 0 }, hechas: [{ fecha: '2026-11-07' }] })], '2026-11-08', 'huevos')[0].texto,
+  'Aplicaste Permetrina el 07/11: revisa en la etiqueta el retiro en huevos antes de venderlos');
+
 // --- diasEtiqueta: entero de 0 a 365 u omitido
 for (const vac of ['', '  ', null, undefined]) assert.strictEqual(c.diasEtiqueta(vac).valor, null, 'vacío ' + String(vac));
 assert.strictEqual(c.diasEtiqueta('0').valor, 0); assert.strictEqual(c.diasEtiqueta(' 14 ').valor, 14);
@@ -305,7 +325,7 @@ module.exports = (async () => {
   assert.strictEqual(c.retiroVigente([fe], [], hoy).huevo, dias(hoy, 2), 'la etiqueta manda: -1 + 3');
   const rE = J(await c.DB.listar('registros', { loteId: lM.id, tipo: 'plan' })).find(x => x.datos.tareaId === fa2.id);
   assert.strictEqual(rE.datos.etiquetaHuevoDias, 3);
-  assert.strictEqual(c.avisosEtiqueta([fe], hoy, 'huevos')[0].texto, 'Aplicaste ' + fe.titulo + ' el ' + dias(hoy, -1).slice(8, 10) + '/' + dias(hoy, -1).slice(5, 7) + ': revisa en la etiqueta el retiro en carne antes de venderla');
+  assert.strictEqual(c.avisosEtiqueta([fe], hoy, 'huevos')[0].texto, 'Aplicaste Amprolio el ' + dias(hoy, -1).slice(8, 10) + '/' + dias(hoy, -1).slice(5, 7) + ': revisa en la etiqueta el retiro en carne antes de venderla');
   await dE();
   assert.deepStrictEqual(J(await c.DB.obtener('planTareas', fa2.id)), antesE, 'deshacer restaura');
   // en una labor no química los días de etiqueta se ignoran

@@ -403,14 +403,24 @@ function estadoTarea(t, hoy) {
   return p < hoy ? 'atrasada' : p === hoy ? 'hoy' : 'proxima';
 }
 
-/* Días de retiro de una aplicación: los de la etiqueta anotados al marcarla (hecha.etiquetaHuevoDias /
-   etiquetaCarneDias, entero >= 0) mandan sobre los del catálogo (quimico.retiroHuevoDias / retiroCarneDias). */
+/* Días de retiro de una aplicación `h` de la tarea (cuyas hechas son `hechas`):
+   1) los de la etiqueta anotados en esa hecha (h.etiquetaHuevoDias / etiquetaCarneDias, entero >= 0);
+   2) si no, los del catálogo (quimico.retiroHuevoDias / retiroCarneDias);
+   3) si el catálogo no trae dato, los de la etiqueta anotados en la hecha anterior más reciente de la MISMA tarea
+      (así el último día de un tratamiento no pierde lo que se leyó en la etiqueta el primer día). Huevo y carne aparte. */
 const _diasEnt = x => (typeof x === 'number' && Number.isInteger(x) && x >= 0 ? x : null);
-function _diasRetiro(q, h, campo) {
-  const e = _diasEnt(h && (campo === 'huevo' ? h.etiquetaHuevoDias : h.etiquetaCarneDias));
+const _clave = campo => (campo === 'huevo' ? 'etiquetaHuevoDias' : 'etiquetaCarneDias');
+function _diasRetiro(q, h, campo, hechas) {
+  const e = _diasEnt(h && h[_clave(campo)]);
   if (e !== null) return e;
-  const d = Number(campo === 'huevo' ? q.retiroHuevoDias : q.retiroCarneDias);
-  return q[campo === 'huevo' ? 'retiroHuevoDias' : 'retiroCarneDias'] == null || !Number.isFinite(d) ? null : d;
+  const k = campo === 'huevo' ? 'retiroHuevoDias' : 'retiroCarneDias', d = Number(q[k]);
+  if (q[k] != null && Number.isFinite(d)) return d;
+  let mejor = null;
+  for (const o of hechas || []) {
+    if (!o || o === h || !fechaValida(o.fecha) || o.fecha > h.fecha || _diasEnt(o[_clave(campo)]) === null) continue;
+    if (mejor === null || o.fecha >= mejor.fecha) mejor = o;
+  }
+  return mejor ? mejor[_clave(campo)] : null;
 }
 
 /* Retiro vigente: máximo de fechaHecha + díasDeRetiro de todas las aplicaciones químicas hechas (también de
@@ -429,7 +439,7 @@ function retiroVigente(tareas, vacunasPlanAplicadas, hoy) {
     for (const h of t.hechas || []) {
       if (!h || !fechaValida(h.fecha)) continue;
       for (const campo of ['huevo', 'carne']) {
-        const dias = _diasRetiro(q, h, campo);
+        const dias = _diasRetiro(q, h, campo, t.hechas);
         if (!(dias > 0)) continue;
         const fin = _masDias(h.fecha, dias);
         if (fin >= hoy && (out[campo] === null || fin > out[campo])) out[campo] = fin;
@@ -451,7 +461,7 @@ function diasEtiqueta(raw) {
 
 /* Avisos «revisa en la etiqueta»: por cada tarea química que reciben las aves (quimico.enAves) cuya última hecha
    (<= hoy) fue hace 14 días o menos y que no tiene retiro conocido (ni en el catálogo ni anotado de la etiqueta en esa
-   hecha). Huevo solo cuenta si el lote no es de carne (`modo` 'huevos' o desconocido). También tareas quitadas.
+   hecha ni en una hecha anterior de la misma tarea). Nombre: producto anotado, si no el ingrediente activo, si no el título. Huevo solo cuenta si el lote no es de carne (`modo` 'huevos' o desconocido). También tareas quitadas.
    -> [{tareaId, loteId, fecha, huevo, carne, texto}]. */
 function avisosEtiqueta(tareas, hoy, modo) {
   if (!fechaValida(hoy)) hoy = hoyLocal();
@@ -463,9 +473,9 @@ function avisosEtiqueta(tareas, hoy, modo) {
     if (!hs.length) continue;
     const h = hs.reduce((a, b) => (b.fecha >= a.fecha ? b : a));
     if (h.fecha < desde) continue;
-    const huevo = modo !== 'carne' && _diasRetiro(q, h, 'huevo') === null, carne = _diasRetiro(q, h, 'carne') === null;
+    const huevo = modo !== 'carne' && _diasRetiro(q, h, 'huevo', hs) === null, carne = _diasRetiro(q, h, 'carne', hs) === null;
     if (!huevo && !carne) continue;
-    const nombre = (typeof h.producto === 'string' && h.producto.trim()) || t.titulo || 'el producto';
+    const nombre = (typeof h.producto === 'string' && h.producto.trim()) || (typeof q.ingredienteActivo === 'string' && q.ingredienteActivo.trim()) || t.titulo || 'el producto';
     const que = huevo && carne ? 'huevos y carne antes de venderlos' : huevo ? 'huevos antes de venderlos' : 'carne antes de venderla';
     out.push({ tareaId: t.id, loteId: t.loteId, fecha: h.fecha, huevo, carne,
       texto: 'Aplicaste ' + nombre + ' el ' + h.fecha.slice(8, 10) + '/' + h.fecha.slice(5, 7) + ': revisa en la etiqueta el retiro en ' + que });
