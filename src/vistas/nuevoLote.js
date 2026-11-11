@@ -189,7 +189,7 @@ const NuevoLote = (function () {
     const quim = q ? `<span class="plan-tags">${tag(q.tipo)}${tag(q.ingredienteActivo)}${tag('Retiro huevo: ' + retiro(q.retiroHuevoDias) + ' · carne: ' + retiro(q.retiroCarneDias))}</span>
         <span class="plan-item-d">${esc(CATALOGO_AVISO_QUIMICO)}</span>` : '';
     const nota = bloq ? '<span class="plan-item-d"><b>No se usa en gallinas de postura de huevo para consumo</b></span>' : '';
-    return `<label class="plan-item nl-tarea${bloq ? ' plan-item-bloqueado' : ''}"><input type="checkbox" data-accion="nl-plan-tarea" data-id="${esc(t.id)}" ${marcada ? 'checked' : ''} ${bloq ? 'disabled' : ''}>
+    return `<label class="plan-item nl-tarea${q ? ' nl-tarea-quimica' : ''}${bloq ? ' plan-item-bloqueado' : ''}"><input type="checkbox" data-accion="nl-plan-tarea" data-id="${esc(t.id)}" ${marcada ? 'checked' : ''} ${bloq ? 'disabled' : ''}>
       <span class="plan-caja" aria-hidden="true"></span>
       <span class="plan-item-texto"><span class="plan-item-t">${esc(t.titulo)}</span><span class="plan-item-d nl-detalle">${esc(t.detalle)}</span>${quim}${nota}</span></label>`;
   }
@@ -271,12 +271,16 @@ const NuevoLote = (function () {
     if (v.mensaje) { error(v.mensaje); return; }
     st.paso = 3; pintar(true);
   };
-  const conservar = f => { const y = window.scrollY; f(); pintar(); window.scrollTo(0, y); };
+  const conservar = (f, accion, id) => {
+    const y = window.scrollY; f(); pintar(); window.scrollTo(0, y);
+    const el = $v(`[data-accion="${accion}"][data-id="${id}"]`);
+    if (el) { try { el.focus({ preventScroll: true }); } catch (e) { /* sin foco */ } }
+  };
   const idsDe = cat => tareasVisibles(genDe(st.gid), edadActual()).filter(t => t.categoria === cat && !noSirve(t, genDe(st.gid))).map(t => t.id);
-  ACCIONES['nl-plan-tarea'] = el => conservar(() => { const id = el.dataset.id; if (st.plan.has(id)) st.plan.delete(id); else st.plan.add(id); });
-  ACCIONES['nl-plan-todo'] = el => conservar(() => idsDe(el.dataset.id).forEach(id => st.plan.add(id)));
-  ACCIONES['nl-plan-ninguno'] = el => conservar(() => idsDe(el.dataset.id).forEach(id => st.plan.delete(id)));
-  ACCIONES['nl-plan-abrir'] = el => conservar(() => { const id = el.dataset.id; if (st.abiertas.has(id)) st.abiertas.delete(id); else st.abiertas.add(id); });
+  ACCIONES['nl-plan-tarea'] = el => conservar(() => { const id = el.dataset.id; if (st.plan.has(id)) st.plan.delete(id); else st.plan.add(id); }, 'nl-plan-tarea', el.dataset.id);
+  ACCIONES['nl-plan-todo'] = el => conservar(() => idsDe(el.dataset.id).forEach(id => st.plan.add(id)), 'nl-plan-todo', el.dataset.id);
+  ACCIONES['nl-plan-ninguno'] = el => conservar(() => idsDe(el.dataset.id).forEach(id => st.plan.delete(id)), 'nl-plan-ninguno', el.dataset.id);
+  ACCIONES['nl-plan-abrir'] = el => conservar(() => { const id = el.dataset.id; if (st.abiertas.has(id)) st.abiertas.delete(id); else st.abiertas.add(id); }, 'nl-plan-abrir', el.dataset.id);
   ACCIONES['nl-plan-siguiente'] = () => { st.paso = 4; pintar(true); };
   ACCIONES['nl-crear'] = async el => {
     leer();

@@ -424,6 +424,7 @@ button { cursor: pointer; }
 .nl-cat-cuerpo { display: grid; gap: 10px; min-width: 0; }
 .nl-cat-botones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .nl-detalle { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.nl-tarea-quimica .nl-detalle { display: block; overflow: visible; }
 .paso-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .gen-lista { display: grid; gap: 10px; }

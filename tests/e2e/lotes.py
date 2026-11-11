@@ -332,6 +332,7 @@ def main():
                   and pg.locator("#view .nl-tarea", has_text="Confirma producto, dosis y retiro con la etiqueta y tu veterinario.").count() >= 1)
             check("las tareas con retiro desconocido dicen 'ver etiqueta'", pg.locator("#view .nl-tarea", has_text="ver etiqueta").count() >= 1)
             check("todas las sugeridas (no noPostura) son las visibles menos las noPostura", sorted(set(pg.evaluate(TODAS)) - set(nop)) == pred)
+            check("las tareas químicas no recortan su detalle", pg.evaluate("[...document.querySelectorAll('#view .nl-tarea-quimica .nl-detalle')].every(e => e.scrollHeight <= e.clientHeight + 1)"))
             medir(pg, "paso 3 claro (todo abierto)")
             pg.evaluate("document.documentElement.setAttribute('data-tema', 'oscuro')")
             medir(pg, "paso 3 oscuro (todo abierto)")
@@ -350,6 +351,26 @@ def main():
             check("«Ninguno» no toca las otras categorías", len(pg.evaluate(MARCADAS)) == n0 - en_cat)
             pg.click(f"#view [data-cat={cid}] [data-accion=nl-plan-todo]")
             check("«Todo» vuelve a marcar las sugeridas de la categoría (sin las noPostura)", pg.evaluate(MARCADAS) == pred)
+            # Foco: se conserva tras cada re-render
+            FOCO = "(() => { const a = document.activeElement; return a ? (a.dataset.accion || '') + '|' + (a.dataset.id || '') : ''; })()"
+            pg.focus(f"#view [data-accion=nl-plan-tarea][data-id='{pred[1]}']")
+            pg.keyboard.press("Space")
+            check("Espacio alterna la casilla y el foco se queda en ella", cumple(lambda: esperar(pg, f"{FOCO} === 'nl-plan-tarea|{pred[1]}'", 2000))
+                  and pred[1] not in pg.evaluate(MARCADAS), pg.evaluate(FOCO))
+            pg.keyboard.press("Space")
+            check("Espacio otra vez la vuelve a marcar y conserva el foco", pred[1] in pg.evaluate(MARCADAS) and pg.evaluate(FOCO) == f"nl-plan-tarea|{pred[1]}", pg.evaluate(FOCO))
+            pg.focus(f"#view [data-accion=nl-plan-abrir][data-id={cid}]")
+            pg.keyboard.press("Enter")
+            check("Enter en la cabecera pliega la sección y el foco se queda en ella",
+                  cumple(lambda: esperar(pg, f"{FOCO} === 'nl-plan-abrir|{cid}'", 2000))
+                  and pg.get_attribute(f"#view [data-accion=nl-plan-abrir][data-id={cid}]", "aria-expanded") == "false", pg.evaluate(FOCO))
+            pg.keyboard.press("Enter")
+            check("Enter de nuevo la abre y conserva el foco", pg.get_attribute(f"#view [data-accion=nl-plan-abrir][data-id={cid}]", "aria-expanded") == "true"
+                  and pg.evaluate(FOCO) == f"nl-plan-abrir|{cid}", pg.evaluate(FOCO))
+            for acc in ("nl-plan-ninguno", "nl-plan-todo"):
+                pg.focus(f"#view [data-accion={acc}][data-id={cid}]"); pg.keyboard.press("Enter")
+                check(f"Enter en «{acc}» conserva el foco", pg.evaluate(FOCO) == f"{acc}|{cid}", pg.evaluate(FOCO))
+            check("(foco) la selección vuelve a ser la sugerida", pg.evaluate(MARCADAS) == pred)
             # Una tarea
             tid = pred[0]
             pg.click(f"#view [data-accion=nl-plan-tarea][data-id='{tid}']")
