@@ -3317,6 +3317,46 @@ function alertaRetiro(datos, hoy) {
   return out;
 }
 
+/* 'YYYY-MM-DD' -> 'DD/MM' (puro, sin DOM). */
+const _ddmm = f => f.slice(8, 10) + '/' + f.slice(5, 7);
+
+/* Labores del plan del ciclo: atrasada -> rojo, hoy -> ámbar, próxima en 1-7 días -> info. */
+function alertaPlan(datos, hoy) {
+  const out = [], activos = new Map(_activos(datos.lotes).map(l => [l.id, l]));
+  for (const t of datos.planTareas || []) {
+    const l = activos.get(t.loteId);
+    if (!l) continue;
+    const est = estadoTarea(t, hoy);
+    if (est !== 'atrasada' && est !== 'hoy' && est !== 'proxima') continue;
+    const f = proximaFecha(t, hoy);
+    if (!f) continue;
+    let gravedad, cuando;
+    if (est === 'atrasada') { gravedad = 'rojo'; cuando = 'atrasada desde ' + _ddmm(f); }
+    else if (est === 'hoy') { gravedad = 'ambar'; cuando = 'hoy'; }
+    else if (f <= _sumaDias(hoy, 7)) { gravedad = 'info'; cuando = 'el ' + _ddmm(f); }
+    else continue;
+    out.push({ id: 'plan-' + t.id, tipo: 'plan', gravedad, loteId: l.id,
+      texto: 'Labor · ' + l.nombre + ': ' + t.titulo + ' (' + cuando + ')',
+      accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) } });
+  }
+  return out;
+}
+
+/* Retiro vigente por aplicaciones químicas del plan (también de tareas quitadas): una alerta por lote y tipo. */
+function alertaRetiroPlan(datos, hoy) {
+  const out = [], tareas = datos.planTareas || [];
+  for (const l of _activos(datos.lotes)) {
+    const r = retiroVigente(tareas.filter(t => t.loteId === l.id), [], hoy);
+    for (const [campo, nombre] of [['huevo', 'huevos'], ['carne', 'carne']]) {
+      if (!r[campo]) continue;
+      out.push({ id: 'retiro-plan-' + campo + '-' + l.id, tipo: 'retiro', gravedad: 'rojo', loteId: l.id,
+        texto: 'No vender ' + nombre + ' hasta el ' + _ddmm(r[campo]) + ' · ' + l.nombre,
+        accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) } });
+    }
+  }
+  return out;
+}
+
 function alertaSinRegistro(datos, hoy, ahora) {
   if (ahora.getHours() < 18) return [];
   return _activos(datos.lotes)
@@ -3352,7 +3392,7 @@ function generarAlertas(datos, ahora) {
   const orden = { rojo: 0, ambar: 1, info: 2 };
   return [
     ...alertaVacunas(datos, hoy), ...alertaMortalidad(datos, hoy), ...alertaPostura(datos, hoy),
-    ...alertaInventario(datos), ...alertaRetiro(datos, hoy), ...alertaSinRegistro(datos, hoy, ahora),
+    ...alertaInventario(datos), ...alertaRetiro(datos, hoy), ...alertaRetiroPlan(datos, hoy), ...alertaPlan(datos, hoy), ...alertaSinRegistro(datos, hoy, ahora),
     ...alertaCambioAlimento(datos, hoy)
   ].map((a, i) => [a, i]).sort((x, y) => orden[x[0].gravedad] - orden[y[0].gravedad] || x[1] - y[1]).map(x => x[0]);
 }

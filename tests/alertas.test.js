@@ -106,8 +106,8 @@ as = c.generarAlertas({ ...base({ planTareas: [tar('t8', { fechaBase: '2026-10-3
 assert.strictEqual(de(as, 'plan').length, 0, 'lote no activo no genera');
 // Sin planTareas (respaldos viejos): no falla
 assert.doesNotThrow(() => c.generarAlertas(base(), dia(10)));
-assert.deepStrictEqual(c.alertaPlan(base(), HOY), []);
-assert.deepStrictEqual(c.alertaRetiroPlan(base(), HOY), []);
+assert.strictEqual(c.alertaPlan(base(), HOY).length, 0);
+assert.strictEqual(c.alertaRetiroPlan(base(), HOY).length, 0);
 // Genética desconocida no rompe
 as = c.generarAlertas({ ...base({ planTareas: [tar('t9', { fechaBase: '2026-10-30' }),
   tar('r9', { titulo: 'Tratamiento', fechaBase: '2026-11-01', hechas: [{ fecha: '2026-11-01' }], quimico: { retiroHuevoDias: 3 } })] }),
@@ -119,14 +119,14 @@ const quim = (id, o = {}) => tar(id, { titulo: 'Antibiótico', fechaBase: '2026-
   quimico: { retiroHuevoDias: 5, retiroCarneDias: 10 }, ...o });
 as = gen({ planTareas: [quim('q1')] });
 r = de(as, 'retiro').filter(a => a.id.startsWith('retiro-plan'));
-assert.deepStrictEqual(r.map(a => a.id), ['retiro-plan-huevo-L1', 'retiro-plan-carne-L1']);
+assert.strictEqual(r.map(a => a.id).join(), 'retiro-plan-huevo-L1,retiro-plan-carne-L1');
 assert.strictEqual(r[0].texto, 'No vender huevos hasta el 06/11 · A');
 assert.strictEqual(r[1].texto, 'No vender carne hasta el 11/11 · A');
 assert.ok(r.every(a => a.gravedad === 'rojo' && a.loteId === 'L1' && a.accion.ruta === '#/lote/L1'));
 as = gen({ planTareas: [quim('q2', { estado: 'quitada' })] });
 assert.strictEqual(de(as, 'retiro').filter(a => a.id.startsWith('retiro-plan')).length, 2, 'retiro vigente aunque la tarea esté quitada');
 as = gen({ planTareas: [quim('q3', { quimico: { retiroHuevoDias: 5 } })] });
-assert.deepStrictEqual(de(as, 'retiro').map(a => a.id), ['retiro-plan-huevo-L1']);
+assert.strictEqual(de(as, 'retiro').map(a => a.id).join(), 'retiro-plan-huevo-L1');
 as = gen({ planTareas: [quim('q4', { fechaBase: '2026-10-01', hechas: [{ fecha: '2026-10-01' }] })] });
 assert.strictEqual(de(as, 'retiro').length, 0, 'retiro vencido no genera');
 as = c.generarAlertas({ ...base({ planTareas: [quim('q5')] }), lotes: [{ ...lote, estado: 'cerrado' }] }, dia(10));
