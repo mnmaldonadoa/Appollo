@@ -18,7 +18,8 @@ const PlanCiclo = (function () {
   const ultimaHecha = t => ((t.hechas || []).map(h => h && h.fecha).filter(fechaValida).sort().pop() || null);
   const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const gen = l => (l && typeof GENETICAS !== 'undefined' ? GENETICAS.find(g => g.id === l.genetica) || null : null);
-  const noSirve = (t, g) => !!(t.quimico && t.quimico.noPostura && g && modoDe(g) === 'huevos');
+  const noSirve = (t, g) => !!(g && bloqueadaEnModo(t, modoDe(g)));
+  const modoLote = l => { const g = gen(l); return g ? modoDe(g) : null; };
 
   /* ------------------------------ Secciones (puro) ------------------------------ */
   /* -> {atrasadas, semana, proximas, hechas, quitadas}: cada elemento {tipo:'tarea'|'vacuna', dato, estado, fecha}. */
@@ -82,7 +83,7 @@ const PlanCiclo = (function () {
       case 'hoy': return 'hoy' + cada;
       case 'proxima': return diaTxt(it.fecha) + cada;
       case 'hecha': return 'hecha el ' + ddmm(it.fecha) + cada;
-      case 'omitida': return 'pasó su edad sin hacerse';
+      case 'omitida': return t.hastaDia != null && t.hastaDia !== '' ? 'pasó su edad sin hacerse' : 'pasó un mes sin hacerse';
       case 'quitada': return 'quitada' + (fechaValida(it.fecha) ? ' el ' + ddmm(it.fecha) : '');
     }
     return '';
@@ -91,13 +92,17 @@ const PlanCiclo = (function () {
   function hechasHtml(t) {
     const hs = (t.hechas || []).filter(h => h && fechaValida(h.fecha)).slice().sort((a, b) => b.fecha.localeCompare(a.fecha));
     if (!hs.length) return '';
-    const fila = h => `<li>Hecha el ${esc(ddmm(h.fecha))}${h.producto ? ' · producto: ' + esc(h.producto) : ''}${h.nota ? ' · ' + esc(h.nota) : ''}</li>`;
+    const etq = h => [Number.isInteger(h.etiquetaHuevoDias) ? 'huevo ' + retiroDias(h.etiquetaHuevoDias) : '', Number.isInteger(h.etiquetaCarneDias) ? 'carne ' + retiroDias(h.etiquetaCarneDias) : ''].filter(Boolean).join(', ');
+    const fila = h => `<li>${t.quimico ? 'Último día' : 'Hecha el'} ${esc(ddmm(h.fecha))}${h.producto ? ' · producto: ' + esc(h.producto) : ''}${etq(h) ? ' · retiro en la etiqueta: ' + esc(etq(h)) : ''}${h.nota ? ' · ' + esc(h.nota) : ''}</li>`;
     return `<ul class="pc-hechas">${hs.slice(0, 3).map(fila).join('')}${hs.length > 3 ? `<li>y ${formatoNumero(hs.length - 3)} más</li>` : ''}</ul>`;
   }
 
-  function tareaHtml(it, hoy, activo) {
-    const t = it.dato, c = catDe(t.categoria), id = t.id, unicaHecha = it.estado === 'hecha'; // única hecha o serie terminada: nada que marcar ni mover
+  function tareaHtml(it, hoy, activo, modo) {
+    const t = it.dato, c = catDe(t.categoria), id = t.id, unicaHecha = it.estado === 'hecha'; // única hecha o serie terminada: nada que mover
+    // Un químico ya hecho admite otra «Hecho» para anotar el último día real del tratamiento (el retiro cuenta desde ahí).
+    const conHecho = !unicaHecha || !!t.quimico;
     const ret = t.quimico ? textoRetiro(retiroVigente([t], [], hoy)) : [];
+    const etq = t.quimico ? avisosEtiqueta([t], hoy, modo) : [];
     let acciones = '';
     if (activo) {
       if (it.estado === 'quitada') {
@@ -109,8 +114,8 @@ const PlanCiclo = (function () {
           Boton({ texto: 'Quitar', icono: 'cruz', variante: 'secundario', accion: 'pc-quitar', datos: { id }, clase: 'pc-quitar' }),
         ].join('');
         const mid = 'pc-menu-' + esc(id);
-        acciones = `<div class="pc-acciones${unicaHecha ? ' pc-acciones-una' : ''}">
-    ${unicaHecha ? '' : Boton({ texto: 'Hecho', icono: 'sig', variante: 'primario', accion: 'pc-hecho', datos: { id } })}
+        acciones = `<div class="pc-acciones${conHecho ? '' : ' pc-acciones-una'}">
+    ${conHecho ? Boton({ texto: 'Hecho', icono: 'sig', variante: unicaHecha ? 'secundario' : 'primario', accion: 'pc-hecho', datos: { id } }) : ''}
     <button type="button" class="btn btn-secundario pc-menu-btn" data-accion="pc-menu" data-id="${esc(id)}" aria-expanded="false" aria-controls="${mid}">${icono('menu')}<span class="btn-texto">Opciones</span></button>
   </div>
   <div class="pc-menu" id="${mid}" hidden>${menu}</div>`;
@@ -122,6 +127,7 @@ const PlanCiclo = (function () {
   ${t.detalle ? `<p class="pc-detalle">${esc(t.detalle)}</p>` : ''}
   ${t.quimico ? quimicoHtml(t.quimico) : ''}
   ${ret.length ? `<p class="pc-retiro-tarea">${icono('aviso')}<span>${ret.map(esc).join(' · ')}</span></p>` : ''}
+  ${etq.map(a => `<p class="pc-etiqueta-tarea">${icono('aviso')}<span>${esc(a.texto)}</span></p>`).join('')}
   ${hechasHtml(t)}
   ${acciones}
 </li>`;
@@ -142,7 +148,8 @@ const PlanCiclo = (function () {
   function html(lote, tareas, vacunas, hoy) {
     if (!fechaValida(hoy)) hoy = hoyLocal();
     const activo = !!lote && lote.estado === 'activo', s = secciones(tareas, vacunas, hoy), lid = lote ? lote.id : '';
-    const item = it => (it.tipo === 'tarea' ? tareaHtml(it, hoy, activo) : vacunaHtml(it, hoy, activo));
+    const modo = modoLote(lote);
+    const item = it => (it.tipo === 'tarea' ? tareaHtml(it, hoy, activo, modo) : vacunaHtml(it, hoy, activo));
     const lista = its => `<ul class="dl-lista pc-lista">${its.map(item).join('')}</ul>`;
     const det = (clave, resumen, cuerpo, clase) => `<details class="dl-hechas pc-det${clase ? ' ' + clase : ''}" data-det="${esc(clave)}"${abiertos.has(lid + '|' + clave) ? ' open' : ''}><summary>${resumen}</summary>${cuerpo}</details>`;
     const seccion = (clave, titulo, its, corte) => {
@@ -152,10 +159,11 @@ const PlanCiclo = (function () {
   <h2 class="seccion-titulo pc-sec-titulo" id="pc-t-${clave}" tabindex="-1">${titulo} <span class="num">${formatoNumero(its.length)}</span></h2>
   ${lista(vis)}${resto.length ? det(clave + '-mas', `Ver ${formatoNumero(resto.length)} más`, lista(resto)) : ''}</section>`;
     };
-    const ret = textoRetiro(retiroVigente(tareas, [], hoy));
+    const ret = textoRetiro(retiroVigente(tareas, [], hoy)), etq = avisosEtiqueta(tareas, hoy, modo);
     const vacio = !s.atrasadas.length && !s.semana.length && !s.proximas.length && !s.hechas.length;
     return `<div class="pc-plan">
-  ${ret.length ? `<div class="pc-retiro" role="note">${icono('aviso')}<div>${ret.map(x => `<p><b>${esc(x)}</b></p>`).join('')}<p>Por productos aplicados en este lote (el último día incluido).</p></div></div>` : ''}
+  ${ret.length ? `<div class="pc-retiro" role="note">${icono('aviso')}<div>${ret.map(x => `<p><b>${esc(x)}</b></p>`).join('')}<p>Por productos aplicados en este lote, contado desde el último día de tratamiento registrado (el día indicado incluido).</p></div></div>` : ''}
+  ${etq.length ? `<div class="pc-etiqueta" role="note">${icono('aviso')}<div>${etq.map(a => `<p><b>${esc(a.texto)}</b></p>`).join('')}<p>Este producto no trae retiro en la lista. Si la etiqueta trae días de retiro, anótalos con «Hecho» en esa labor.</p></div></div>` : ''}
   ${activo ? Boton({ texto: 'Agregar labor', icono: 'mas', variante: 'primario', accion: 'pc-agregar', datos: { id: lid }, clase: 'btn-ancho' })
     : '<p class="pc-solo-lectura">Lote cerrado: el plan es de solo lectura.</p>'}
   ${vacio ? `<p class="pantalla-texto">Aún no hay labores en el plan${activo ? '. Usa «Agregar labor» para elegir del catálogo o escribir una propia.' : '.'}</p>` : ''}
@@ -218,6 +226,7 @@ const PlanCiclo = (function () {
   let ocupado = false; // una operación a la vez: un doble toque no duplica hechas
   const $h = s => { const c = App.hojaAbierta(); return c ? c.querySelector(s) : null; };
   const valor = s => { const el = $h(s); return el ? el.value : ''; };
+  const valorNum = s => { const el = $h(s); return !el ? '' : el.validity && el.validity.badInput ? 'x' : el.value; }; // texto no numérico: se rechaza, no se ignora
   function error(msg) { const p = $h('.reg-error'); if (p) { p.textContent = msg; p.hidden = false; } }
   const campo = (id, etiqueta, control, ayuda) => `<div class="reg-campo"><label class="reg-etiqueta" for="${id}">${etiqueta}</label>${control}${ayuda ? `<p class="reg-ayuda">${ayuda}</p>` : ''}</div>`;
   const pie = (accion, id, texto) => `<p class="reg-error" role="alert" hidden></p>
@@ -273,19 +282,28 @@ const PlanCiclo = (function () {
     m.hidden = !abrir;
   };
 
-  ACCIONES['pc-hecho'] = async el => {
+  /* Hoja «Marcar hecha». En un químico la fecha es el ÚLTIMO día de tratamiento (el retiro se cuenta desde ahí) y hay
+     campos opcionales con los días de retiro de la etiqueta. Se abre desde la pestaña y desde Alertas. */
+  async function abrirHecho(id) {
     if (ocupado) return;
-    const c = await cargarTarea(el.dataset.id);
+    const c = await cargarTarea(id);
     if (!c) return;
-    const { t, l } = c, hoy = hoyLocal();
+    const { t, l } = c, hoy = hoyLocal(), q = t.quimico, carne = modoLote(l) === 'carne';
+    const num = (id2, et) => `<div class="reg-campo"><label class="reg-etiqueta" for="${id2}">${et}</label><input class="reg-texto" id="${id2}" type="number" inputmode="numeric" min="0" max="365" step="1" placeholder="—"></div>`;
     App.abrirHoja({ titulo: 'Marcar hecha', contenido: `<p class="pc-hoja-tarea"><b>${esc(t.titulo)}</b></p>
-${t.quimico ? quimicoHtml(t.quimico) : ''}
-${campo('pc-fecha', 'Fecha en que se hizo', `<input class="reg-texto" id="pc-fecha" type="date" value="${hoy}" max="${hoy}"${fechaValida(l.fechaLlegada) ? ` min="${esc(l.fechaLlegada)}"` : ''}>`)}
-${t.quimico ? campo('pc-producto', 'Producto usado (nombre comercial)', '<input class="reg-texto" id="pc-producto" type="text" maxlength="80" autocomplete="off">', 'Así queda constancia de qué se aplicó.') : ''}
+${q ? quimicoHtml(q) : ''}
+${q ? campo('pc-fecha', 'Último día de tratamiento (última dosis)', `<input class="reg-texto" id="pc-fecha" type="date" value="${hoy}" max="${hoy}"${fechaValida(l.fechaLlegada) ? ` min="${esc(l.fechaLlegada)}"` : ''}>`, 'El retiro se cuenta desde el último día que las aves recibieron el producto.')
+    : campo('pc-fecha', 'Fecha en que se hizo', `<input class="reg-texto" id="pc-fecha" type="date" value="${hoy}" max="${hoy}"${fechaValida(l.fechaLlegada) ? ` min="${esc(l.fechaLlegada)}"` : ''}>`)}
+${q ? campo('pc-producto', 'Producto usado (nombre comercial)', '<input class="reg-texto" id="pc-producto" type="text" maxlength="80" autocomplete="off">', 'Así queda constancia de qué se aplicó.') : ''}
+${q ? `<fieldset class="pc-etq"><legend class="reg-etiqueta">Días de retiro según la etiqueta (opcional)</legend>
+  <div class="pc-etq-fila${carne ? ' pc-etq-una' : ''}">${carne ? '' : num('pc-etq-huevo', 'Huevo')}${num('pc-etq-carne', 'Carne')}</div>
+  <p class="reg-ayuda">De 0 a 365 días. Si lo anotas, manda sobre el retiro de la lista.</p></fieldset>` : ''}
 ${campo('pc-nota', 'Nota (opcional)', '<input class="reg-texto" id="pc-nota" type="text" maxlength="200" autocomplete="off">')}
 ${pie('pc-hecho-guardar', t.id, 'Guardar')}` });
-  };
-  ACCIONES['pc-hecho-guardar'] = el => desdeHoja(() => Plan.marcarHecha(el.dataset.id, { fecha: valor('#pc-fecha'), nota: valor('#pc-nota'), producto: valor('#pc-producto') }), 'Labor hecha');
+  }
+  ACCIONES['pc-hecho'] = el => abrirHecho(el.dataset.id);
+  ACCIONES['pc-hecho-guardar'] = el => desdeHoja(() => Plan.marcarHecha(el.dataset.id, { fecha: valor('#pc-fecha'), nota: valor('#pc-nota'), producto: valor('#pc-producto'),
+    etiquetaHuevoDias: valorNum('#pc-etq-huevo'), etiquetaCarneDias: valorNum('#pc-etq-carne') }), 'Labor hecha');
 
   ACCIONES['pc-mover'] = async el => {
     if (ocupado) return;
@@ -336,7 +354,7 @@ ${pie('pc-editar-guardar', t.id, 'Guardar')}` });
       const boton = x.estado === 'nueva' ? Boton({ texto: 'Agregar', icono: 'mas', variante: 'primario', accion: 'pc-agregar-cat', datos: { id: t.id } })
         : x.estado === 'quitada' ? Boton({ texto: 'Reactivar', icono: 'mas', variante: 'secundario', accion: 'pc-reactivar', datos: { id: x.filaId } })
           : x.estado === 'enplan' ? '<span class="chip chip-verde"><span class="chip-punto" aria-hidden="true"></span>En el plan</span>'
-            : '<p class="plan-item-d"><b>No se usa en gallinas de postura de huevo para consumo</b></p>';
+            : `<p class="plan-item-d"><b>${esc(motivoBloqueo(t))}</b></p>`;
       return `<li class="pc-cat-item" data-cat-item="${esc(t.id)}" tabindex="-1"><div class="pc-cat-texto"><b>${esc(t.titulo)}</b>
   <span class="pc-cat-dia">Desde el día ${formatoNumero(t.desdeDia)}${Number(t.cadaDias) > 0 ? ' · ' + esc(cadaTxt(t.cadaDias)) : ''}</span>
   ${t.detalle ? `<span class="plan-item-d">${esc(t.detalle)}</span>` : ''}${t.quimico ? quimicoHtml(t.quimico) : ''}</div>${boton}</li>`;
@@ -416,5 +434,5 @@ ${pie('pc-editar-guardar', t.id, 'Guardar')}` });
     }, 'Labor agregada');
   };
 
-  return { html, secciones, catalogo, montar };
+  return { html, secciones, catalogo, montar, abrirHecho };
 })();

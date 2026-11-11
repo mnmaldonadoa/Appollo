@@ -39,7 +39,7 @@ const NuevoLote = (function () {
 
   /* Tareas del catálogo que se muestran: las de la genética y el modo que aún no pasaron por edad (hastaDia >= edad).
      Sin edad válida (null) se muestran todas. */
-  const noSirve = (t, g) => !!(t.quimico && t.quimico.noPostura && modoDe(g) === 'huevos');
+  const noSirve = (t, g) => bloqueadaEnModo(t, modoDe(g));
   /* `edadLlegada` (por defecto = edad): edad con que llegaron; las tareas únicas de días anteriores no se muestran
      (ver sugeribleAlLlegar en catalogo.js). */
   function tareasVisibles(g, edad, edadLlegada) {
@@ -193,7 +193,7 @@ const NuevoLote = (function () {
     const tag = x => `<span class="plan-tag">${esc(x)}</span>`;
     const quim = q ? `<span class="plan-tags">${tag(q.tipo)}${tag(q.ingredienteActivo)}${tag('Retiro huevo: ' + retiro(q.retiroHuevoDias) + ' · carne: ' + retiro(q.retiroCarneDias))}</span>
         <span class="plan-item-d">${esc(CATALOGO_AVISO_QUIMICO)}</span>` : '';
-    const nota = bloq ? '<span class="plan-item-d"><b>No se usa en gallinas de postura de huevo para consumo</b></span>' : '';
+    const nota = bloq ? `<span class="plan-item-d"><b>${esc(motivoBloqueo(t))}</b></span>` : '';
     return `<label class="plan-item nl-tarea${q ? ' nl-tarea-quimica' : ''}${bloq ? ' plan-item-bloqueado' : ''}"><input type="checkbox" data-accion="nl-plan-tarea" data-id="${esc(t.id)}" ${marcada ? 'checked' : ''} ${bloq ? 'disabled' : ''}>
       <span class="plan-caja" aria-hidden="true"></span>
       <span class="plan-item-texto"><span class="plan-item-t">${esc(t.titulo)}</span><span class="plan-item-d nl-detalle">${esc(t.detalle)}</span>${quim}${nota}</span></label>`;

@@ -19,13 +19,17 @@ Aplicación móvil (PWA) que funciona **sin internet**. Sirve para llevar el dí
 
 ## Plan del ciclo
 
-Cada lote nuevo puede llevar un plan de labores para todo su ciclo, tomado de un catálogo de referencia (`src/catalogo.js`; fuentes en `docs/fuentes-catalogo.md`). Se elige al crear el lote y se ve en la pestaña **Plan** del detalle del lote.
+Cada lote nuevo puede llevar un plan de labores para todo su ciclo, tomado de un catálogo de referencia (`src/catalogo.js`; fuentes en `docs/fuentes-catalogo.md`). Se elige al crear el lote y se ve en la pestaña **Plan del ciclo** del detalle del lote.
 
-- Las labores se agrupan en **Esta semana**, **Próximas**, **Hechas** y **Quitadas**, con su fecha según la edad del lote.
+- Las labores se agrupan en **Atrasadas**, **Esta semana**, **Próximas**, **Hechas** y **Quitadas**, con su fecha según la edad del lote. Una labor única sin edad límite que pasa 30 días sin hacerse queda como **omitida** (en Hechas) y deja de avisar.
 - **Hecho** guarda la labor (con producto y nota si es un químico) y deja un registro de tipo `plan` en el historial; **Deshacer** lo revierte.
+- En un químico, la fecha de **Hecho** es el **último día de tratamiento (última dosis)**: el retiro se cuenta desde el último día que las aves recibieron el producto. Si el tratamiento dura varios días, se puede volver a tocar **Hecho** en la labor ya hecha para anotar el último día real; cuenta la fecha más reciente.
+- La hoja **Hecho** de un químico trae un campo opcional **Días de retiro según la etiqueta** (huevo y carne; en lotes de carne solo carne), entero de 0 a 365. Si se anota, manda sobre el retiro del catálogo.
+- Si las aves recibieron un químico sin retiro conocido (ni en el catálogo ni anotado de la etiqueta), durante 14 días el plan y las alertas muestran en ámbar «Aplicaste … el DD/MM: revisa en la etiqueta el retiro en huevos (o carne) antes de venderlos».
 - **Quitar** saca una labor del plan sin borrarla y **Reactivar** la devuelve. **Agregar** permite sumar labores del catálogo o **propias**.
-- Los químicos hechos con retiro mueven las alertas: **No vender huevos hasta…** y **No vender carne hasta…**.
-- Las labores viajan en el respaldo (exportar e importar) y funcionan sin conexión.
+- Los químicos hechos con retiro mueven las alertas rojas: **No vender huevos hasta…** y **No vender carne hasta…**, contados desde el último día de tratamiento registrado.
+- En **Alertas**, las labores atrasadas salen en ámbar y juntas, una por lote («N labores atrasadas · lote», con **Ver plan**); las de hoy y de los próximos 7 días salen una por una. **Hecho** desde Alertas guarda con un toque solo las labores que no son químicos; en un químico abre la hoja para anotar el último día de tratamiento.
+- Las labores viajan en el respaldo (exportar e importar) y funcionan sin conexión. Un respaldo hecho con esta versión (con `planTareas`) lo rechaza una versión anterior de la app («datos desconocidos»).
 - Un lote sin plan sigue funcionando igual que antes.
 
 ## Estructura

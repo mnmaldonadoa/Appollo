@@ -351,6 +351,8 @@ function textoReporte(resumen, lote, periodo, granja) {
    `proxima` (opcional, solo repetitivas): fecha elegida con «Mover fecha»; vale mientras sea posterior a la última hecha.
    ========================================================================= */
 const PLAN_GRACIA_DIAS = 3; // una ocurrencia sin hacer sigue "atrasada" hasta 3 días; después se salta a la siguiente
+const PLAN_OMITIR_DIAS = 30; // una única sin hastaDia que nadie marcó pasa a 'omitida' 30 días después de su fecha
+const PLAN_AVISO_ETIQUETA_DIAS = 14; // días que dura el aviso «revisa en la etiqueta el retiro» tras la última aplicación
 
 function _planDiffDias(a, b) { // días enteros de a a b (b − a), tolerante al cambio de hora
   return Math.round((fechaADate(b) - fechaADate(a)) / 86400000);
@@ -358,7 +360,7 @@ function _planDiffDias(a, b) { // días enteros de a a b (b − a), tolerante al
 
 /* Próxima fecha de la tarea, o null si está quitada o ya pasó hastaDia (contado desde fechaBase).
    - Con hechas y cadaDias: la última hecha + cadaDias.
-   - Única (sin cadaDias): fechaBase + desdeDia.
+   - Única (sin cadaDias): fechaBase + desdeDia; sin hastaDia ni hechas, null pasados 30 días de esa fecha (omitida).
    - Repetitiva sin hechas: ocurrencia de la rejilla fechaBase + desdeDia + k·cadaDias; la más reciente <= hoy
      si dista <= 3 días (sale atrasada/hoy, una sola vez), si no la siguiente > hoy. Nunca antes de fechaBase + desdeDia. */
 function proximaFecha(t, hoy) {
@@ -368,8 +370,10 @@ function proximaFecha(t, hoy) {
   const cada = Number(t.cadaDias) > 0 ? Number(t.cadaDias) : 0;
   const hechas = (t.hechas || []).map(h => h && h.fecha).filter(fechaValida).sort();
   let cand;
-  if (!cada) cand = inicio;
-  else if (fechaValida(t.proxima) && (!hechas.length || t.proxima > hechas[hechas.length - 1])) cand = t.proxima; // «Mover fecha»
+  if (!cada) {
+    cand = inicio;
+    if ((t.hastaDia == null || t.hastaDia === '') && !hechas.length && _planDiffDias(inicio, hoy) > PLAN_OMITIR_DIAS) return null; // omitida
+  } else if (fechaValida(t.proxima) && (!hechas.length || t.proxima > hechas[hechas.length - 1])) cand = t.proxima; // «Mover fecha»
   else if (hechas.length) cand = _masDias(hechas[hechas.length - 1], cada);
   else if (hoy <= inicio) cand = inicio;
   else {
@@ -386,7 +390,7 @@ function proximaFecha(t, hoy) {
 }
 
 /* 'hecha' (única ya hecha, o serie con hechas que ya terminó) | 'atrasada' | 'hoy' | 'proxima' | 'quitada'
-   | 'omitida' (pasó hastaDia sin ninguna hecha). */
+   | 'omitida' (pasó hastaDia sin ninguna hecha, o única sin hastaDia que lleva más de 30 días sin hacerse). */
 function estadoTarea(t, hoy) {
   if (!t) return 'quitada';
   if (t.estado === 'quitada') return 'quitada';
@@ -399,11 +403,23 @@ function estadoTarea(t, hoy) {
   return p < hoy ? 'atrasada' : p === hoy ? 'hoy' : 'proxima';
 }
 
-/* Retiro vigente: máximo de fechaHecha + retiroXDias de todas las aplicaciones químicas hechas (también de
-   tareas quitadas) cuya fecha de fin sea >= hoy. La fecha devuelta es el último día bloqueado ('hasta' inclusive:
-   se puede vender desde el día siguiente), igual que estadoSanitario/alertaRetiro. Las tareas químicas llevan sus días de retiro en `t.quimico`
-   ({retiroHuevoDias, retiroCarneDias, ...}, copiado del catálogo). `vacunasPlanAplicadas` se acepta solo por
-   compatibilidad de API: las vacunas del plan no tienen retiro aquí y se ignoran. */
+/* Días de retiro de una aplicación: los de la etiqueta anotados al marcarla (hecha.etiquetaHuevoDias /
+   etiquetaCarneDias, entero >= 0) mandan sobre los del catálogo (quimico.retiroHuevoDias / retiroCarneDias). */
+const _diasEnt = x => (typeof x === 'number' && Number.isInteger(x) && x >= 0 ? x : null);
+function _diasRetiro(q, h, campo) {
+  const e = _diasEnt(h && (campo === 'huevo' ? h.etiquetaHuevoDias : h.etiquetaCarneDias));
+  if (e !== null) return e;
+  const d = Number(campo === 'huevo' ? q.retiroHuevoDias : q.retiroCarneDias);
+  return q[campo === 'huevo' ? 'retiroHuevoDias' : 'retiroCarneDias'] == null || !Number.isFinite(d) ? null : d;
+}
+
+/* Retiro vigente: máximo de fechaHecha + díasDeRetiro de todas las aplicaciones químicas hechas (también de
+   tareas quitadas) cuya fecha de fin sea >= hoy. La fecha de una hecha química es el ÚLTIMO día de tratamiento: en
+   tratamientos de varios días se registra otra hecha con la última dosis y el retiro se cuenta desde la más reciente
+   (las anteriores nunca lo acortan). La fecha devuelta es el último día bloqueado ('hasta' inclusive: se puede vender
+   desde el día siguiente), igual que estadoSanitario/alertaRetiro. Los días salen de _diasRetiro (etiqueta anotada o
+   `t.quimico`, copiado del catálogo). `vacunasPlanAplicadas` se acepta solo por compatibilidad de API: las vacunas
+   del plan no tienen retiro aquí y se ignoran. */
 function retiroVigente(tareas, vacunasPlanAplicadas, hoy) {
   if (!fechaValida(hoy)) hoy = hoyLocal();
   const out = { huevo: null, carne: null };
@@ -412,12 +428,47 @@ function retiroVigente(tareas, vacunasPlanAplicadas, hoy) {
     if (!q) continue;
     for (const h of t.hechas || []) {
       if (!h || !fechaValida(h.fecha)) continue;
-      for (const [campo, dias] of [['huevo', q.retiroHuevoDias], ['carne', q.retiroCarneDias]]) {
-        if (!(Number(dias) > 0)) continue;
-        const fin = _masDias(h.fecha, Number(dias));
+      for (const campo of ['huevo', 'carne']) {
+        const dias = _diasRetiro(q, h, campo);
+        if (!(dias > 0)) continue;
+        const fin = _masDias(h.fecha, dias);
         if (fin >= hoy && (out[campo] === null || fin > out[campo])) out[campo] = fin;
       }
     }
+  }
+  return out;
+}
+
+/* Campo opcional «Días de retiro según la etiqueta»: '' / null -> {valor:null}; entero 0-365 -> {valor}; si no {mensaje}. */
+function diasEtiqueta(raw) {
+  const MSG = { mensaje: 'Los días de retiro deben ser un número entero de 0 a 365' };
+  const v = typeof raw === 'string' ? raw.trim() : raw;
+  if (v === '' || v === null || v === undefined) return { valor: null };
+  if (typeof v === 'string' ? !/^\d+$/.test(v) : typeof v !== 'number') return MSG;
+  const n = Number(v);
+  return Number.isInteger(n) && n >= 0 && n <= 365 ? { valor: n } : MSG;
+}
+
+/* Avisos «revisa en la etiqueta»: por cada tarea química que reciben las aves (quimico.enAves) cuya última hecha
+   (<= hoy) fue hace 14 días o menos y que no tiene retiro conocido (ni en el catálogo ni anotado de la etiqueta en esa
+   hecha). Huevo solo cuenta si el lote no es de carne (`modo` 'huevos' o desconocido). También tareas quitadas.
+   -> [{tareaId, loteId, fecha, huevo, carne, texto}]. */
+function avisosEtiqueta(tareas, hoy, modo) {
+  if (!fechaValida(hoy)) hoy = hoyLocal();
+  const out = [], desde = _masDias(hoy, -PLAN_AVISO_ETIQUETA_DIAS);
+  for (const t of tareas || []) {
+    const q = t && t.quimico;
+    if (!q || q.enAves !== true) continue;
+    const hs = (t.hechas || []).filter(h => h && fechaValida(h.fecha) && h.fecha <= hoy);
+    if (!hs.length) continue;
+    const h = hs.reduce((a, b) => (b.fecha >= a.fecha ? b : a));
+    if (h.fecha < desde) continue;
+    const huevo = modo !== 'carne' && _diasRetiro(q, h, 'huevo') === null, carne = _diasRetiro(q, h, 'carne') === null;
+    if (!huevo && !carne) continue;
+    const nombre = (typeof h.producto === 'string' && h.producto.trim()) || t.titulo || 'el producto';
+    const que = huevo && carne ? 'huevos y carne antes de venderlos' : huevo ? 'huevos antes de venderlos' : 'carne antes de venderla';
+    out.push({ tareaId: t.id, loteId: t.loteId, fecha: h.fecha, huevo, carne,
+      texto: 'Aplicaste ' + nombre + ' el ' + h.fecha.slice(8, 10) + '/' + h.fecha.slice(5, 7) + ': revisa en la etiqueta el retiro en ' + que });
   }
   return out;
 }

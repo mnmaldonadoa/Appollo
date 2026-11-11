@@ -313,21 +313,20 @@ def main():
             pg.evaluate("() => { Storage.prototype.getItem = Storage.prototype._g; }")
             pg.evaluate("k => localStorage.setItem(k, '1')", AV)
 
-            # tarea vencida -> alerta roja -> Hecho / Deshacer
+            # labor de hoy -> alerta ámbar individual -> Hecho / Deshacer (no químico: un toque)
             pg.evaluate("""lid => DB.guardar('planTareas', {id:'pt1', loteId: lid, origen:'propia', categoria:'manejo', titulo:'Desparasitar <b>x</b>',
-               desdeDia:0, fechaBase:'2026-10-30', estado:'activa', hechas:[]})""", lid)
+               desdeDia:0, fechaBase:'2026-11-04', estado:'activa', hechas:[]})""", lid)
             pg.evaluate("location.reload()"); pg.wait_for_selector("#view .pantalla")
             inicio_listo()
             check("Inicio cuenta la alerta de plan (tarjeta Alertas pendientes con 1+)", int(pg.locator("#view [data-t=alertas] .tarjeta-cifra").get_attribute("data-cifra")) >= 1)
             pg.screenshot(path=str(CAP / "inicio-plan.png"))
             ir("#/alertas"); quieto()
             card = pg.locator("#view [data-alerta=plan-pt1]")
-            check("tarea vencida: alerta roja 'Urgente' con texto escapado y botones Ver plan / Hecho",
-                  card.count() == 1 and "al-rojo" in card.get_attribute("class") and "Urgente" in card.inner_text() and "Desparasitar <b>x</b>" in card.inner_text()
+            check("labor de hoy: alerta ámbar 'Atención' con texto escapado y botones Ver plan / Hecho",
+                  card.count() == 1 and "al-ambar" in card.get_attribute("class") and "Atención" in card.inner_text() and "Desparasitar <b>x</b>" in card.inner_text()
                   and card.locator("b").count() == 0 and card.locator("[data-accion=ir]").inner_text().strip() == "Ver plan"
                   and card.locator("[data-accion=al-plan-hecho]").inner_text().strip() == "Hecho", card.inner_text() if card.count() else pg.inner_text("#view"))
             check("'Ver plan' usa el enlace profundo de la pestaña Plan", card.locator("[data-accion=ir]").get_attribute("data-ruta") == "#/lote/%s/plan" % lid)
-            medir("alertas con plan"); pg.screenshot(path=str(CAP / "alertas-plan.png"))
             pg.click("#view [data-alerta=plan-pt1] [data-accion=al-plan-hecho]")
             pg.wait_for_selector("#toast:not([hidden]) [data-accion=deshacer]")
             esperar("() => DB.obtener('planTareas', 'pt1').then(t => t.hechas.length === 1)")
@@ -347,6 +346,56 @@ def main():
             esperar("() => DB.listar('registros').then(r => r.filter(x => x.tipo === 'plan').length >= 1)")
             pg.wait_for_timeout(300)
             check("doble toque en Hecho registra una sola vez", len(pg.evaluate(REGS, "plan")) == 1)
+            pg.wait_for_selector("#toast", state="hidden", timeout=8000)
+
+            # atrasadas: UNA alerta ámbar por lote, sin Hecho, detrás de las rojas
+            pg.evaluate("""lid => Promise.all([
+               DB.guardar('planTareas', {id:'pa1', loteId: lid, origen:'propia', categoria:'agua', titulo:'Lavar tanque', desdeDia:0, fechaBase:'2026-10-30', estado:'activa', hechas:[]}),
+               DB.guardar('planTareas', {id:'pa2', loteId: lid, origen:'propia', categoria:'agua', titulo:'Revisar cortinas', desdeDia:0, fechaBase:'2026-11-01', estado:'activa', hechas:[]}),
+               DB.guardar('planTareas', {id:'pa3', loteId: lid, origen:'propia', categoria:'agua', titulo:'Muy vieja', desdeDia:0, fechaBase:'2026-09-20', estado:'activa', hechas:[]})])""", lid)
+            pg.evaluate("App.refrescar()"); pg.wait_for_selector("#view [data-alerta='plan-atrasadas-%s']" % lid); quieto()
+            g = pg.locator("#view [data-alerta='plan-atrasadas-%s']" % lid)
+            check("atrasadas agrupadas: '2 labores atrasadas · lote' ámbar con Ver plan y sin Hecho (la de hace 45 días quedó omitida)",
+                  g.count() == 1 and "al-ambar" in g.get_attribute("class") and "2 labores atrasadas · " in g.inner_text()
+                  and g.locator("[data-accion=ir]").get_attribute("data-ruta") == "#/lote/%s/plan" % lid and g.locator("[data-accion=al-plan-hecho]").count() == 0
+                  and pg.locator("#view [data-alerta=plan-pa1], #view [data-alerta=plan-pa2], #view [data-alerta=plan-pa3]").count() == 0, g.inner_text() if g.count() else pg.inner_text("#view"))
+            orden = pg.evaluate("[...document.querySelectorAll('#view .al-card')].map(c => c.classList.contains('al-rojo') ? 0 : c.classList.contains('al-ambar') ? 1 : 2)")
+            check("ninguna ámbar o info antes de una roja", orden == sorted(orden), orden)
+            check("la insignia de urgentes no cuenta las labores", pg.evaluate("document.querySelector('#nav-insignia').hidden || !/2 labores/.test(document.querySelector('#nav-insignia').textContent)"))
+
+            # químico de hoy: Hecho desde Alertas NO guarda en un toque; abre la hoja con «Último día de tratamiento»
+            pg.evaluate("""lid => DB.guardar('planTareas', {id:'pq1', loteId: lid, origen:'catalogo', catalogoId:'qui-cocci-amprolio', categoria:'quimico',
+               titulo:'Amprolio en el agua', detalle:'', desdeDia:0, fechaBase:'2026-11-04', estado:'activa', hechas:[],
+               quimico:{tipo:'Anticoccidial de tratamiento en el agua', ingredienteActivo:'Amprolio', retiroHuevoDias:null, retiroCarneDias:null, enAves:true,
+                 advertencia: CATALOGO_AVISO_QUIMICO}})""", lid)
+            pg.evaluate("App.refrescar()"); pg.wait_for_selector("#view [data-alerta=plan-pq1]"); quieto()
+            nreg = len(pg.evaluate(REGS, "plan"))
+            pg.click("#view [data-alerta=plan-pq1] [data-accion=al-plan-hecho]")
+            pg.wait_for_selector(".hoja-capa:not(.cerrando) .hoja #pc-fecha"); quieto()
+            hoja = pg.locator(".hoja")
+            check("químico: Hecho abre la hoja (sin guardar) con 'Último día de tratamiento (última dosis)' y su ayuda",
+                  "Último día de tratamiento (última dosis)" in hoja.inner_text() and "El retiro se cuenta desde el último día que las aves recibieron el producto" in hoja.inner_text()
+                  and len(pg.evaluate(REGS, "plan")) == nreg and pg.evaluate("DB.obtener('planTareas', 'pq1')")["hechas"] == [], hoja.inner_text())
+            check("la hoja trae el aviso fijo y los días de retiro de la etiqueta (huevo y carne)",
+                  pg.evaluate("CATALOGO_AVISO_QUIMICO") in hoja.inner_text() and "Días de retiro según la etiqueta (opcional)" in hoja.inner_text()
+                  and hoja.locator("#pc-etq-huevo").count() == 1 and hoja.locator("#pc-etq-carne").count() == 1)
+            medir("hoja Hecho químico"); pg.screenshot(path=str(CAP / "hoja-hecho-quimico.png"))
+            pg.fill("#pc-etq-carne", "400"); pg.click(".hoja [data-accion=pc-hecho-guardar]")
+            pg.wait_for_selector(".hoja .reg-error:not([hidden])")
+            check("días de etiqueta fuera de 0-365: error y no guarda", "entero de 0 a 365" in pg.inner_text(".hoja .reg-error") and len(pg.evaluate(REGS, "plan")) == nreg)
+            pg.fill("#pc-etq-carne", ""); pg.fill("#pc-producto", "Amprolin")
+            pg.click(".hoja [data-accion=pc-hecho-guardar]")
+            pg.wait_for_selector(".hoja-capa", state="detached", timeout=4000)
+            pg.wait_for_selector("#toast:not([hidden]) [data-accion=deshacer]")
+            esperar("() => DB.obtener('planTareas', 'pq1').then(t => t.hechas.length === 1)")
+            pg.wait_for_selector("#view [data-alerta=etiqueta-pq1]")
+            check("el toast de la hoja ofrece Deshacer", pg.is_visible("#toast [data-accion=deshacer]"))
+            pg.wait_for_selector("#toast", state="hidden", timeout=8000); quieto()
+            e = pg.locator("#view [data-alerta=etiqueta-pq1]")
+            check("tras guardar: aviso ámbar 'revisa en la etiqueta el retiro en huevos y carne' con el producto",
+                  "al-ambar" in e.get_attribute("class") and "Aplicaste Amprolin el 04/11: revisa en la etiqueta el retiro en huevos y carne antes de venderlos" in e.inner_text(), e.inner_text())
+            medir("alertas con plan"); pg.screenshot(path=str(CAP / "alertas-plan.png"))
+            pg.emulate_media(color_scheme="dark"); pg.wait_for_timeout(150); pg.screenshot(path=str(CAP / "alertas-plan-oscuro.png")); pg.emulate_media(color_scheme="light")
             pg.evaluate("DB.listar('registros').then(rs => Promise.all(rs.filter(r => r.tipo === 'plan').map(r => DB.borrar('registros', r.id))))")
             pg.evaluate("DB.listar('planTareas').then(fs => Promise.all(fs.map(f => DB.borrar('planTareas', f.id))))")
             pg.evaluate("DB.borrar('lotes', 'cerr')")

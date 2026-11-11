@@ -764,6 +764,21 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .pc-cat-texto b { overflow-wrap: anywhere; }
 .pc-cat-dia { color: var(--secundario); font-size: 1rem; }
 
+/* Plan del ciclo: aviso «revisa en la etiqueta» (ámbar) y días de retiro de la etiqueta en la hoja Hecho */
+.pc-etiqueta { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r); background: var(--huevo-suave);
+  border: 2px solid var(--precaucion-viva); color: var(--texto); box-shadow: var(--sombra-1); }
+.pc-etiqueta > .ic { flex: none; width: 28px; height: 28px; color: var(--precaucion); }
+.pc-etiqueta div { display: grid; gap: 4px; min-width: 0; }
+.pc-etiqueta p { margin: 0; overflow-wrap: anywhere; }
+.pc-etiqueta p:last-child { font-size: 1rem; }
+.pc-etiqueta-tarea { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: 1rem; font-weight: 700; color: var(--precaucion); overflow-wrap: anywhere; }
+.pc-etiqueta-tarea .ic { flex: none; width: 22px; height: 22px; margin-top: 1px; }
+.pc-etq { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pc-etq legend { padding: 0; margin-bottom: 6px; }
+.pc-etq-fila { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.pc-etq-fila.pc-etq-una { grid-template-columns: minmax(0, 1fr); }
+.pc-etq .reg-texto { min-width: 0; width: 100%; }
+
 </style>
 </head>
 <body>
@@ -1955,6 +1970,8 @@ function textoReporte(resumen, lote, periodo, granja) {
    `proxima` (opcional, solo repetitivas): fecha elegida con «Mover fecha»; vale mientras sea posterior a la última hecha.
    ========================================================================= */
 const PLAN_GRACIA_DIAS = 3; // una ocurrencia sin hacer sigue "atrasada" hasta 3 días; después se salta a la siguiente
+const PLAN_OMITIR_DIAS = 30; // una única sin hastaDia que nadie marcó pasa a 'omitida' 30 días después de su fecha
+const PLAN_AVISO_ETIQUETA_DIAS = 14; // días que dura el aviso «revisa en la etiqueta el retiro» tras la última aplicación
 
 function _planDiffDias(a, b) { // días enteros de a a b (b − a), tolerante al cambio de hora
   return Math.round((fechaADate(b) - fechaADate(a)) / 86400000);
@@ -1962,7 +1979,7 @@ function _planDiffDias(a, b) { // días enteros de a a b (b − a), tolerante al
 
 /* Próxima fecha de la tarea, o null si está quitada o ya pasó hastaDia (contado desde fechaBase).
    - Con hechas y cadaDias: la última hecha + cadaDias.
-   - Única (sin cadaDias): fechaBase + desdeDia.
+   - Única (sin cadaDias): fechaBase + desdeDia; sin hastaDia ni hechas, null pasados 30 días de esa fecha (omitida).
    - Repetitiva sin hechas: ocurrencia de la rejilla fechaBase + desdeDia + k·cadaDias; la más reciente <= hoy
      si dista <= 3 días (sale atrasada/hoy, una sola vez), si no la siguiente > hoy. Nunca antes de fechaBase + desdeDia. */
 function proximaFecha(t, hoy) {
@@ -1972,8 +1989,10 @@ function proximaFecha(t, hoy) {
   const cada = Number(t.cadaDias) > 0 ? Number(t.cadaDias) : 0;
   const hechas = (t.hechas || []).map(h => h && h.fecha).filter(fechaValida).sort();
   let cand;
-  if (!cada) cand = inicio;
-  else if (fechaValida(t.proxima) && (!hechas.length || t.proxima > hechas[hechas.length - 1])) cand = t.proxima; // «Mover fecha»
+  if (!cada) {
+    cand = inicio;
+    if ((t.hastaDia == null || t.hastaDia === '') && !hechas.length && _planDiffDias(inicio, hoy) > PLAN_OMITIR_DIAS) return null; // omitida
+  } else if (fechaValida(t.proxima) && (!hechas.length || t.proxima > hechas[hechas.length - 1])) cand = t.proxima; // «Mover fecha»
   else if (hechas.length) cand = _masDias(hechas[hechas.length - 1], cada);
   else if (hoy <= inicio) cand = inicio;
   else {
@@ -1990,7 +2009,7 @@ function proximaFecha(t, hoy) {
 }
 
 /* 'hecha' (única ya hecha, o serie con hechas que ya terminó) | 'atrasada' | 'hoy' | 'proxima' | 'quitada'
-   | 'omitida' (pasó hastaDia sin ninguna hecha). */
+   | 'omitida' (pasó hastaDia sin ninguna hecha, o única sin hastaDia que lleva más de 30 días sin hacerse). */
 function estadoTarea(t, hoy) {
   if (!t) return 'quitada';
   if (t.estado === 'quitada') return 'quitada';
@@ -2003,11 +2022,23 @@ function estadoTarea(t, hoy) {
   return p < hoy ? 'atrasada' : p === hoy ? 'hoy' : 'proxima';
 }
 
-/* Retiro vigente: máximo de fechaHecha + retiroXDias de todas las aplicaciones químicas hechas (también de
-   tareas quitadas) cuya fecha de fin sea >= hoy. La fecha devuelta es el último día bloqueado ('hasta' inclusive:
-   se puede vender desde el día siguiente), igual que estadoSanitario/alertaRetiro. Las tareas químicas llevan sus días de retiro en `t.quimico`
-   ({retiroHuevoDias, retiroCarneDias, ...}, copiado del catálogo). `vacunasPlanAplicadas` se acepta solo por
-   compatibilidad de API: las vacunas del plan no tienen retiro aquí y se ignoran. */
+/* Días de retiro de una aplicación: los de la etiqueta anotados al marcarla (hecha.etiquetaHuevoDias /
+   etiquetaCarneDias, entero >= 0) mandan sobre los del catálogo (quimico.retiroHuevoDias / retiroCarneDias). */
+const _diasEnt = x => (typeof x === 'number' && Number.isInteger(x) && x >= 0 ? x : null);
+function _diasRetiro(q, h, campo) {
+  const e = _diasEnt(h && (campo === 'huevo' ? h.etiquetaHuevoDias : h.etiquetaCarneDias));
+  if (e !== null) return e;
+  const d = Number(campo === 'huevo' ? q.retiroHuevoDias : q.retiroCarneDias);
+  return q[campo === 'huevo' ? 'retiroHuevoDias' : 'retiroCarneDias'] == null || !Number.isFinite(d) ? null : d;
+}
+
+/* Retiro vigente: máximo de fechaHecha + díasDeRetiro de todas las aplicaciones químicas hechas (también de
+   tareas quitadas) cuya fecha de fin sea >= hoy. La fecha de una hecha química es el ÚLTIMO día de tratamiento: en
+   tratamientos de varios días se registra otra hecha con la última dosis y el retiro se cuenta desde la más reciente
+   (las anteriores nunca lo acortan). La fecha devuelta es el último día bloqueado ('hasta' inclusive: se puede vender
+   desde el día siguiente), igual que estadoSanitario/alertaRetiro. Los días salen de _diasRetiro (etiqueta anotada o
+   `t.quimico`, copiado del catálogo). `vacunasPlanAplicadas` se acepta solo por compatibilidad de API: las vacunas
+   del plan no tienen retiro aquí y se ignoran. */
 function retiroVigente(tareas, vacunasPlanAplicadas, hoy) {
   if (!fechaValida(hoy)) hoy = hoyLocal();
   const out = { huevo: null, carne: null };
@@ -2016,12 +2047,47 @@ function retiroVigente(tareas, vacunasPlanAplicadas, hoy) {
     if (!q) continue;
     for (const h of t.hechas || []) {
       if (!h || !fechaValida(h.fecha)) continue;
-      for (const [campo, dias] of [['huevo', q.retiroHuevoDias], ['carne', q.retiroCarneDias]]) {
-        if (!(Number(dias) > 0)) continue;
-        const fin = _masDias(h.fecha, Number(dias));
+      for (const campo of ['huevo', 'carne']) {
+        const dias = _diasRetiro(q, h, campo);
+        if (!(dias > 0)) continue;
+        const fin = _masDias(h.fecha, dias);
         if (fin >= hoy && (out[campo] === null || fin > out[campo])) out[campo] = fin;
       }
     }
+  }
+  return out;
+}
+
+/* Campo opcional «Días de retiro según la etiqueta»: '' / null -> {valor:null}; entero 0-365 -> {valor}; si no {mensaje}. */
+function diasEtiqueta(raw) {
+  const MSG = { mensaje: 'Los días de retiro deben ser un número entero de 0 a 365' };
+  const v = typeof raw === 'string' ? raw.trim() : raw;
+  if (v === '' || v === null || v === undefined) return { valor: null };
+  if (typeof v === 'string' ? !/^\d+$/.test(v) : typeof v !== 'number') return MSG;
+  const n = Number(v);
+  return Number.isInteger(n) && n >= 0 && n <= 365 ? { valor: n } : MSG;
+}
+
+/* Avisos «revisa en la etiqueta»: por cada tarea química que reciben las aves (quimico.enAves) cuya última hecha
+   (<= hoy) fue hace 14 días o menos y que no tiene retiro conocido (ni en el catálogo ni anotado de la etiqueta en esa
+   hecha). Huevo solo cuenta si el lote no es de carne (`modo` 'huevos' o desconocido). También tareas quitadas.
+   -> [{tareaId, loteId, fecha, huevo, carne, texto}]. */
+function avisosEtiqueta(tareas, hoy, modo) {
+  if (!fechaValida(hoy)) hoy = hoyLocal();
+  const out = [], desde = _masDias(hoy, -PLAN_AVISO_ETIQUETA_DIAS);
+  for (const t of tareas || []) {
+    const q = t && t.quimico;
+    if (!q || q.enAves !== true) continue;
+    const hs = (t.hechas || []).filter(h => h && fechaValida(h.fecha) && h.fecha <= hoy);
+    if (!hs.length) continue;
+    const h = hs.reduce((a, b) => (b.fecha >= a.fecha ? b : a));
+    if (h.fecha < desde) continue;
+    const huevo = modo !== 'carne' && _diasRetiro(q, h, 'huevo') === null, carne = _diasRetiro(q, h, 'carne') === null;
+    if (!huevo && !carne) continue;
+    const nombre = (typeof h.producto === 'string' && h.producto.trim()) || t.titulo || 'el producto';
+    const que = huevo && carne ? 'huevos y carne antes de venderlos' : huevo ? 'huevos antes de venderlos' : 'carne antes de venderla';
+    out.push({ tareaId: t.id, loteId: t.loteId, fecha: h.fecha, huevo, carne,
+      texto: 'Aplicaste ' + nombre + ' el ' + h.fecha.slice(8, 10) + '/' + h.fecha.slice(5, 7) + ': revisa en la etiqueta el retiro en ' + que });
   }
   return out;
 }
@@ -2054,7 +2120,9 @@ function validarTareaPropia(o) {
 </script>
 <script>
 /* Catálogo de tareas del ciclo de vida (huevos y carne). Contenido revisado en docs/catalogo-borrador.json.
-   Sin dosis: solo tipo de producto, ingrediente activo y días de retiro. Cada tarea cita su fuente. */
+   Sin dosis: solo tipo de producto, ingrediente activo y días de retiro. Cada tarea cita su fuente.
+   quimico.enAves: true cuando el producto se da o se aplica a las aves (agua, alimento o sobre el cuerpo); sin él es
+   un producto para instalaciones, cama o plagas. Solo los que van en las aves y no traen retiro piden revisar la etiqueta. */
 const CATEGORIAS_PLAN = [
   { id: 'alimento', nombre: 'Alimento', icono: 'grano' },
   { id: 'ambiente', nombre: 'Ambiente y espacio', icono: 'termo' },
@@ -3070,6 +3138,7 @@ const CATALOGO = [
       ingredienteActivo: 'Flubendazol',
       retiroHuevoDias: 0,
       retiroCarneDias: 7,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · VMD (Reino Unido), Resumen de las características del producto de flubendazol para aves, SPC 1032750 (vigente, consultado 2026). https://www.vmd.defra.gov.uk/productinformationDatabase/files/SPC_Documents/SPC_1032750.PDF · Manual Merck de Veterinaria, Helminthiasis in Poultry (revisión 2025). https://www.merckvetmanual.com/poultry/helminthiasis/helminthiasis-in-poultry'
@@ -3087,6 +3156,7 @@ const CATALOGO = [
       ingredienteActivo: 'Flubendazol',
       retiroHuevoDias: 0,
       retiroCarneDias: 7,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'Manual Merck de Veterinaria, Helminthiasis in Poultry (revisión 2025). https://www.merckvetmanual.com/poultry/helminthiasis/helminthiasis-in-poultry · VMD (Reino Unido), Resumen de las características del producto de flubendazol para aves, SPC 1032750 (vigente, consultado 2026). https://www.vmd.defra.gov.uk/productinformationDatabase/files/SPC_Documents/SPC_1032750.PDF · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
@@ -3103,6 +3173,7 @@ const CATALOGO = [
       ingredienteActivo: 'Permetrina',
       retiroHuevoDias: null,
       retiroCarneDias: 0,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'Mississippi State University Extension, P3800 Control External Parasites of Poultry (2025). https://extension.msstate.edu/publications/control-external-parasites-poultry · University of Kentucky Extension, ENT-28 Insect Control on Poultry (2007). https://www.uky.edu/Ag/PAT/recs/livestk/pdf/ENT-28_Poultry.pdf · Manual Merck de Veterinaria, Mites of Poultry (revisión 2026). https://www.merckvetmanual.com/poultry/ectoparasites/mites-of-poultry'
@@ -3119,6 +3190,7 @@ const CATALOGO = [
       ingredienteActivo: 'Fluralaner',
       retiroHuevoDias: 0,
       retiroCarneDias: 14,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'Base de datos de medicamentos veterinarios de la Unión Europea, fluralaner en solución para agua de bebida, pollos (consultado 2026). https://medicines.health.europa.eu/veterinary/en/600000000062 · Manual Merck de Veterinaria, Mites of Poultry (revisión 2026). https://www.merckvetmanual.com/poultry/ectoparasites/mites-of-poultry · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
@@ -3174,6 +3246,7 @@ const CATALOGO = [
       retiroHuevoDias: null,
       retiroCarneDias: 1,
       noPostura: true,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'Manual Merck de Veterinaria, Coccidiosis in Poultry (revisión 2024). https://www.merckvetmanual.com/poultry/coccidiosis/coccidiosis-in-poultry · Unión Europea, Reglamento (CE) n.º 1356/2004, monensina sódica como coccidiostático (2004). https://www.legislation.gov.uk/eur/2004/1356/data.xht'
@@ -3193,6 +3266,7 @@ const CATALOGO = [
       retiroHuevoDias: null,
       retiroCarneDias: null,
       noPostura: true,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Unión Europea, Reglamento (CE) n.º 1356/2004, monensina sódica como coccidiostático (2004). https://www.legislation.gov.uk/eur/2004/1356/data.xht · Manual Merck de Veterinaria, Coccidiosis in Poultry (revisión 2024). https://www.merckvetmanual.com/poultry/coccidiosis/coccidiosis-in-poultry'
@@ -3209,6 +3283,7 @@ const CATALOGO = [
       ingredienteActivo: 'Amprolio',
       retiroHuevoDias: null,
       retiroCarneDias: null,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'EE. UU., 21 CFR 520.100 Amprolio (texto del eCFR en Cornell LII, consultado 2026). https://www.law.cornell.edu/cfr/text/21/520.100 · Manual Merck de Veterinaria, Coccidiosis in Poultry (revisión 2024). https://www.merckvetmanual.com/poultry/coccidiosis/coccidiosis-in-poultry'
@@ -3226,6 +3301,7 @@ const CATALOGO = [
       retiroHuevoDias: null,
       retiroCarneDias: 16,
       noPostura: true,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'Base de datos de medicamentos veterinarios de la Unión Europea, toltrazuril en solución para agua de bebida, pollos (consultado 2026). https://medicines.health.europa.eu/veterinary/en/600000043604 · Manual Merck de Veterinaria, Coccidiosis in Poultry (revisión 2024). https://www.merckvetmanual.com/poultry/coccidiosis/coccidiosis-in-poultry'
@@ -3275,6 +3351,7 @@ const CATALOGO = [
       ingredienteActivo: 'Ciromazina',
       retiroHuevoDias: null,
       retiroCarneDias: null,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'University of Kentucky Extension, ENT-28 Insect Control on Poultry (2007). https://www.uky.edu/Ag/PAT/recs/livestk/pdf/ENT-28_Poultry.pdf'
@@ -3305,6 +3382,16 @@ const CATALOGO = [
 function sugeribleAlLlegar(t, edadLlegada) {
   const e = Number(edadLlegada);
   return Number(t.cadaDias) > 0 || !(e > 0) || Number(t.desdeDia) >= e;
+}
+
+/* ¿La tarea no se puede usar en este modo? Las noPostura no aplican a gallinas de postura de huevo para consumo. */
+function bloqueadaEnModo(t, modo) {
+  return !!(t && t.quimico && t.quimico.noPostura && modo === 'huevos');
+}
+/* Por qué una tarea noPostura está bloqueada (texto de la nota deshabilitada). */
+function motivoBloqueo(t) {
+  return t && t.id === 'qui-cocci-pollitas' ? 'Solo para crianza de pollitas; no aplica en gallinas ya en postura'
+    : 'No se usa en gallinas de postura de huevo para consumo';
 }
 
 /* Tareas que aplican a una genética y un modo ('huevos' | 'carne'), por día de inicio y luego por id. */
@@ -3415,9 +3502,10 @@ function alertaRetiro(datos, hoy) {
 /* 'YYYY-MM-DD' -> 'DD/MM' (puro, sin DOM). */
 const _ddmm = f => f.slice(8, 10) + '/' + f.slice(5, 7);
 
-/* Labores del plan del ciclo: atrasada -> rojo, hoy -> ámbar, próxima en 1-7 días -> info. */
+/* Labores del plan del ciclo. Atrasadas: UNA alerta ámbar por lote («N labores atrasadas · lote», sin Hecho) para no
+   tapar las rojas; hoy -> ámbar y próxima en 1-7 días -> info, una por tarea (llevan tareaId para el botón Hecho). */
 function alertaPlan(datos, hoy) {
-  const out = [], activos = new Map(_activos(datos.lotes).map(l => [l.id, l]));
+  const out = [], activos = new Map(_activos(datos.lotes).map(l => [l.id, l])), atrasadas = new Map();
   for (const t of datos.planTareas || []) {
     const l = activos.get(t.loteId);
     if (!l) continue;
@@ -3425,14 +3513,33 @@ function alertaPlan(datos, hoy) {
     if (est !== 'atrasada' && est !== 'hoy' && est !== 'proxima') continue;
     const f = proximaFecha(t, hoy);
     if (!f) continue;
+    if (est === 'atrasada') { atrasadas.set(l.id, (atrasadas.get(l.id) || 0) + 1); continue; }
     let gravedad, cuando;
-    if (est === 'atrasada') { gravedad = 'rojo'; cuando = 'atrasada desde ' + _ddmm(f); }
-    else if (est === 'hoy') { gravedad = 'ambar'; cuando = 'hoy'; }
+    if (est === 'hoy') { gravedad = 'ambar'; cuando = 'hoy'; }
     else if (f <= _sumaDias(hoy, 7)) { gravedad = 'info'; cuando = 'el ' + _ddmm(f); }
     else continue;
-    out.push({ id: 'plan-' + t.id, tipo: 'plan', gravedad, loteId: l.id,
+    out.push({ id: 'plan-' + t.id, tipo: 'plan', gravedad, loteId: l.id, tareaId: t.id,
       texto: 'Labor · ' + l.nombre + ': ' + t.titulo + ' (' + cuando + ')',
       accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) + '/plan' } });
+  }
+  const grupos = [...atrasadas].map(([id, n]) => {
+    const l = activos.get(id);
+    return { id: 'plan-atrasadas-' + id, tipo: 'plan', gravedad: 'ambar', loteId: id,
+      texto: n + (n === 1 ? ' labor atrasada · ' : ' labores atrasadas · ') + l.nombre,
+      accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) + '/plan' } };
+  });
+  return grupos.concat(out);
+}
+
+/* Químicos que recibieron las aves sin retiro conocido: «revisa en la etiqueta» durante 14 días (ámbar, por tarea). */
+function alertaEtiqueta(datos, hoy) {
+  const out = [], tareas = datos.planTareas || [];
+  for (const l of _activos(datos.lotes)) {
+    const g = GENETICAS.find(x => x.id === l.genetica);
+    for (const a of avisosEtiqueta(tareas.filter(t => t.loteId === l.id), hoy, g ? modoDe(g) : null)) {
+      out.push({ id: 'etiqueta-' + a.tareaId, tipo: 'etiqueta', gravedad: 'ambar', loteId: l.id,
+        texto: a.texto + ' · ' + l.nombre, accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) + '/plan' } });
+    }
   }
   return out;
 }
@@ -3487,7 +3594,7 @@ function generarAlertas(datos, ahora) {
   const orden = { rojo: 0, ambar: 1, info: 2 };
   return [
     ...alertaVacunas(datos, hoy), ...alertaMortalidad(datos, hoy), ...alertaPostura(datos, hoy),
-    ...alertaInventario(datos), ...alertaRetiro(datos, hoy), ...alertaRetiroPlan(datos, hoy), ...alertaPlan(datos, hoy), ...alertaSinRegistro(datos, hoy, ahora),
+    ...alertaInventario(datos), ...alertaRetiro(datos, hoy), ...alertaRetiroPlan(datos, hoy), ...alertaEtiqueta(datos, hoy), ...alertaPlan(datos, hoy), ...alertaSinRegistro(datos, hoy, ahora),
     ...alertaCambioAlimento(datos, hoy)
   ].map((a, i) => [a, i]).sort((x, y) => orden[x[0].gravedad] - orden[y[0].gravedad] || x[1] - y[1]).map(x => x[0]);
 }
@@ -3648,7 +3755,10 @@ const DB = (function () {
     for (const s of Object.keys(datos)) out[s] = datos[s].map(o => Object.assign({}, o, { id: String(o.id) }));
     (out.registros || []).forEach(r => {
       r.loteId = sid(r.loteId);
-      if (r.datos && typeof r.datos === 'object' && r.datos.planId !== undefined && r.datos.planId !== null) r.datos = Object.assign({}, r.datos, { planId: String(r.datos.planId) });
+      if (r.datos && typeof r.datos === 'object') {
+        for (const k of ['planId', 'tareaId']) // referencias a vacunasPlan / planTareas: como los ids, en texto
+          if (r.datos[k] !== undefined && r.datos[k] !== null) r.datos = Object.assign({}, r.datos, { [k]: String(r.datos[k]) });
+      }
     });
     (out.vacunasPlan || []).forEach(v => { v.loteId = sid(v.loteId); });
     (out.planTareas || []).forEach(t => { t.loteId = sid(t.loteId); });
@@ -3714,6 +3824,9 @@ const DB = (function () {
    Las escrituras se encolan (una a la vez) para que dos llamadas seguidas no dupliquen filas.
    Operaciones de escritura sobre un lote cerrado -> {mensaje:'El lote está cerrado'} sin tocar nada.
    Las que se pueden deshacer devuelven una función async que restaura las filas previas.
+   noPostura: crearInicial y agregarCatalogo nunca las ponen en un lote de postura (también lo filtra la vista).
+   marcarHecha en un químico: la fecha es el último día de tratamiento; se puede repetir en una tarea ya hecha para
+   anotar el último día real, y acepta etiquetaHuevoDias / etiquetaCarneDias (0-365, opcionales) que se guardan en la hecha.
    ========================================================================= */
 const Plan = (function () {
   'use strict';
@@ -3726,6 +3839,10 @@ const Plan = (function () {
 
   let cola = Promise.resolve();
   const serie = fn => { const p = cola.then(fn); cola = p.catch(() => { /* la cola sigue */ }); return p; };
+
+  /* noPostura en un lote de postura: -> mensaje de rechazo, o '' si se puede usar. */
+  const bloqueo = (t, modo) => (bloqueadaEnModo(t, modo) ? motivoBloqueo(t) : '');
+  const modoLote = lote => { const g = typeof GENETICAS !== 'undefined' && lote ? GENETICAS.find(x => x.id === lote.genetica) : null; return g ? modoDe(g) : null; };
 
   const fechaBaseDe = lote => masDias(lote.fechaLlegada, -(Number(lote.edadLlegadaDias) || 0));
 
@@ -3759,6 +3876,7 @@ const Plan = (function () {
       const existentes = await listar(lote.id);
       for (const t of tareasDelCatalogo(genetica, modo)) {
         if (!quiere.has(t.id)) continue;
+        if (bloqueo(t, modo)) continue; // noPostura en postura: nunca entra
         if (t.hastaDia != null && t.hastaDia < edad) continue;
         if (!sugeribleAlLlegar(t, llegadaE)) continue; // única que ya pasó antes de la llegada
         if (existentes.some(e => e.catalogoId === t.id)) continue;
@@ -3785,6 +3903,8 @@ const Plan = (function () {
       if (cerrado(lote)) return CERRADO;
       const t = CATALOGO.find(x => x.id === catalogoId);
       if (!t) return no('Esa tarea no existe en el catálogo');
+      const b = bloqueo(t, modoLote(lote));
+      if (b) return no(b);
       const previa = (await listar(lote.id)).find(f => f.catalogoId === catalogoId);
       if (previa) {
         if (previa.estado === 'activa') return previa;
@@ -3828,10 +3948,19 @@ const Plan = (function () {
       const datos = { tareaId: c.t.id, titulo: c.t.titulo };
       const producto = typeof o.producto === 'string' ? o.producto.trim() : '';
       if (producto) datos.producto = producto;
+      // Químicos: días de retiro según la etiqueta (opcionales, 0-365); mandan sobre el catálogo en retiroVigente.
+      const etiqueta = {};
+      if (c.t.quimico) {
+        for (const k of ['etiquetaHuevoDias', 'etiquetaCarneDias']) {
+          const e = diasEtiqueta(o[k]);
+          if (e.mensaje) return no(e.mensaje);
+          if (e.valor !== null) { etiqueta[k] = e.valor; datos[k] = e.valor; }
+        }
+      }
       const v = validarRegistro('plan', datos, c.lote, [], fecha);
       if (!v.ok) return no(v.mensaje);
       const previo = copia(c.t), f = copia(c.t);
-      const h = { fecha };
+      const h = Object.assign({ fecha }, etiqueta);
       const nota = typeof o.nota === 'string' ? o.nota.trim() : '';
       if (nota) h.nota = nota;
       if (producto) h.producto = producto;
@@ -4369,13 +4498,13 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   function tarjeta(a) {
     const g = GRAV[a.gravedad] || GRAV.info;
     const hecha = a.tipo === 'vacuna' && String(a.id).startsWith('vacuna-');
-    const labor = a.tipo === 'plan' && String(a.id).startsWith('plan-');
+    const labor = a.tipo === 'plan' && a.tareaId; // la alerta agrupada de atrasadas no lleva Hecho
     return `<li class="al-card al-${esc(a.gravedad)}" data-alerta="${esc(a.id)}">
   <div class="al-cab"><span class="al-icono">${icono(g.ic)}</span><span class="${g.clase}">${a.gravedad === 'info' ? '' : '<span class="chip-punto" aria-hidden="true"></span>'}${g.chip}</span></div>
   <p class="al-texto">${esc(a.texto)}</p>
   <div class="al-botones">
     ${Boton({ texto: a.accion && a.accion.etiqueta || 'Ver', variante: 'primario', accion: 'ir', datos: { ruta: a.accion && a.accion.ruta }, clase: 'btn-ancho' })}
-    ${labor ? Boton({ texto: 'Hecho', icono: 'sig', variante: 'secundario', accion: 'al-plan-hecho', datos: { id: String(a.id).slice('plan-'.length) }, clase: 'btn-ancho' }) : ''}
+    ${labor ? Boton({ texto: 'Hecho', icono: 'sig', variante: 'secundario', accion: 'al-plan-hecho', datos: { id: a.tareaId }, clase: 'btn-ancho' }) : ''}
     ${hecha ? Boton({ texto: 'Marcar hecha', icono: 'jeringa', variante: 'secundario', accion: 'al-hecha', datos: { id: String(a.id).slice('vacuna-'.length) }, clase: 'btn-ancho' }) : ''}
   </div>
 </li>`;
@@ -4424,9 +4553,15 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   };
 
   let ocupado = false; // una acción a la vez: un doble toque no duplica la labor hecha
+  /* Hecho desde Alertas: una labor común se guarda con un toque (con Deshacer). Un químico NO: abre la hoja del plan
+     para anotar el último día de tratamiento (desde ahí se cuenta el retiro), el producto y la etiqueta. */
   ACCIONES['al-plan-hecho'] = async el => {
     if (ocupado) return;
-    ocupado = true; el.disabled = true;
+    ocupado = true; // antes de cualquier await: un doble toque no pasa dos veces
+    let t = null;
+    try { t = await DB.obtener('planTareas', el.dataset.id); } catch (e) { t = null; }
+    if (t && t.quimico) { ocupado = false; return PlanCiclo.abrirHecho(t.id); }
+    el.disabled = true;
     App.ocultarToast(); // el Deshacer anterior ya no vale
     let r;
     try { r = await Plan.marcarHecha(el.dataset.id); } catch (e) { r = { mensaje: 'No se pudo guardar. Intenta de nuevo.' }; }
@@ -4605,8 +4740,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   ${Boton({ texto: 'Ver mis lotes', icono: 'lotes', variante: 'primario', accion: 'ir', datos: { ruta: '#/lotes' }, clase: 'btn-ancho' })}</section>`;
     }
     const pestana = params.partes && params.partes[1] === 'plan' ? 'plan' : 'resumen';
-    const [regs, vacs, tareas] = await Promise.all([DB.listar('registros', { loteId: l.id }), DB.listar('vacunasPlan', { loteId: l.id }),
-      pestana === 'plan' ? Plan.listar(l.id) : Promise.resolve([])]);
+    const [regs, vacs, tareas] = await Promise.all([DB.listar('registros', { loteId: l.id }), DB.listar('vacunasPlan', { loteId: l.id }), Plan.listar(l.id)]);
     const hoy = hoyLocal(), activo = l.estado === 'activo', hasta = activo ? hoy : (l.fechaCierre || hoy);
     const alt = App.estado.granja && App.estado.granja.altitud;
     const res = resumenLote(l, regs, vacs, hasta), mort = res.ok ? fin(mortalidadPct(l, regs, hasta)) : null;
@@ -4640,7 +4774,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   ${orden.length ? `<ul class="dl-lista">${orden.slice(0, lim).map(r => {
     const t = TIPO[r.tipo] || [r.tipo, 'hoja'];
     return `<li class="dl-reg"><span class="dl-icono">${icono(t[1])}</span><div class="dl-fila-texto"><b>${r.tipo === 'plan' ? esc(t[0] + ': ' + valorReg(r)) : esc(t[0] + ' · ' + valorReg(r))}</b><span>${esc(fechaTxt(r.fecha))}</span></div>
-  ${Boton({ texto: 'Borrar', variante: 'secundario', accion: 'dl-borrar', datos: { id: r.id }, clase: 'dl-borrar' })}</li>`;
+  ${r.tipo === 'plan' && !activo ? '' : Boton({ texto: 'Borrar', variante: 'secundario', accion: 'dl-borrar', datos: { id: r.id }, clase: 'dl-borrar' })}</li>`;
   }).join('')}</ul>${orden.length > lim ? Boton({ texto: `Ver más (${formatoNumero(orden.length - lim)})`, variante: 'secundario', accion: 'dl-mas', datos: { id: l.id }, clase: 'btn-ancho' }) : ''}`
     : '<p class="pantalla-texto">Aún no hay registros. Usa ＋ Registrar en la barra de abajo.</p>'}
   <h2 class="seccion-titulo">Calendario de vacunas</h2>
@@ -4658,7 +4792,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   </div>
   <div class="dl-borrar-lote">
   ${Boton({ texto: 'Borrar lote', icono: 'cruz', variante: 'secundario', accion: 'dl-borrar-lote', clase: 'btn-ancho dl-borrar-lote-btn' })}
-  <div class="dl-confirmar-borrar" hidden><p><b>¿Borrar este lote?</b> Se borran también sus ${formatoNumero(regs.length)} registros y ${formatoNumero(vacs.length)} vacunas. No se puede deshacer.</p>
+  <div class="dl-confirmar-borrar" hidden><p><b>¿Borrar este lote?</b> Se borran también sus ${formatoNumero(regs.length)} registros, ${formatoNumero(vacs.length)} vacunas y ${formatoNumero(tareas.length)} ${tareas.length === 1 ? 'labor' : 'labores'} del plan del ciclo. No se puede deshacer.</p>
     <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'dl-borrar-lote-no' })}${Boton({ texto: 'Sí, borrar lote', variante: 'peligro', accion: 'dl-borrar-lote-si', datos: { id: l.id } })}</div></div>
   </div>`}
   </div>
@@ -4703,6 +4837,10 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     el.disabled = true;
     const r = await DB.obtener('registros', el.dataset.id);
     if (!r) { App.refrescar(); return; }
+    if (r.tipo === 'plan') { // el plan de un lote cerrado es de solo lectura: su labor hecha no se borra
+      const lr = await DB.obtener('lotes', r.loteId);
+      if (!lr || lr.estado !== 'activo') { App.toast('El lote está cerrado'); App.refrescar(); return; }
+    }
     const previo = copia(r), kg = r.tipo === 'alimento' ? Number(r.datos && r.datos.descontadoKg) || 0 : 0;
     const plan = r.tipo === 'vacuna' && r.datos && r.datos.planId ? await DB.obtener('vacunasPlan', r.datos.planId) : null;
     const planPrevio = plan ? copia(plan) : null;
@@ -5267,7 +5405,7 @@ const NuevoLote = (function () {
 
   /* Tareas del catálogo que se muestran: las de la genética y el modo que aún no pasaron por edad (hastaDia >= edad).
      Sin edad válida (null) se muestran todas. */
-  const noSirve = (t, g) => !!(t.quimico && t.quimico.noPostura && modoDe(g) === 'huevos');
+  const noSirve = (t, g) => bloqueadaEnModo(t, modoDe(g));
   /* `edadLlegada` (por defecto = edad): edad con que llegaron; las tareas únicas de días anteriores no se muestran
      (ver sugeribleAlLlegar en catalogo.js). */
   function tareasVisibles(g, edad, edadLlegada) {
@@ -5421,7 +5559,7 @@ const NuevoLote = (function () {
     const tag = x => `<span class="plan-tag">${esc(x)}</span>`;
     const quim = q ? `<span class="plan-tags">${tag(q.tipo)}${tag(q.ingredienteActivo)}${tag('Retiro huevo: ' + retiro(q.retiroHuevoDias) + ' · carne: ' + retiro(q.retiroCarneDias))}</span>
         <span class="plan-item-d">${esc(CATALOGO_AVISO_QUIMICO)}</span>` : '';
-    const nota = bloq ? '<span class="plan-item-d"><b>No se usa en gallinas de postura de huevo para consumo</b></span>' : '';
+    const nota = bloq ? `<span class="plan-item-d"><b>${esc(motivoBloqueo(t))}</b></span>` : '';
     return `<label class="plan-item nl-tarea${q ? ' nl-tarea-quimica' : ''}${bloq ? ' plan-item-bloqueado' : ''}"><input type="checkbox" data-accion="nl-plan-tarea" data-id="${esc(t.id)}" ${marcada ? 'checked' : ''} ${bloq ? 'disabled' : ''}>
       <span class="plan-caja" aria-hidden="true"></span>
       <span class="plan-item-texto"><span class="plan-item-t">${esc(t.titulo)}</span><span class="plan-item-d nl-detalle">${esc(t.detalle)}</span>${quim}${nota}</span></label>`;
@@ -5553,7 +5691,8 @@ const PlanCiclo = (function () {
   const ultimaHecha = t => ((t.hechas || []).map(h => h && h.fecha).filter(fechaValida).sort().pop() || null);
   const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const gen = l => (l && typeof GENETICAS !== 'undefined' ? GENETICAS.find(g => g.id === l.genetica) || null : null);
-  const noSirve = (t, g) => !!(t.quimico && t.quimico.noPostura && g && modoDe(g) === 'huevos');
+  const noSirve = (t, g) => !!(g && bloqueadaEnModo(t, modoDe(g)));
+  const modoLote = l => { const g = gen(l); return g ? modoDe(g) : null; };
 
   /* ------------------------------ Secciones (puro) ------------------------------ */
   /* -> {atrasadas, semana, proximas, hechas, quitadas}: cada elemento {tipo:'tarea'|'vacuna', dato, estado, fecha}. */
@@ -5617,7 +5756,7 @@ const PlanCiclo = (function () {
       case 'hoy': return 'hoy' + cada;
       case 'proxima': return diaTxt(it.fecha) + cada;
       case 'hecha': return 'hecha el ' + ddmm(it.fecha) + cada;
-      case 'omitida': return 'pasó su edad sin hacerse';
+      case 'omitida': return t.hastaDia != null && t.hastaDia !== '' ? 'pasó su edad sin hacerse' : 'pasó un mes sin hacerse';
       case 'quitada': return 'quitada' + (fechaValida(it.fecha) ? ' el ' + ddmm(it.fecha) : '');
     }
     return '';
@@ -5626,13 +5765,17 @@ const PlanCiclo = (function () {
   function hechasHtml(t) {
     const hs = (t.hechas || []).filter(h => h && fechaValida(h.fecha)).slice().sort((a, b) => b.fecha.localeCompare(a.fecha));
     if (!hs.length) return '';
-    const fila = h => `<li>Hecha el ${esc(ddmm(h.fecha))}${h.producto ? ' · producto: ' + esc(h.producto) : ''}${h.nota ? ' · ' + esc(h.nota) : ''}</li>`;
+    const etq = h => [Number.isInteger(h.etiquetaHuevoDias) ? 'huevo ' + retiroDias(h.etiquetaHuevoDias) : '', Number.isInteger(h.etiquetaCarneDias) ? 'carne ' + retiroDias(h.etiquetaCarneDias) : ''].filter(Boolean).join(', ');
+    const fila = h => `<li>${t.quimico ? 'Último día' : 'Hecha el'} ${esc(ddmm(h.fecha))}${h.producto ? ' · producto: ' + esc(h.producto) : ''}${etq(h) ? ' · retiro en la etiqueta: ' + esc(etq(h)) : ''}${h.nota ? ' · ' + esc(h.nota) : ''}</li>`;
     return `<ul class="pc-hechas">${hs.slice(0, 3).map(fila).join('')}${hs.length > 3 ? `<li>y ${formatoNumero(hs.length - 3)} más</li>` : ''}</ul>`;
   }
 
-  function tareaHtml(it, hoy, activo) {
-    const t = it.dato, c = catDe(t.categoria), id = t.id, unicaHecha = it.estado === 'hecha'; // única hecha o serie terminada: nada que marcar ni mover
+  function tareaHtml(it, hoy, activo, modo) {
+    const t = it.dato, c = catDe(t.categoria), id = t.id, unicaHecha = it.estado === 'hecha'; // única hecha o serie terminada: nada que mover
+    // Un químico ya hecho admite otra «Hecho» para anotar el último día real del tratamiento (el retiro cuenta desde ahí).
+    const conHecho = !unicaHecha || !!t.quimico;
     const ret = t.quimico ? textoRetiro(retiroVigente([t], [], hoy)) : [];
+    const etq = t.quimico ? avisosEtiqueta([t], hoy, modo) : [];
     let acciones = '';
     if (activo) {
       if (it.estado === 'quitada') {
@@ -5644,8 +5787,8 @@ const PlanCiclo = (function () {
           Boton({ texto: 'Quitar', icono: 'cruz', variante: 'secundario', accion: 'pc-quitar', datos: { id }, clase: 'pc-quitar' }),
         ].join('');
         const mid = 'pc-menu-' + esc(id);
-        acciones = `<div class="pc-acciones${unicaHecha ? ' pc-acciones-una' : ''}">
-    ${unicaHecha ? '' : Boton({ texto: 'Hecho', icono: 'sig', variante: 'primario', accion: 'pc-hecho', datos: { id } })}
+        acciones = `<div class="pc-acciones${conHecho ? '' : ' pc-acciones-una'}">
+    ${conHecho ? Boton({ texto: 'Hecho', icono: 'sig', variante: unicaHecha ? 'secundario' : 'primario', accion: 'pc-hecho', datos: { id } }) : ''}
     <button type="button" class="btn btn-secundario pc-menu-btn" data-accion="pc-menu" data-id="${esc(id)}" aria-expanded="false" aria-controls="${mid}">${icono('menu')}<span class="btn-texto">Opciones</span></button>
   </div>
   <div class="pc-menu" id="${mid}" hidden>${menu}</div>`;
@@ -5657,6 +5800,7 @@ const PlanCiclo = (function () {
   ${t.detalle ? `<p class="pc-detalle">${esc(t.detalle)}</p>` : ''}
   ${t.quimico ? quimicoHtml(t.quimico) : ''}
   ${ret.length ? `<p class="pc-retiro-tarea">${icono('aviso')}<span>${ret.map(esc).join(' · ')}</span></p>` : ''}
+  ${etq.map(a => `<p class="pc-etiqueta-tarea">${icono('aviso')}<span>${esc(a.texto)}</span></p>`).join('')}
   ${hechasHtml(t)}
   ${acciones}
 </li>`;
@@ -5677,7 +5821,8 @@ const PlanCiclo = (function () {
   function html(lote, tareas, vacunas, hoy) {
     if (!fechaValida(hoy)) hoy = hoyLocal();
     const activo = !!lote && lote.estado === 'activo', s = secciones(tareas, vacunas, hoy), lid = lote ? lote.id : '';
-    const item = it => (it.tipo === 'tarea' ? tareaHtml(it, hoy, activo) : vacunaHtml(it, hoy, activo));
+    const modo = modoLote(lote);
+    const item = it => (it.tipo === 'tarea' ? tareaHtml(it, hoy, activo, modo) : vacunaHtml(it, hoy, activo));
     const lista = its => `<ul class="dl-lista pc-lista">${its.map(item).join('')}</ul>`;
     const det = (clave, resumen, cuerpo, clase) => `<details class="dl-hechas pc-det${clase ? ' ' + clase : ''}" data-det="${esc(clave)}"${abiertos.has(lid + '|' + clave) ? ' open' : ''}><summary>${resumen}</summary>${cuerpo}</details>`;
     const seccion = (clave, titulo, its, corte) => {
@@ -5687,10 +5832,11 @@ const PlanCiclo = (function () {
   <h2 class="seccion-titulo pc-sec-titulo" id="pc-t-${clave}" tabindex="-1">${titulo} <span class="num">${formatoNumero(its.length)}</span></h2>
   ${lista(vis)}${resto.length ? det(clave + '-mas', `Ver ${formatoNumero(resto.length)} más`, lista(resto)) : ''}</section>`;
     };
-    const ret = textoRetiro(retiroVigente(tareas, [], hoy));
+    const ret = textoRetiro(retiroVigente(tareas, [], hoy)), etq = avisosEtiqueta(tareas, hoy, modo);
     const vacio = !s.atrasadas.length && !s.semana.length && !s.proximas.length && !s.hechas.length;
     return `<div class="pc-plan">
-  ${ret.length ? `<div class="pc-retiro" role="note">${icono('aviso')}<div>${ret.map(x => `<p><b>${esc(x)}</b></p>`).join('')}<p>Por productos aplicados en este lote (el último día incluido).</p></div></div>` : ''}
+  ${ret.length ? `<div class="pc-retiro" role="note">${icono('aviso')}<div>${ret.map(x => `<p><b>${esc(x)}</b></p>`).join('')}<p>Por productos aplicados en este lote, contado desde el último día de tratamiento registrado (el día indicado incluido).</p></div></div>` : ''}
+  ${etq.length ? `<div class="pc-etiqueta" role="note">${icono('aviso')}<div>${etq.map(a => `<p><b>${esc(a.texto)}</b></p>`).join('')}<p>Este producto no trae retiro en la lista. Si la etiqueta trae días de retiro, anótalos con «Hecho» en esa labor.</p></div></div>` : ''}
   ${activo ? Boton({ texto: 'Agregar labor', icono: 'mas', variante: 'primario', accion: 'pc-agregar', datos: { id: lid }, clase: 'btn-ancho' })
     : '<p class="pc-solo-lectura">Lote cerrado: el plan es de solo lectura.</p>'}
   ${vacio ? `<p class="pantalla-texto">Aún no hay labores en el plan${activo ? '. Usa «Agregar labor» para elegir del catálogo o escribir una propia.' : '.'}</p>` : ''}
@@ -5753,6 +5899,7 @@ const PlanCiclo = (function () {
   let ocupado = false; // una operación a la vez: un doble toque no duplica hechas
   const $h = s => { const c = App.hojaAbierta(); return c ? c.querySelector(s) : null; };
   const valor = s => { const el = $h(s); return el ? el.value : ''; };
+  const valorNum = s => { const el = $h(s); return !el ? '' : el.validity && el.validity.badInput ? 'x' : el.value; }; // texto no numérico: se rechaza, no se ignora
   function error(msg) { const p = $h('.reg-error'); if (p) { p.textContent = msg; p.hidden = false; } }
   const campo = (id, etiqueta, control, ayuda) => `<div class="reg-campo"><label class="reg-etiqueta" for="${id}">${etiqueta}</label>${control}${ayuda ? `<p class="reg-ayuda">${ayuda}</p>` : ''}</div>`;
   const pie = (accion, id, texto) => `<p class="reg-error" role="alert" hidden></p>
@@ -5808,19 +5955,28 @@ const PlanCiclo = (function () {
     m.hidden = !abrir;
   };
 
-  ACCIONES['pc-hecho'] = async el => {
+  /* Hoja «Marcar hecha». En un químico la fecha es el ÚLTIMO día de tratamiento (el retiro se cuenta desde ahí) y hay
+     campos opcionales con los días de retiro de la etiqueta. Se abre desde la pestaña y desde Alertas. */
+  async function abrirHecho(id) {
     if (ocupado) return;
-    const c = await cargarTarea(el.dataset.id);
+    const c = await cargarTarea(id);
     if (!c) return;
-    const { t, l } = c, hoy = hoyLocal();
+    const { t, l } = c, hoy = hoyLocal(), q = t.quimico, carne = modoLote(l) === 'carne';
+    const num = (id2, et) => `<div class="reg-campo"><label class="reg-etiqueta" for="${id2}">${et}</label><input class="reg-texto" id="${id2}" type="number" inputmode="numeric" min="0" max="365" step="1" placeholder="—"></div>`;
     App.abrirHoja({ titulo: 'Marcar hecha', contenido: `<p class="pc-hoja-tarea"><b>${esc(t.titulo)}</b></p>
-${t.quimico ? quimicoHtml(t.quimico) : ''}
-${campo('pc-fecha', 'Fecha en que se hizo', `<input class="reg-texto" id="pc-fecha" type="date" value="${hoy}" max="${hoy}"${fechaValida(l.fechaLlegada) ? ` min="${esc(l.fechaLlegada)}"` : ''}>`)}
-${t.quimico ? campo('pc-producto', 'Producto usado (nombre comercial)', '<input class="reg-texto" id="pc-producto" type="text" maxlength="80" autocomplete="off">', 'Así queda constancia de qué se aplicó.') : ''}
+${q ? quimicoHtml(q) : ''}
+${q ? campo('pc-fecha', 'Último día de tratamiento (última dosis)', `<input class="reg-texto" id="pc-fecha" type="date" value="${hoy}" max="${hoy}"${fechaValida(l.fechaLlegada) ? ` min="${esc(l.fechaLlegada)}"` : ''}>`, 'El retiro se cuenta desde el último día que las aves recibieron el producto.')
+    : campo('pc-fecha', 'Fecha en que se hizo', `<input class="reg-texto" id="pc-fecha" type="date" value="${hoy}" max="${hoy}"${fechaValida(l.fechaLlegada) ? ` min="${esc(l.fechaLlegada)}"` : ''}>`)}
+${q ? campo('pc-producto', 'Producto usado (nombre comercial)', '<input class="reg-texto" id="pc-producto" type="text" maxlength="80" autocomplete="off">', 'Así queda constancia de qué se aplicó.') : ''}
+${q ? `<fieldset class="pc-etq"><legend class="reg-etiqueta">Días de retiro según la etiqueta (opcional)</legend>
+  <div class="pc-etq-fila${carne ? ' pc-etq-una' : ''}">${carne ? '' : num('pc-etq-huevo', 'Huevo')}${num('pc-etq-carne', 'Carne')}</div>
+  <p class="reg-ayuda">De 0 a 365 días. Si lo anotas, manda sobre el retiro de la lista.</p></fieldset>` : ''}
 ${campo('pc-nota', 'Nota (opcional)', '<input class="reg-texto" id="pc-nota" type="text" maxlength="200" autocomplete="off">')}
 ${pie('pc-hecho-guardar', t.id, 'Guardar')}` });
-  };
-  ACCIONES['pc-hecho-guardar'] = el => desdeHoja(() => Plan.marcarHecha(el.dataset.id, { fecha: valor('#pc-fecha'), nota: valor('#pc-nota'), producto: valor('#pc-producto') }), 'Labor hecha');
+  }
+  ACCIONES['pc-hecho'] = el => abrirHecho(el.dataset.id);
+  ACCIONES['pc-hecho-guardar'] = el => desdeHoja(() => Plan.marcarHecha(el.dataset.id, { fecha: valor('#pc-fecha'), nota: valor('#pc-nota'), producto: valor('#pc-producto'),
+    etiquetaHuevoDias: valorNum('#pc-etq-huevo'), etiquetaCarneDias: valorNum('#pc-etq-carne') }), 'Labor hecha');
 
   ACCIONES['pc-mover'] = async el => {
     if (ocupado) return;
@@ -5871,7 +6027,7 @@ ${pie('pc-editar-guardar', t.id, 'Guardar')}` });
       const boton = x.estado === 'nueva' ? Boton({ texto: 'Agregar', icono: 'mas', variante: 'primario', accion: 'pc-agregar-cat', datos: { id: t.id } })
         : x.estado === 'quitada' ? Boton({ texto: 'Reactivar', icono: 'mas', variante: 'secundario', accion: 'pc-reactivar', datos: { id: x.filaId } })
           : x.estado === 'enplan' ? '<span class="chip chip-verde"><span class="chip-punto" aria-hidden="true"></span>En el plan</span>'
-            : '<p class="plan-item-d"><b>No se usa en gallinas de postura de huevo para consumo</b></p>';
+            : `<p class="plan-item-d"><b>${esc(motivoBloqueo(t))}</b></p>`;
       return `<li class="pc-cat-item" data-cat-item="${esc(t.id)}" tabindex="-1"><div class="pc-cat-texto"><b>${esc(t.titulo)}</b>
   <span class="pc-cat-dia">Desde el día ${formatoNumero(t.desdeDia)}${Number(t.cadaDias) > 0 ? ' · ' + esc(cadaTxt(t.cadaDias)) : ''}</span>
   ${t.detalle ? `<span class="plan-item-d">${esc(t.detalle)}</span>` : ''}${t.quimico ? quimicoHtml(t.quimico) : ''}</div>${boton}</li>`;
@@ -5951,7 +6107,7 @@ ${pie('pc-editar-guardar', t.id, 'Guardar')}` });
     }, 'Labor agregada');
   };
 
-  return { html, secciones, catalogo, montar };
+  return { html, secciones, catalogo, montar, abrirHecho };
 })();
 
 </script>

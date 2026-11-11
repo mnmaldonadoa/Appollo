@@ -75,8 +75,8 @@ def main():
         check("llega con 30 días y el plan sugerido completo (30 labores): 0 Atrasadas",
               n30 == 30 and pg.locator("#view [data-sec=atrasadas] .pc-item").count() == 0, (n30, pg.locator("#view [data-sec=atrasadas] .pc-item").count()))
         al30 = pg.evaluate("""id => (async () => { const d = {}; for (const s of DB.STORES) d[s] = await DB.listar(s); d.granja = App.estado.granja;
-          return generarAlertas(d, new Date()).filter(a => a.loteId === id && a.tipo === 'plan').map(a => a.gravedad); })()""", l30)
-        check("y 0 alertas de labores atrasadas (rojas) en Alertas", al30.count("rojo") == 0, al30)
+          return generarAlertas(d, new Date()).filter(a => a.loteId === id && a.tipo === 'plan').map(a => a.id.startsWith('plan-atrasadas-') ? 'atrasadas' : a.gravedad); })()""", l30)
+        check("y 0 alertas de labores atrasadas en Alertas", al30.count("atrasadas") == 0 and al30.count("rojo") == 0, al30)
         print(f"     (alertas de labores del lote a 30 días: {len(al30)} — de hoy/próximos 7 días: {al30})")
         pg.evaluate("id => DB.obtener('lotes', id).then(l => DB.guardar('lotes', Object.assign({}, l, {estado:'cerrado', fechaCierre:'2026-11-10'})))", l30)
 
@@ -196,11 +196,37 @@ def main():
               pg.evaluate("document.activeElement && document.activeElement.outerHTML.slice(0, 80)"))
 
         # ---------- química: producto, retiro y alerta; quitar no apaga el aviso ----------
+        # (las aves llegaron el 01/11 para poder registrar un día de tratamiento anterior a hoy; las filas guardan su fechaBase)
+        pg.evaluate("id => DB.obtener('lotes', id).then(l => DB.guardar('lotes', Object.assign({}, l, {fechaLlegada:'2026-11-01'})))", lid)
         pg.click(f"#view [data-accion=pc-hecho][data-id='{qui}']"); hoja()
         check("la hoja de una química pide el producto y muestra la advertencia", pg.is_visible("#pc-producto")
               and "Confirma producto, dosis y retiro con la etiqueta y tu veterinario." in pg.inner_text(".hoja"))
-        pg.fill("#pc-producto", "Flubenol"); pg.click(".hoja [data-accion=pc-hecho-guardar]"); sin_hoja(); toast("Labor hecha")
+        check("química: la fecha es el «Último día de tratamiento (última dosis)» y explica el retiro",
+              pg.inner_text(".hoja label[for=pc-fecha]").strip() == "Último día de tratamiento (última dosis)"
+              and "El retiro se cuenta desde el último día que las aves recibieron el producto" in pg.inner_text(".hoja"))
+        check("química: campos opcionales de días de retiro según la etiqueta (huevo y carne)",
+              pg.is_visible("#pc-etq-huevo") and pg.is_visible("#pc-etq-carne") and "Días de retiro según la etiqueta (opcional)" in pg.inner_text(".hoja"))
+        medir("hoja hecho química"); captura("hoja-hecho-quimico-claro.png")
+        pg.locator("#pc-nota").scroll_into_view_if_needed(); captura("hoja-hecho-quimico-etiqueta-claro.png")
+        pg.emulate_media(color_scheme="dark"); pg.wait_for_timeout(100); medir("hoja hecho química oscuro"); captura("hoja-hecho-quimico-etiqueta-oscuro.png")
+        pg.locator(".hoja #pc-fecha").scroll_into_view_if_needed(); captura("hoja-hecho-quimico-oscuro.png")
+        pg.emulate_media(color_scheme="light")
+        # primer día registrado por error (06/11): retiro hasta el 13/11
+        pg.fill("#pc-fecha", "2026-11-06"); pg.fill("#pc-producto", "Flubenol"); pg.click(".hoja [data-accion=pc-hecho-guardar]"); sin_hoja(); toast("Labor hecha")
         esperar(en_sec("hechas", qui))
+        check("retiro contado desde la fecha registrada (06/11 + 7 = 13/11) y el aviso dice desde cuándo",
+              "No vender huevos hasta el 13/11" in pg.inner_text("#view .pc-retiro") and "contado desde el último día de tratamiento registrado" in pg.inner_text("#view .pc-retiro"))
+        check("química ya hecha: sigue el botón Hecho (último día real) y no hay Mover fecha",
+              pg.locator(f"#view [data-accion=pc-hecho][data-id='{qui}']").count() == 1 and pg.locator(f"#view [data-accion=pc-mover][data-id='{qui}']").count() == 0)
+        # otra Hecho con el último día real (hoy) y días de la etiqueta en carne
+        pg.click(f"#view [data-accion=pc-hecho][data-id='{qui}']"); hoja()
+        pg.fill("#pc-etq-carne", "20"); pg.fill("#pc-producto", "Flubenol")
+        pg.click(".hoja [data-accion=pc-hecho-guardar]"); sin_hoja(); toast("Labor hecha")
+        esperar(f"(async () => (await DB.obtener('planTareas', '{qui}')).hechas.length === 2)()")
+        fq = fila(qui)
+        check("la segunda hecha guarda el último día y los días de la etiqueta", fq["hechas"][1] == {"fecha": HOY, "etiquetaCarneDias": 20, "producto": "Flubenol"}, fq["hechas"])
+        check("el retiro pasa a contarse desde el último día (huevo 17/11; carne con la etiqueta: 30/11)",
+              "No vender huevos hasta el 17/11" in pg.inner_text("#view .pc-retiro") and "No vender carne hasta el 30/11" in pg.inner_text("#view .pc-retiro"), pg.inner_text("#view .pc-retiro"))
         t = pg.inner_text(f"#view [data-item='{qui}']")
         check("la química hecha muestra tipo, ingrediente, retiro y producto",
               all(x in t for x in ("Antiparasitario interno", "Flubendazol", "Retiro huevo: 7 días", "No vender huevos hasta el 17/11", "Flubenol")), t)
@@ -215,6 +241,17 @@ def main():
         pg.evaluate("location.hash = '#/alertas'"); pg.wait_for_selector("#view .pantalla")
         check("ni el de Alertas", ok_espera("document.querySelector('#view').innerText.includes('No vender huevos hasta el 17/11')"))
         pg.evaluate(f"location.hash = '#/lote/{lid}/plan'"); pg.wait_for_selector("#view .pc-plan")
+
+        # ---------- químico que reciben las aves sin retiro conocido: aviso ámbar «revisa en la etiqueta» ----------
+        amp = pg.evaluate("""l => DB.guardar('planTareas', {loteId: l.id, origen:'catalogo', catalogoId:'qui-cocci-amprolio', categoria:'quimico',
+          titulo:'Amprolio en el agua', detalle:'', desdeDia:0, fechaBase:'2026-11-08', estado:'activa', hechas:[{fecha:'2026-11-09', producto:'Amprolin'}], creado:new Date().toISOString(),
+          quimico:{tipo:'Anticoccidial de tratamiento en el agua', ingredienteActivo:'Amprolio', enAves:true, retiroHuevoDias:null, retiroCarneDias:null, advertencia: CATALOGO_AVISO_QUIMICO}}).then(f => f.id)""", lote)
+        pg.evaluate("App.refrescar()"); esperar("!!document.querySelector('#view .pc-etiqueta')")
+        TXT = "Aplicaste Amprolin el 09/11: revisa en la etiqueta el retiro en huevos y carne antes de venderlos"
+        check("aviso ámbar arriba del plan y en la tarjeta", TXT in pg.inner_text("#view .pc-etiqueta") and TXT in pg.inner_text(f"#view [data-item='{amp}']"))
+        pg.evaluate("App.ocultarToast()"); pg.evaluate("document.querySelector('#view .pc-etiqueta').scrollIntoView({block: 'center'})")
+        medir("plan con aviso de etiqueta"); captura("plan-etiqueta-claro.png")
+        pg.emulate_media(color_scheme="dark"); pg.wait_for_timeout(100); captura("plan-etiqueta-oscuro.png"); pg.emulate_media(color_scheme="light")
 
         # ---------- oscuro ----------
         pg.emulate_media(color_scheme="dark"); pg.wait_for_timeout(100)
@@ -236,6 +273,14 @@ def main():
         check("lote cerrado: sin botones de edición en el plan", not edicion, edicion)
         check("lote cerrado: el plan sigue a la vista", pg.locator("#view .pc-item").count() > 0)
         medir("plan cerrado")
+        pg.click("#dl-tab-resumen"); pg.wait_for_selector("#view .dl-datos")
+        labores = pg.locator("#view .dl-reg", has_text="Labor:")
+        check("lote cerrado: las labores del historial no tienen Borrar", labores.count() >= 1 and labores.locator("[data-accion=dl-borrar]").count() == 0, labores.count())
+        ntar = len(pg.evaluate("id => DB.listar('planTareas', {loteId: id})", lid))
+        pg.click("#view [data-accion=dl-borrar-lote]"); pg.wait_for_selector("#view .dl-confirmar-borrar:not([hidden])")
+        check("Borrar lote avisa que también se borran las labores del plan (con cuántas)",
+              f"{ntar} labores del plan del ciclo" in pg.inner_text("#view .dl-confirmar-borrar"), pg.inner_text("#view .dl-confirmar-borrar"))
+        pg.click("#view [data-accion=dl-borrar-lote-no]")
 
         br.close()
     check("sin errores de consola ni de página", not errores, errores[:5])

@@ -741,3 +741,18 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .pc-cat-texto { display: grid; gap: 4px; min-width: 0; }
 .pc-cat-texto b { overflow-wrap: anywhere; }
 .pc-cat-dia { color: var(--secundario); font-size: 1rem; }
+
+/* Plan del ciclo: aviso «revisa en la etiqueta» (ámbar) y días de retiro de la etiqueta en la hoja Hecho */
+.pc-etiqueta { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r); background: var(--huevo-suave);
+  border: 2px solid var(--precaucion-viva); color: var(--texto); box-shadow: var(--sombra-1); }
+.pc-etiqueta > .ic { flex: none; width: 28px; height: 28px; color: var(--precaucion); }
+.pc-etiqueta div { display: grid; gap: 4px; min-width: 0; }
+.pc-etiqueta p { margin: 0; overflow-wrap: anywhere; }
+.pc-etiqueta p:last-child { font-size: 1rem; }
+.pc-etiqueta-tarea { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: 1rem; font-weight: 700; color: var(--precaucion); overflow-wrap: anywhere; }
+.pc-etiqueta-tarea .ic { flex: none; width: 22px; height: 22px; margin-top: 1px; }
+.pc-etq { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pc-etq legend { padding: 0; margin-bottom: 6px; }
+.pc-etq-fila { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.pc-etq-fila.pc-etq-una { grid-template-columns: minmax(0, 1fr); }
+.pc-etq .reg-texto { min-width: 0; width: 100%; }

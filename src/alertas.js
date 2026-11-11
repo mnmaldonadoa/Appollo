@@ -96,9 +96,10 @@ function alertaRetiro(datos, hoy) {
 /* 'YYYY-MM-DD' -> 'DD/MM' (puro, sin DOM). */
 const _ddmm = f => f.slice(8, 10) + '/' + f.slice(5, 7);
 
-/* Labores del plan del ciclo: atrasada -> rojo, hoy -> ámbar, próxima en 1-7 días -> info. */
+/* Labores del plan del ciclo. Atrasadas: UNA alerta ámbar por lote («N labores atrasadas · lote», sin Hecho) para no
+   tapar las rojas; hoy -> ámbar y próxima en 1-7 días -> info, una por tarea (llevan tareaId para el botón Hecho). */
 function alertaPlan(datos, hoy) {
-  const out = [], activos = new Map(_activos(datos.lotes).map(l => [l.id, l]));
+  const out = [], activos = new Map(_activos(datos.lotes).map(l => [l.id, l])), atrasadas = new Map();
   for (const t of datos.planTareas || []) {
     const l = activos.get(t.loteId);
     if (!l) continue;
@@ -106,14 +107,33 @@ function alertaPlan(datos, hoy) {
     if (est !== 'atrasada' && est !== 'hoy' && est !== 'proxima') continue;
     const f = proximaFecha(t, hoy);
     if (!f) continue;
+    if (est === 'atrasada') { atrasadas.set(l.id, (atrasadas.get(l.id) || 0) + 1); continue; }
     let gravedad, cuando;
-    if (est === 'atrasada') { gravedad = 'rojo'; cuando = 'atrasada desde ' + _ddmm(f); }
-    else if (est === 'hoy') { gravedad = 'ambar'; cuando = 'hoy'; }
+    if (est === 'hoy') { gravedad = 'ambar'; cuando = 'hoy'; }
     else if (f <= _sumaDias(hoy, 7)) { gravedad = 'info'; cuando = 'el ' + _ddmm(f); }
     else continue;
-    out.push({ id: 'plan-' + t.id, tipo: 'plan', gravedad, loteId: l.id,
+    out.push({ id: 'plan-' + t.id, tipo: 'plan', gravedad, loteId: l.id, tareaId: t.id,
       texto: 'Labor · ' + l.nombre + ': ' + t.titulo + ' (' + cuando + ')',
       accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) + '/plan' } });
+  }
+  const grupos = [...atrasadas].map(([id, n]) => {
+    const l = activos.get(id);
+    return { id: 'plan-atrasadas-' + id, tipo: 'plan', gravedad: 'ambar', loteId: id,
+      texto: n + (n === 1 ? ' labor atrasada · ' : ' labores atrasadas · ') + l.nombre,
+      accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) + '/plan' } };
+  });
+  return grupos.concat(out);
+}
+
+/* Químicos que recibieron las aves sin retiro conocido: «revisa en la etiqueta» durante 14 días (ámbar, por tarea). */
+function alertaEtiqueta(datos, hoy) {
+  const out = [], tareas = datos.planTareas || [];
+  for (const l of _activos(datos.lotes)) {
+    const g = GENETICAS.find(x => x.id === l.genetica);
+    for (const a of avisosEtiqueta(tareas.filter(t => t.loteId === l.id), hoy, g ? modoDe(g) : null)) {
+      out.push({ id: 'etiqueta-' + a.tareaId, tipo: 'etiqueta', gravedad: 'ambar', loteId: l.id,
+        texto: a.texto + ' · ' + l.nombre, accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) + '/plan' } });
+    }
   }
   return out;
 }
@@ -168,7 +188,7 @@ function generarAlertas(datos, ahora) {
   const orden = { rojo: 0, ambar: 1, info: 2 };
   return [
     ...alertaVacunas(datos, hoy), ...alertaMortalidad(datos, hoy), ...alertaPostura(datos, hoy),
-    ...alertaInventario(datos), ...alertaRetiro(datos, hoy), ...alertaRetiroPlan(datos, hoy), ...alertaPlan(datos, hoy), ...alertaSinRegistro(datos, hoy, ahora),
+    ...alertaInventario(datos), ...alertaRetiro(datos, hoy), ...alertaRetiroPlan(datos, hoy), ...alertaEtiqueta(datos, hoy), ...alertaPlan(datos, hoy), ...alertaSinRegistro(datos, hoy, ahora),
     ...alertaCambioAlimento(datos, hoy)
   ].map((a, i) => [a, i]).sort((x, y) => orden[x[0].gravedad] - orden[y[0].gravedad] || x[1] - y[1]).map(x => x[0]);
 }

@@ -64,6 +64,9 @@ assert.strictEqual(s.hechas.find(x => x.dato.id === 'fin').estado, 'hecha', '(pr
 assert.ok(!tiene('pc-hecho', 'fin') && !tiene('pc-mover', 'fin') && tiene('pc-quitar', 'fin') && tiene('pc-editar', 'fin'), 'serie terminada: sin Hecho ni Mover');
 assert.ok(!tiene('pc-mover', 'omi'), 'omitida: sin Mover');
 assert.ok(tiene('pc-reactivar', 'qui') && !tiene('pc-hecho', 'qui') && !tiene('pc-quitar', 'qui'), 'quitada: solo Reactivar');
+assert.ok(tiene('pc-hecho', 'quim') && !tiene('pc-mover', 'quim'), 'química ya hecha: otra Hecho (último día real), sin Mover');
+assert.ok(h.includes('contado desde el último día de tratamiento registrado'), 'el aviso de retiro dice desde cuándo se cuenta');
+assert.ok(h.includes('Último día 10/11'), 'las hechas de un químico se leen como último día');
 assert.ok(tiene('dl-aplicar', 'v1') && tiene('dl-aplicar', 'v3') && !tiene('dl-aplicar', 'v2'), 'vacunas pendientes con Marcar aplicada');
 // tarjeta química
 assert.ok(h.includes('Antiparasitario interno') && h.includes('Flubendazol'), 'tipo e ingrediente activo');
@@ -86,6 +89,20 @@ const hv = PC.html(L, [], [], hoy);
 assert.ok(hv.includes('data-accion="pc-agregar"') && /Aún no hay labores/.test(hv), 'plan vacío invita a agregar');
 assert.ok(!/NaN|undefined/.test(h + hc + hv), 'sin NaN/undefined');
 
+// revisar la etiqueta: químico que reciben las aves sin retiro conocido (ámbar, arriba y en la tarjeta)
+const amp = T({ id: 'amp', categoria: 'quimico', titulo: 'Amprolio <i>', desdeDia: 3, hechas: [{ fecha: '2026-11-08' }],
+  quimico: { tipo: 'Anticoccidial', ingredienteActivo: 'Amprolio', enAves: true, retiroHuevoDias: null, retiroCarneDias: null, advertencia: c.CATALOGO_AVISO_QUIMICO } });
+const he = PC.html(L, [amp], [], hoy);
+assert.ok(/class="pc-etiqueta" role="note"/.test(he), 'aviso ámbar arriba');
+assert.strictEqual((he.match(/Aplicaste Amprolio &lt;i&gt; el 08\/11: revisa en la etiqueta el retiro en huevos y carne antes de venderlos/g) || []).length, 2, 'arriba y en la tarjeta, escapado');
+assert.ok(!PC.html(L, [amp], [], '2026-11-23').includes('Aplicaste'), 'pasados 14 días ya no');
+assert.ok(PC.html(Object.assign({}, L, { genetica: 'ross308' }), [amp], [], hoy).includes('el retiro en carne antes de venderla'), 'lote de carne: solo carne');
+// única sin hastaDia que pasó 30 días: omitida con su texto
+const vieja = T({ id: 'vie', titulo: 'Vieja', desdeDia: 0, fechaBase: '2026-10-01' });
+const sv = PC.secciones([vieja], [], hoy);
+assert.strictEqual(sv.hechas[0].estado, 'omitida'); assert.strictEqual(sv.atrasadas.length, 0);
+assert.ok(PC.html(L, [vieja], [], hoy).includes('pasó un mes sin hacerse'));
+
 // catálogo de la hoja: búsqueda sin tildes, en el plan / quitada / agregar
 const g = c.GENETICAS.find(x => x.id === 'isa-brown');
 const filas = [T({ id: 'r1', catalogoId: 'agua-analisis' }), T({ id: 'r2', catalogoId: 'agua-bebederos', estado: 'quitada' })];
@@ -96,4 +113,6 @@ assert.ok(cat.some(x => x.estado === 'nueva'));
 const busc = PC.catalogo(g, 0, filas, 'ANALISIS');
 assert.ok(busc.length >= 1 && busc.every(x => /an[aá]lisis/i.test(x.t.titulo + ' ' + x.t.detalle)), 'busca sin tildes ni mayúsculas');
 assert.ok(PC.catalogo(g, 400, [], '').every(x => x.t.hastaDia == null || x.t.hastaDia >= 400), 'no ofrece las que ya pasaron su edad');
+const coc = PC.catalogo(g, 0, [], 'pollitas').find(x => x.t.id === 'qui-cocci-pollitas');
+assert.strictEqual(coc.estado, 'nosirve', 'cocci de pollitas bloqueada en postura');
 console.log('planCiclo OK');

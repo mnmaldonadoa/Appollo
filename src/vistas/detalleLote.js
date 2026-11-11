@@ -66,8 +66,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   ${Boton({ texto: 'Ver mis lotes', icono: 'lotes', variante: 'primario', accion: 'ir', datos: { ruta: '#/lotes' }, clase: 'btn-ancho' })}</section>`;
     }
     const pestana = params.partes && params.partes[1] === 'plan' ? 'plan' : 'resumen';
-    const [regs, vacs, tareas] = await Promise.all([DB.listar('registros', { loteId: l.id }), DB.listar('vacunasPlan', { loteId: l.id }),
-      pestana === 'plan' ? Plan.listar(l.id) : Promise.resolve([])]);
+    const [regs, vacs, tareas] = await Promise.all([DB.listar('registros', { loteId: l.id }), DB.listar('vacunasPlan', { loteId: l.id }), Plan.listar(l.id)]);
     const hoy = hoyLocal(), activo = l.estado === 'activo', hasta = activo ? hoy : (l.fechaCierre || hoy);
     const alt = App.estado.granja && App.estado.granja.altitud;
     const res = resumenLote(l, regs, vacs, hasta), mort = res.ok ? fin(mortalidadPct(l, regs, hasta)) : null;
@@ -101,7 +100,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   ${orden.length ? `<ul class="dl-lista">${orden.slice(0, lim).map(r => {
     const t = TIPO[r.tipo] || [r.tipo, 'hoja'];
     return `<li class="dl-reg"><span class="dl-icono">${icono(t[1])}</span><div class="dl-fila-texto"><b>${r.tipo === 'plan' ? esc(t[0] + ': ' + valorReg(r)) : esc(t[0] + ' · ' + valorReg(r))}</b><span>${esc(fechaTxt(r.fecha))}</span></div>
-  ${Boton({ texto: 'Borrar', variante: 'secundario', accion: 'dl-borrar', datos: { id: r.id }, clase: 'dl-borrar' })}</li>`;
+  ${r.tipo === 'plan' && !activo ? '' : Boton({ texto: 'Borrar', variante: 'secundario', accion: 'dl-borrar', datos: { id: r.id }, clase: 'dl-borrar' })}</li>`;
   }).join('')}</ul>${orden.length > lim ? Boton({ texto: `Ver más (${formatoNumero(orden.length - lim)})`, variante: 'secundario', accion: 'dl-mas', datos: { id: l.id }, clase: 'btn-ancho' }) : ''}`
     : '<p class="pantalla-texto">Aún no hay registros. Usa ＋ Registrar en la barra de abajo.</p>'}
   <h2 class="seccion-titulo">Calendario de vacunas</h2>
@@ -119,7 +118,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   </div>
   <div class="dl-borrar-lote">
   ${Boton({ texto: 'Borrar lote', icono: 'cruz', variante: 'secundario', accion: 'dl-borrar-lote', clase: 'btn-ancho dl-borrar-lote-btn' })}
-  <div class="dl-confirmar-borrar" hidden><p><b>¿Borrar este lote?</b> Se borran también sus ${formatoNumero(regs.length)} registros y ${formatoNumero(vacs.length)} vacunas. No se puede deshacer.</p>
+  <div class="dl-confirmar-borrar" hidden><p><b>¿Borrar este lote?</b> Se borran también sus ${formatoNumero(regs.length)} registros, ${formatoNumero(vacs.length)} vacunas y ${formatoNumero(tareas.length)} ${tareas.length === 1 ? 'labor' : 'labores'} del plan del ciclo. No se puede deshacer.</p>
     <div class="reg-pregunta-botones">${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'dl-borrar-lote-no' })}${Boton({ texto: 'Sí, borrar lote', variante: 'peligro', accion: 'dl-borrar-lote-si', datos: { id: l.id } })}</div></div>
   </div>`}
   </div>
@@ -164,6 +163,10 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     el.disabled = true;
     const r = await DB.obtener('registros', el.dataset.id);
     if (!r) { App.refrescar(); return; }
+    if (r.tipo === 'plan') { // el plan de un lote cerrado es de solo lectura: su labor hecha no se borra
+      const lr = await DB.obtener('lotes', r.loteId);
+      if (!lr || lr.estado !== 'activo') { App.toast('El lote está cerrado'); App.refrescar(); return; }
+    }
     const previo = copia(r), kg = r.tipo === 'alimento' ? Number(r.datos && r.datos.descontadoKg) || 0 : 0;
     const plan = r.tipo === 'vacuna' && r.datos && r.datos.planId ? await DB.obtener('vacunasPlan', r.datos.planId) : null;
     const planPrevio = plan ? copia(plan) : null;

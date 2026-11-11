@@ -30,6 +30,7 @@ for (const t of CATALOGO) {
     for (const k of ['retiroHuevoDias', 'retiroCarneDias'])
       assert.ok(q[k] === null || (typeof q[k] === 'number' && q[k] >= 0), t.id + ': ' + k + ' número >= 0 o null');
     assert.ok(!('dosis' in q) && !('dosis' in t), t.id + ': sin campo dosis');
+    assert.ok(!('enAves' in q) || q.enAves === true, t.id + ': enAves es true o no está');
   }
   const texto = [t.titulo, t.detalle, t.quimico ? JSON.stringify(t.quimico) : ''].join(' ');
   assert.ok(!/\d\s*(mg|ml|g)\s*\/\s*(kg|l|ave)/i.test(texto), t.id + ': sin dosis en el texto');
@@ -55,4 +56,14 @@ for (let i = 1; i < post.length; i++) {
   const a = post[i - 1], b = post[i];
   assert.ok(a.desdeDia < b.desdeDia || (a.desdeDia === b.desdeDia && a.id <= b.id), 'orden estable desdeDia, id');
 }
+// enAves: solo los productos que reciben las aves (valores fijos)
+assert.deepStrictEqual([...CATALOGO.filter(t => t.quimico && t.quimico.enAves).map(t => t.id)].sort(), ['qui-acaro-rojo-agua', 'qui-cocci-amprolio',
+  'qui-cocci-broiler', 'qui-cocci-pollitas', 'qui-cocci-toltrazuril', 'qui-despara-pastoreo', 'qui-despara-postura', 'qui-larvicida-jaula', 'qui-piojos-acaros']);
+// noPostura: bloqueo por modo y su motivo
+const tq = id => CATALOGO.find(t => t.id === id);
+assert.strictEqual(c.bloqueadaEnModo(tq('qui-cocci-pollitas'), 'huevos'), true);
+assert.strictEqual(c.bloqueadaEnModo(tq('qui-cocci-pollitas'), 'carne'), false);
+assert.strictEqual(c.bloqueadaEnModo(tq('qui-despara-postura'), 'huevos'), false);
+assert.strictEqual(c.motivoBloqueo(tq('qui-cocci-pollitas')), 'Solo para crianza de pollitas; no aplica en gallinas ya en postura');
+assert.strictEqual(c.motivoBloqueo(tq('qui-cocci-toltrazuril')), 'No se usa en gallinas de postura de huevo para consumo');
 console.log('catalogo.test.js OK');

@@ -86,12 +86,26 @@ for (let i = 1; i < as.length; i++) assert.ok(orden[as[i - 1].gravedad] <= orden
 const tar = (id, o = {}) => ({ id, loteId: 'L1', titulo: 'Desparasitar', categoria: 'sanidad', estado: 'activa', fechaBase: HOY, desdeDia: 0, hechas: [], ...o });
 as = gen({ planTareas: [tar('t1', { fechaBase: '2026-10-30' })] });
 let p = de(as, 'plan');
-assert.strictEqual(p.length, 1); assert.strictEqual(p[0].gravedad, 'rojo'); assert.strictEqual(p[0].id, 'plan-t1');
-assert.strictEqual(p[0].texto, 'Labor · A: Desparasitar (atrasada desde 30/10)');
+// atrasadas: ámbar (no tapan las rojas) y una sola alerta por lote
+assert.strictEqual(p.length, 1); assert.strictEqual(p[0].gravedad, 'ambar'); assert.strictEqual(p[0].id, 'plan-atrasadas-L1');
+assert.strictEqual(p[0].texto, '1 labor atrasada · A');
 assert.deepStrictEqual(JSON.parse(JSON.stringify(p[0].accion)), { etiqueta: 'Ver plan', ruta: '#/lote/L1/plan' });
-assert.strictEqual(p[0].loteId, 'L1');
+assert.strictEqual(p[0].loteId, 'L1'); assert.strictEqual(p[0].tareaId, undefined, 'la agrupada no lleva tarea (sin Hecho)');
+as = gen({ planTareas: [tar('t1', { fechaBase: '2026-10-30' }), tar('t1b', { fechaBase: '2026-10-25' }), tar('t1c', { fechaBase: '2026-11-01', cadaDias: 7 }),
+  { ...tar('o1', { fechaBase: '2026-10-30' }), loteId: 'L2' }], lotes: [lote, { ...lote, id: 'L2', nombre: 'B' }] });
+p = de(as, 'plan');
+assert.strictEqual(p.map(a => a.id).join(), 'plan-atrasadas-L1,plan-atrasadas-L2');
+assert.strictEqual(p[0].texto, '3 labores atrasadas · A'); assert.strictEqual(p[1].texto, '1 labor atrasada · B');
+assert.strictEqual(p[1].accion.ruta, '#/lote/L2/plan');
+assert.ok(p.every(a => a.gravedad === 'ambar'));
+// única sin hastaDia que pasó 30 días sin hacerse: omitida, ya no se acumula
+as = gen({ planTareas: [tar('t0', { fechaBase: '2026-10-03' })] });
+assert.strictEqual(de(as, 'plan').length, 0, '03/10 -> 03/11: 31 días, omitida');
+as = gen({ planTareas: [tar('t0', { fechaBase: '2026-10-04' })] });
+assert.strictEqual(de(as, 'plan').length, 1, '30 días: sigue atrasada');
 as = gen({ planTareas: [tar('t2')] });
 p = de(as, 'plan'); assert.strictEqual(p[0].gravedad, 'ambar'); assert.strictEqual(p[0].texto, 'Labor · A: Desparasitar (hoy)');
+assert.strictEqual(p[0].id, 'plan-t2'); assert.strictEqual(p[0].tareaId, 't2');
 as = gen({ planTareas: [tar('t3', { fechaBase: '2026-11-10' })] });
 p = de(as, 'plan'); assert.strictEqual(p[0].gravedad, 'info'); assert.strictEqual(p[0].texto, 'Labor · A: Desparasitar (el 10/11)');
 as = gen({ planTareas: [tar('t4', { fechaBase: '2026-11-11' })] });
@@ -134,3 +148,32 @@ assert.strictEqual(de(as, 'retiro').length, 0);
 // Orden con plan: rojo antes que ámbar antes que info
 as = gen({ planTareas: [tar('a1', { fechaBase: '2026-11-10' }), tar('a2'), tar('a3', { fechaBase: '2026-10-30' }), quim('q6')] });
 for (let i = 1; i < as.length; i++) assert.ok(orden[as[i - 1].gravedad] <= orden[as[i].gravedad]);
+// Las labores atrasadas (ámbar) nunca van antes que un retiro o una vacuna vencida (rojo)
+as = gen({ planTareas: [tar('a3', { fechaBase: '2026-10-30' }), tar('a4', { fechaBase: '2026-10-31' }), quim('q7')],
+  vacunasPlan: [{ id: 'v1', loteId: 'L1', nombre: 'N', fechaPrevista: '2026-11-02', via: 'ocular' }] });
+assert.deepStrictEqual([...as.filter(a => a.tipo !== 'sin-registro' && a.tipo !== 'fase').map(a => a.id + ':' + a.gravedad)],
+  ['vacuna-v1:rojo', 'retiro-plan-huevo-L1:rojo', 'retiro-plan-carne-L1:rojo', 'plan-atrasadas-L1:ambar']);
+// Retiro de un tratamiento de varios días: cuenta desde la última hecha registrada
+as = gen({ planTareas: [quim('q8', { quimico: { retiroCarneDias: 7 }, hechas: [{ fecha: '2026-10-25' }, { fecha: '2026-11-01' }] })] });
+assert.strictEqual(de(as, 'retiro')[0].texto, 'No vender carne hasta el 08/11 · A');
+
+// Revisar la etiqueta: químico que reciben las aves sin retiro conocido, 14 días tras la última hecha (ámbar)
+const amp = (id, o = {}) => tar(id, { titulo: 'Amprolio en el agua', fechaBase: '2026-10-20', hechas: [{ fecha: '2026-10-21', producto: 'Amprolin' }],
+  quimico: { enAves: true, retiroHuevoDias: null, retiroCarneDias: null }, ...o });
+as = gen({ planTareas: [amp('e1')] });
+let e = de(as, 'etiqueta');
+assert.strictEqual(e.length, 1);
+assert.strictEqual(e[0].id, 'etiqueta-e1'); assert.strictEqual(e[0].gravedad, 'ambar'); assert.strictEqual(e[0].loteId, 'L1');
+assert.strictEqual(e[0].texto, 'Aplicaste Amprolin el 21/10: revisa en la etiqueta el retiro en huevos y carne antes de venderlos · A');
+assert.deepStrictEqual(JSON.parse(JSON.stringify(e[0].accion)), { etiqueta: 'Ver plan', ruta: '#/lote/L1/plan' });
+assert.strictEqual(de(gen({ planTareas: [amp('e2', { hechas: [{ fecha: '2026-10-20' }] })] }), 'etiqueta').length, 1, '14 días: 20/10 -> 03/11');
+assert.strictEqual(de(gen({ planTareas: [amp('e3', { hechas: [{ fecha: '2026-10-19' }] })] }), 'etiqueta').length, 0, '15 días: ya no');
+assert.strictEqual(de(gen({ planTareas: [amp('e4', { hechas: [{ fecha: '2026-10-21', etiquetaHuevoDias: 0, etiquetaCarneDias: 0 }] })] }), 'etiqueta').length, 0, 'etiqueta anotada');
+assert.strictEqual(de(gen({ planTareas: [amp('e5', { quimico: { retiroHuevoDias: null, retiroCarneDias: null } })] }), 'etiqueta').length, 0, 'no va en las aves');
+assert.strictEqual(de(gen({ planTareas: [amp('e6', { estado: 'quitada' })] }), 'etiqueta').length, 1, 'quitada también');
+as = c.generarAlertas({ ...base({ planTareas: [amp('e7')] }), lotes: [{ ...lote, genetica: 'ross308' }] }, dia(10));
+assert.strictEqual(de(as, 'etiqueta')[0].texto, 'Aplicaste Amprolin el 21/10: revisa en la etiqueta el retiro en carne antes de venderla · A', 'lote de carne: solo carne');
+as = c.generarAlertas({ ...base({ planTareas: [amp('e8')] }), lotes: [{ ...lote, estado: 'cerrado' }] }, dia(10));
+assert.strictEqual(de(as, 'etiqueta').length, 0, 'lote cerrado');
+assert.strictEqual(c.alertaEtiqueta(base(), HOY).length, 0, 'sin planTareas');
+console.log('alertas.test.js OK');

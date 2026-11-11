@@ -41,8 +41,10 @@ module.exports = (async () => {
   const L = { id: 5, nombre: 'N', genetica: 'isa-brown', avesInicio: 10, fechaLlegada: '2026-01-01', edadLlegadaDias: 0, estado: 'activo' };
   let r = await importar(c, {
     lotes: [L], inventario: [{ id: 7, nombre: 'Maíz', cantidad: 3 }],
-    registros: [{ id: 11, loteId: 5, fecha: '2026-01-02', tipo: 'alimento', datos: { kg: 1, planId: 3 } }],
-    vacunasPlan: [{ id: 3, loteId: 5, nombre: 'ND', fechaPrevista: '2026-01-05' }]
+    registros: [{ id: 11, loteId: 5, fecha: '2026-01-02', tipo: 'alimento', datos: { kg: 1, planId: 3 } },
+      { id: 12, loteId: 5, fecha: '2026-01-03', tipo: 'plan', datos: { tareaId: 8, titulo: 'Agua' } }],
+    vacunasPlan: [{ id: 3, loteId: 5, nombre: 'ND', fechaPrevista: '2026-01-05' }],
+    planTareas: [{ id: 8, loteId: 5, titulo: 'Agua', estado: 'activa', fechaBase: '2026-01-01', desdeDia: 2, hechas: [{ fecha: '2026-01-03' }] }]
   });
   assert.ok(r.ok, JSON.stringify(r));
   assert.ok(await c.DB.obtener('lotes', '5'), 'lote 5 alcanzable por id de texto');
@@ -51,7 +53,10 @@ module.exports = (async () => {
   assert.strictEqual(reg.id, '11'); assert.strictEqual(reg.loteId, '5'); assert.strictEqual(reg.datos.planId, '3');
   const vp = J((await c.DB.listar('vacunasPlan'))[0]);
   assert.strictEqual(vp.id, '3'); assert.strictEqual(vp.loteId, '5');
-  assert.strictEqual((await c.DB.listar('registros', { loteId: '5' })).length, 1);
+  const regP = J(await c.DB.obtener('registros', '12'));
+  assert.strictEqual(regP.datos.tareaId, '8', 'tareaId del registro plan pasa a texto (como planId)');
+  assert.ok(await c.DB.obtener('planTareas', regP.datos.tareaId), 'y alcanza su tarea');
+  assert.strictEqual((await c.DB.listar('registros', { loteId: '5' })).length, 2);
 
   /* ---- importar: genética desconocida se normaliza (no revienta alertas) ---- */
   r = await importar(c, { lotes: [{ ...L, id: 'a', genetica: 'marciana' }, { ...L, id: 'b', genetica: 42 }], registros: [

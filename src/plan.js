@@ -4,6 +4,9 @@
    Las escrituras se encolan (una a la vez) para que dos llamadas seguidas no dupliquen filas.
    Operaciones de escritura sobre un lote cerrado -> {mensaje:'El lote está cerrado'} sin tocar nada.
    Las que se pueden deshacer devuelven una función async que restaura las filas previas.
+   noPostura: crearInicial y agregarCatalogo nunca las ponen en un lote de postura (también lo filtra la vista).
+   marcarHecha en un químico: la fecha es el último día de tratamiento; se puede repetir en una tarea ya hecha para
+   anotar el último día real, y acepta etiquetaHuevoDias / etiquetaCarneDias (0-365, opcionales) que se guardan en la hecha.
    ========================================================================= */
 const Plan = (function () {
   'use strict';
@@ -16,6 +19,10 @@ const Plan = (function () {
 
   let cola = Promise.resolve();
   const serie = fn => { const p = cola.then(fn); cola = p.catch(() => { /* la cola sigue */ }); return p; };
+
+  /* noPostura en un lote de postura: -> mensaje de rechazo, o '' si se puede usar. */
+  const bloqueo = (t, modo) => (bloqueadaEnModo(t, modo) ? motivoBloqueo(t) : '');
+  const modoLote = lote => { const g = typeof GENETICAS !== 'undefined' && lote ? GENETICAS.find(x => x.id === lote.genetica) : null; return g ? modoDe(g) : null; };
 
   const fechaBaseDe = lote => masDias(lote.fechaLlegada, -(Number(lote.edadLlegadaDias) || 0));
 
@@ -49,6 +56,7 @@ const Plan = (function () {
       const existentes = await listar(lote.id);
       for (const t of tareasDelCatalogo(genetica, modo)) {
         if (!quiere.has(t.id)) continue;
+        if (bloqueo(t, modo)) continue; // noPostura en postura: nunca entra
         if (t.hastaDia != null && t.hastaDia < edad) continue;
         if (!sugeribleAlLlegar(t, llegadaE)) continue; // única que ya pasó antes de la llegada
         if (existentes.some(e => e.catalogoId === t.id)) continue;
@@ -75,6 +83,8 @@ const Plan = (function () {
       if (cerrado(lote)) return CERRADO;
       const t = CATALOGO.find(x => x.id === catalogoId);
       if (!t) return no('Esa tarea no existe en el catálogo');
+      const b = bloqueo(t, modoLote(lote));
+      if (b) return no(b);
       const previa = (await listar(lote.id)).find(f => f.catalogoId === catalogoId);
       if (previa) {
         if (previa.estado === 'activa') return previa;
@@ -118,10 +128,19 @@ const Plan = (function () {
       const datos = { tareaId: c.t.id, titulo: c.t.titulo };
       const producto = typeof o.producto === 'string' ? o.producto.trim() : '';
       if (producto) datos.producto = producto;
+      // Químicos: días de retiro según la etiqueta (opcionales, 0-365); mandan sobre el catálogo en retiroVigente.
+      const etiqueta = {};
+      if (c.t.quimico) {
+        for (const k of ['etiquetaHuevoDias', 'etiquetaCarneDias']) {
+          const e = diasEtiqueta(o[k]);
+          if (e.mensaje) return no(e.mensaje);
+          if (e.valor !== null) { etiqueta[k] = e.valor; datos[k] = e.valor; }
+        }
+      }
       const v = validarRegistro('plan', datos, c.lote, [], fecha);
       if (!v.ok) return no(v.mensaje);
       const previo = copia(c.t), f = copia(c.t);
-      const h = { fecha };
+      const h = Object.assign({ fecha }, etiqueta);
       const nota = typeof o.nota === 'string' ? o.nota.trim() : '';
       if (nota) h.nota = nota;
       if (producto) h.producto = producto;

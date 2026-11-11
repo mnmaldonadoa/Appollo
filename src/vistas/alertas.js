@@ -21,13 +21,13 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   function tarjeta(a) {
     const g = GRAV[a.gravedad] || GRAV.info;
     const hecha = a.tipo === 'vacuna' && String(a.id).startsWith('vacuna-');
-    const labor = a.tipo === 'plan' && String(a.id).startsWith('plan-');
+    const labor = a.tipo === 'plan' && a.tareaId; // la alerta agrupada de atrasadas no lleva Hecho
     return `<li class="al-card al-${esc(a.gravedad)}" data-alerta="${esc(a.id)}">
   <div class="al-cab"><span class="al-icono">${icono(g.ic)}</span><span class="${g.clase}">${a.gravedad === 'info' ? '' : '<span class="chip-punto" aria-hidden="true"></span>'}${g.chip}</span></div>
   <p class="al-texto">${esc(a.texto)}</p>
   <div class="al-botones">
     ${Boton({ texto: a.accion && a.accion.etiqueta || 'Ver', variante: 'primario', accion: 'ir', datos: { ruta: a.accion && a.accion.ruta }, clase: 'btn-ancho' })}
-    ${labor ? Boton({ texto: 'Hecho', icono: 'sig', variante: 'secundario', accion: 'al-plan-hecho', datos: { id: String(a.id).slice('plan-'.length) }, clase: 'btn-ancho' }) : ''}
+    ${labor ? Boton({ texto: 'Hecho', icono: 'sig', variante: 'secundario', accion: 'al-plan-hecho', datos: { id: a.tareaId }, clase: 'btn-ancho' }) : ''}
     ${hecha ? Boton({ texto: 'Marcar hecha', icono: 'jeringa', variante: 'secundario', accion: 'al-hecha', datos: { id: String(a.id).slice('vacuna-'.length) }, clase: 'btn-ancho' }) : ''}
   </div>
 </li>`;
@@ -76,9 +76,15 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   };
 
   let ocupado = false; // una acción a la vez: un doble toque no duplica la labor hecha
+  /* Hecho desde Alertas: una labor común se guarda con un toque (con Deshacer). Un químico NO: abre la hoja del plan
+     para anotar el último día de tratamiento (desde ahí se cuenta el retiro), el producto y la etiqueta. */
   ACCIONES['al-plan-hecho'] = async el => {
     if (ocupado) return;
-    ocupado = true; el.disabled = true;
+    ocupado = true; // antes de cualquier await: un doble toque no pasa dos veces
+    let t = null;
+    try { t = await DB.obtener('planTareas', el.dataset.id); } catch (e) { t = null; }
+    if (t && t.quimico) { ocupado = false; return PlanCiclo.abrirHecho(t.id); }
+    el.disabled = true;
     App.ocultarToast(); // el Deshacer anterior ya no vale
     let r;
     try { r = await Plan.marcarHecha(el.dataset.id); } catch (e) { r = { mensaje: 'No se pudo guardar. Intenta de nuevo.' }; }

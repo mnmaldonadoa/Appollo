@@ -429,7 +429,7 @@ def main():
             ir_paso3(pg, "hyline-brown", 0); abrir_todas(pg)
             nop = pg.evaluate("[...document.querySelectorAll('#view [data-accion=nl-plan-tarea]:disabled')].map(e => e.dataset.id)")
             check("las tareas noPostura están deshabilitadas y sin marcar", len(nop) >= 1 and not set(nop) & set(pg.evaluate(MARCADAS)), nop)
-            check("las noPostura explican por qué", pg.locator("#view .nl-tarea:has(input:disabled)").first.inner_text().count("No se usa en gallinas de postura de huevo para consumo") == 1)
+            check("las noPostura explican por qué", pg.locator("#view .nl-tarea:has(input:disabled)").first.inner_text().count("Solo para crianza de pollitas; no aplica en gallinas ya en postura") == 1)
             check("llegada a 0 días: «Antes de que lleguen» sí se sugiere", "lle-precalentar" in pg.evaluate(MARCADAS))
             pg.click("#view [data-accion=nl-atras]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='2']")
             pg.click("#view [data-accion=nl-atras]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='1']")

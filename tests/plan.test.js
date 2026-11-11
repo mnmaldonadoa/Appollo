@@ -63,6 +63,67 @@ assert.strictEqual(JSON.stringify(retiroVigente([quim, q2, T()], [{ fechaAplicad
 assert.strictEqual(JSON.stringify(retiroVigente([T({ quimico: { retiroHuevoDias: 7 } })], [], '2026-11-05')), JSON.stringify({ huevo: null, carne: null }), 'sin hechas no hay retiro');
 assert.strictEqual(JSON.stringify(retiroVigente(null, null, '2026-11-05')), JSON.stringify({ huevo: null, carne: null }));
 
+// --- única sin hastaDia: omitida a los 30 días sin hacerse (no se acumula para siempre)
+const u30 = T({ desdeDia: 7 }); // fecha 2026-11-08
+assert.strictEqual(proximaFecha(u30, '2026-12-08'), '2026-11-08', 'a 30 días aún atrasada');
+assert.strictEqual(estadoTarea(u30, '2026-12-08'), 'atrasada');
+assert.strictEqual(proximaFecha(u30, '2026-12-09'), null, 'a 31 días ya no hay próxima');
+assert.strictEqual(estadoTarea(u30, '2026-12-09'), 'omitida');
+assert.strictEqual(estadoTarea(T({ desdeDia: 7, hechas: [{ fecha: '2026-11-20' }] }), '2027-02-01'), 'hecha', 'hecha no pasa a omitida');
+assert.strictEqual(proximaFecha(T({ cadaDias: 7 }), '2027-02-01'), '2027-01-31', 'las repetitivas no se omiten');
+
+// --- retiroVigente: tratamiento de varios días (se cuenta desde la última hecha registrada)
+const multi = T({ quimico: { retiroHuevoDias: 0, retiroCarneDias: 7 }, hechas: [{ fecha: '2026-11-01' }] });
+assert.strictEqual(retiroVigente([multi], [], '2026-11-03').carne, '2026-11-08', 'primer día registrado: 01/11 + 7');
+const multi2 = Object.assign({}, multi, { hechas: [{ fecha: '2026-11-01' }, { fecha: '2026-11-07' }] }); // último día del tratamiento
+assert.strictEqual(retiroVigente([multi2], [], '2026-11-03').carne, '2026-11-14', 'con la última dosis 07/11: hasta el 14/11');
+assert.strictEqual(retiroVigente([multi2], [], '2026-11-12').carne, '2026-11-14');
+assert.strictEqual(retiroVigente([multi2], [], '2026-11-15').carne, null);
+assert.strictEqual(retiroVigente([Object.assign({}, multi, { hechas: [{ fecha: '2026-11-07' }, { fecha: '2026-11-01' }] })], [], '2026-11-03').carne, '2026-11-14', 'el orden de las hechas no importa');
+assert.strictEqual(retiroVigente([multi2], [], '2026-11-03').huevo, null, 'retiro 0 en huevo: nada que bloquear');
+// días según la etiqueta (en la hecha) mandan sobre el catálogo
+const etq = T({ quimico: { retiroHuevoDias: null, retiroCarneDias: null }, hechas: [{ fecha: '2026-11-04', etiquetaHuevoDias: 5, etiquetaCarneDias: 12 }] });
+assert.strictEqual(JSON.stringify(retiroVigente([etq], [], '2026-11-05')), JSON.stringify({ huevo: '2026-11-09', carne: '2026-11-16' }));
+const etq2 = T({ quimico: { retiroHuevoDias: 3, retiroCarneDias: 7 }, hechas: [{ fecha: '2026-11-04', etiquetaHuevoDias: 10 }] });
+assert.strictEqual(JSON.stringify(retiroVigente([etq2], [], '2026-11-05')), JSON.stringify({ huevo: '2026-11-14', carne: '2026-11-11' }), 'la etiqueta de huevo manda; carne sigue el catálogo');
+const etq0 = T({ quimico: { retiroHuevoDias: 3, retiroCarneDias: null }, hechas: [{ fecha: '2026-11-04', etiquetaHuevoDias: 0 }] });
+assert.strictEqual(JSON.stringify(retiroVigente([etq0], [], '2026-11-05')), JSON.stringify({ huevo: null, carne: null }), 'etiqueta 0: sin retiro');
+
+// --- diasEtiqueta: entero de 0 a 365 u omitido
+for (const vac of ['', '  ', null, undefined]) assert.strictEqual(c.diasEtiqueta(vac).valor, null, 'vacío ' + String(vac));
+assert.strictEqual(c.diasEtiqueta('0').valor, 0); assert.strictEqual(c.diasEtiqueta(' 14 ').valor, 14);
+assert.strictEqual(c.diasEtiqueta(365).valor, 365); assert.strictEqual(c.diasEtiqueta('365').valor, 365);
+for (const bad of ['366', '-1', '1.5', 'abc', '1e1', 1.5, -2, 400, true, {}]) {
+  assert.strictEqual(c.diasEtiqueta(bad).mensaje, 'Los días de retiro deben ser un número entero de 0 a 365', 'mal ' + String(bad));
+}
+
+// --- avisosEtiqueta: producto que reciben las aves sin retiro conocido -> revisar la etiqueta 14 días
+const sinRet = T({ id: 'am', titulo: 'Amprolio', quimico: { enAves: true, retiroHuevoDias: null, retiroCarneDias: null },
+  hechas: [{ fecha: '2026-11-02' }, { fecha: '2026-11-05', producto: 'Amprolin' }] });
+let av = c.avisosEtiqueta([sinRet], '2026-11-05', 'huevos');
+assert.strictEqual(av.length, 1);
+assert.strictEqual(av[0].texto, 'Aplicaste Amprolin el 05/11: revisa en la etiqueta el retiro en huevos y carne antes de venderlos');
+assert.strictEqual(av[0].tareaId, 'am'); assert.strictEqual(av[0].fecha, '2026-11-05');
+assert.strictEqual(av[0].huevo, true); assert.strictEqual(av[0].carne, true);
+assert.strictEqual(c.avisosEtiqueta([sinRet], '2026-11-19', 'huevos').length, 1, 'el día 14 sigue');
+assert.strictEqual(c.avisosEtiqueta([sinRet], '2026-11-20', 'huevos').length, 0, 'el día 15 ya no');
+assert.strictEqual(c.avisosEtiqueta([sinRet], '2026-11-04', 'huevos').length, 1, 'antes de la última hecha: cuenta la anterior');
+assert.strictEqual(c.avisosEtiqueta([sinRet], '2026-11-04', 'huevos')[0].fecha, '2026-11-02');
+assert.strictEqual(c.avisosEtiqueta([sinRet], '2026-11-01', 'huevos').length, 0, 'antes de aplicar nada');
+assert.strictEqual(c.avisosEtiqueta([sinRet], '2026-11-06', 'carne')[0].texto, 'Aplicaste Amprolin el 05/11: revisa en la etiqueta el retiro en carne antes de venderla', 'aves de carne: solo carne');
+const soloHuevo = Object.assign({}, sinRet, { titulo: 'Piojos', quimico: { enAves: true, retiroHuevoDias: null, retiroCarneDias: 0 }, hechas: [{ fecha: '2026-11-05' }] });
+assert.strictEqual(c.avisosEtiqueta([soloHuevo], '2026-11-06', 'huevos')[0].texto, 'Aplicaste Piojos el 05/11: revisa en la etiqueta el retiro en huevos antes de venderlos', 'sin producto: el título');
+assert.strictEqual(c.avisosEtiqueta([soloHuevo], '2026-11-06', 'carne').length, 0, 'carne con retiro 0 conocido: nada');
+assert.strictEqual(c.avisosEtiqueta([Object.assign({}, soloHuevo, { estado: 'quitada' })], '2026-11-06', 'huevos').length, 1, 'también si la tarea se quitó');
+const conEtq = Object.assign({}, sinRet, { hechas: [{ fecha: '2026-11-05', etiquetaHuevoDias: 0 }] });
+assert.strictEqual(c.avisosEtiqueta([conEtq], '2026-11-06', 'huevos')[0].texto, 'Aplicaste Amprolio el 05/11: revisa en la etiqueta el retiro en carne antes de venderla', 'huevo ya revisado en la etiqueta');
+assert.strictEqual(c.avisosEtiqueta([Object.assign({}, sinRet, { hechas: [{ fecha: '2026-11-05', etiquetaHuevoDias: 2, etiquetaCarneDias: 9 }] })], '2026-11-06', 'huevos').length, 0, 'ambos revisados');
+assert.strictEqual(c.avisosEtiqueta([Object.assign({}, sinRet, { quimico: { retiroHuevoDias: null, retiroCarneDias: null } })], '2026-11-06', 'huevos').length, 0, 'no va en las aves (desinfectante, cebo): sin aviso');
+assert.strictEqual(c.avisosEtiqueta([Object.assign({}, sinRet, { hechas: [] })], '2026-11-06', 'huevos').length, 0, 'sin hechas');
+assert.strictEqual(c.avisosEtiqueta([T()], '2026-11-06', 'huevos').length, 0, 'sin químico');
+assert.strictEqual(c.avisosEtiqueta([sinRet], '2026-11-06', null)[0].huevo, true, 'modo desconocido: también huevos');
+assert.strictEqual(c.avisosEtiqueta(null, '2026-11-06', 'huevos').length, 0);
+
 // --- validarTareaPropia
 const ok = { titulo: 'Revisar bebederos', categoria: 'agua', fecha: '2026-11-10', cadaDias: '' };
 const v = validarTareaPropia(ok);
@@ -139,7 +200,7 @@ module.exports = (async () => {
   const l0 = await mkLote({ edadLlegadaDias: 0 });
   const f0 = J(await P.crearInicial(l0, g, 'huevos', todoIsa));
   assert.ok(f0.some(f => f.catalogoId === 'lle-precalentar') && f0.some(f => f.catalogoId === 'lle-alimento-papel'), 'E=0: las de antes/al llegar se crean');
-  assert.strictEqual(f0.length, 62, 'E=0: 62 filas (61 sugeridas + la noPostura)');
+  assert.strictEqual(f0.length, 61, 'E=0: 61 filas (la noPostura no entra en postura)');
   assert.ok(f0.every(f => !('proxima' in f)), 'E=0: sin próxima forzada');
   // agregar después desde el catálogo no pasa por la regla (elección explícita)
   const tarde = J(await P.agregarCatalogo(l30, 'lle-precalentar'));
@@ -216,6 +277,52 @@ module.exports = (async () => {
   assert.strictEqual(J(await c.DB.listar('registros', { loteId: l4.id, tipo: 'plan' }))[0].datos.producto, 'Ivermectina 1%');
   assert.strictEqual(c.retiroVigente(await P.listar(l4.id), [], hoy).carne, dias(hoy, 7));
   assert.strictEqual(c.retiroVigente(await P.listar(l4.id), [], hoy).huevo, null);
+
+  // químico de varios días: otra «Hecho» con el último día mueve el retiro (flubendazol: carne 7)
+  const lM = await mkLote({ fechaLlegada: dias(hoy, -20) });
+  const [fm] = await P.crearInicial(lM, g, 'huevos', ['qui-despara-postura']);
+  assert.strictEqual(typeof (await P.marcarHecha(fm.id, { fecha: dias(hoy, -6) })), 'function');
+  assert.strictEqual(c.retiroVigente(await P.listar(lM.id), [], hoy).carne, dias(hoy, 1), 'primer día: -6 + 7');
+  assert.strictEqual(c.estadoTarea(J(await c.DB.obtener('planTareas', fm.id)), hoy), 'hecha');
+  assert.strictEqual(typeof (await P.marcarHecha(fm.id, { fecha: hoy })), 'function', 'una química ya hecha acepta otra hecha (último día)');
+  const fm2 = J(await c.DB.obtener('planTareas', fm.id));
+  assert.strictEqual(fm2.hechas.length, 2);
+  assert.strictEqual(c.retiroVigente([fm2], [], hoy).carne, dias(hoy, 7), 'retiro desde el último día registrado');
+  assert.strictEqual(J(await c.DB.listar('registros', { loteId: lM.id, tipo: 'plan' })).length, 2);
+  // días de retiro según la etiqueta: se validan y se guardan en la hecha (y en el registro)
+  const [fa2] = await P.crearInicial(lM, g, 'huevos', ['qui-cocci-amprolio']);
+  const antesE = J(await c.DB.obtener('planTareas', fa2.id)), nRegE = (await c.DB.listar('registros')).length;
+  for (const mal of ['366', '-1', '2.5', 'x']) {
+    assert.strictEqual((await P.marcarHecha(fa2.id, { fecha: hoy, etiquetaHuevoDias: mal })).mensaje, 'Los días de retiro deben ser un número entero de 0 a 365', 'huevo ' + mal);
+    assert.strictEqual((await P.marcarHecha(fa2.id, { fecha: hoy, etiquetaCarneDias: mal })).mensaje, 'Los días de retiro deben ser un número entero de 0 a 365', 'carne ' + mal);
+  }
+  assert.deepStrictEqual(J(await c.DB.obtener('planTareas', fa2.id)), antesE, 'rechazo no toca la fila');
+  assert.strictEqual((await c.DB.listar('registros')).length, nRegE, 'rechazo no crea registro');
+  const dE = await P.marcarHecha(fa2.id, { fecha: dias(hoy, -1), etiquetaHuevoDias: '3', etiquetaCarneDias: '' });
+  assert.strictEqual(typeof dE, 'function');
+  const fe = J(await c.DB.obtener('planTareas', fa2.id));
+  assert.strictEqual(fe.hechas[0].etiquetaHuevoDias, 3); assert.ok(!('etiquetaCarneDias' in fe.hechas[0]), 'vacío no se guarda');
+  assert.strictEqual(c.retiroVigente([fe], [], hoy).huevo, dias(hoy, 2), 'la etiqueta manda: -1 + 3');
+  const rE = J(await c.DB.listar('registros', { loteId: lM.id, tipo: 'plan' })).find(x => x.datos.tareaId === fa2.id);
+  assert.strictEqual(rE.datos.etiquetaHuevoDias, 3);
+  assert.strictEqual(c.avisosEtiqueta([fe], hoy, 'huevos')[0].texto, 'Aplicaste ' + fe.titulo + ' el ' + dias(hoy, -1).slice(8, 10) + '/' + dias(hoy, -1).slice(5, 7) + ': revisa en la etiqueta el retiro en carne antes de venderla');
+  await dE();
+  assert.deepStrictEqual(J(await c.DB.obtener('planTareas', fa2.id)), antesE, 'deshacer restaura');
+  // en una labor no química los días de etiqueta se ignoran
+  const pnq = (await P.agregarPropia(lM, { titulo: 'Agua', categoria: 'agua', fecha: hoy })).tarea;
+  await P.marcarHecha(pnq.id, { etiquetaHuevoDias: '999' });
+  assert.ok(!('etiquetaHuevoDias' in J(await c.DB.obtener('planTareas', pnq.id)).hechas[0]));
+
+  // noPostura: nunca en lotes de postura, ni al crear ni al agregar (defensa en profundidad)
+  const lN = await mkLote();
+  const fN = J(await P.crearInicial(lN, g, 'huevos', ['qui-cocci-pollitas', 'agua-analisis']));
+  assert.deepStrictEqual(fN.map(f => f.catalogoId), ['agua-analisis'], 'crearInicial salta la noPostura en huevos');
+  assert.strictEqual((await P.agregarCatalogo(lN, 'qui-cocci-pollitas')).mensaje, 'Solo para crianza de pollitas; no aplica en gallinas ya en postura');
+  assert.strictEqual((await filas(lN.id)).length, 1);
+  const gR = c.GENETICAS.find(x => x.id === 'ross308');
+  const lR = await mkLote({ genetica: 'ross308' });
+  assert.deepStrictEqual(J(await P.crearInicial(lR, gR, 'carne', ['qui-cocci-toltrazuril'])).map(f => f.catalogoId), ['qui-cocci-toltrazuril'], 'en carne sí');
+  assert.strictEqual(J(await P.agregarCatalogo(lR, 'qui-cocci-broiler')).catalogoId, 'qui-cocci-broiler');
 
   // agregarPropia
   let l5 = await mkLote();

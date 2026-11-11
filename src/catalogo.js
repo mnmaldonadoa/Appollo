@@ -1,5 +1,7 @@
 /* Catálogo de tareas del ciclo de vida (huevos y carne). Contenido revisado en docs/catalogo-borrador.json.
-   Sin dosis: solo tipo de producto, ingrediente activo y días de retiro. Cada tarea cita su fuente. */
+   Sin dosis: solo tipo de producto, ingrediente activo y días de retiro. Cada tarea cita su fuente.
+   quimico.enAves: true cuando el producto se da o se aplica a las aves (agua, alimento o sobre el cuerpo); sin él es
+   un producto para instalaciones, cama o plagas. Solo los que van en las aves y no traen retiro piden revisar la etiqueta. */
 const CATEGORIAS_PLAN = [
   { id: 'alimento', nombre: 'Alimento', icono: 'grano' },
   { id: 'ambiente', nombre: 'Ambiente y espacio', icono: 'termo' },
@@ -1015,6 +1017,7 @@ const CATALOGO = [
       ingredienteActivo: 'Flubendazol',
       retiroHuevoDias: 0,
       retiroCarneDias: 7,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · VMD (Reino Unido), Resumen de las características del producto de flubendazol para aves, SPC 1032750 (vigente, consultado 2026). https://www.vmd.defra.gov.uk/productinformationDatabase/files/SPC_Documents/SPC_1032750.PDF · Manual Merck de Veterinaria, Helminthiasis in Poultry (revisión 2025). https://www.merckvetmanual.com/poultry/helminthiasis/helminthiasis-in-poultry'
@@ -1032,6 +1035,7 @@ const CATALOGO = [
       ingredienteActivo: 'Flubendazol',
       retiroHuevoDias: 0,
       retiroCarneDias: 7,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'Manual Merck de Veterinaria, Helminthiasis in Poultry (revisión 2025). https://www.merckvetmanual.com/poultry/helminthiasis/helminthiasis-in-poultry · VMD (Reino Unido), Resumen de las características del producto de flubendazol para aves, SPC 1032750 (vigente, consultado 2026). https://www.vmd.defra.gov.uk/productinformationDatabase/files/SPC_Documents/SPC_1032750.PDF · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
@@ -1048,6 +1052,7 @@ const CATALOGO = [
       ingredienteActivo: 'Permetrina',
       retiroHuevoDias: null,
       retiroCarneDias: 0,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'Mississippi State University Extension, P3800 Control External Parasites of Poultry (2025). https://extension.msstate.edu/publications/control-external-parasites-poultry · University of Kentucky Extension, ENT-28 Insect Control on Poultry (2007). https://www.uky.edu/Ag/PAT/recs/livestk/pdf/ENT-28_Poultry.pdf · Manual Merck de Veterinaria, Mites of Poultry (revisión 2026). https://www.merckvetmanual.com/poultry/ectoparasites/mites-of-poultry'
@@ -1064,6 +1069,7 @@ const CATALOGO = [
       ingredienteActivo: 'Fluralaner',
       retiroHuevoDias: 0,
       retiroCarneDias: 14,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'Base de datos de medicamentos veterinarios de la Unión Europea, fluralaner en solución para agua de bebida, pollos (consultado 2026). https://medicines.health.europa.eu/veterinary/en/600000000062 · Manual Merck de Veterinaria, Mites of Poultry (revisión 2026). https://www.merckvetmanual.com/poultry/ectoparasites/mites-of-poultry · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
@@ -1119,6 +1125,7 @@ const CATALOGO = [
       retiroHuevoDias: null,
       retiroCarneDias: 1,
       noPostura: true,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'Manual Merck de Veterinaria, Coccidiosis in Poultry (revisión 2024). https://www.merckvetmanual.com/poultry/coccidiosis/coccidiosis-in-poultry · Unión Europea, Reglamento (CE) n.º 1356/2004, monensina sódica como coccidiostático (2004). https://www.legislation.gov.uk/eur/2004/1356/data.xht'
@@ -1138,6 +1145,7 @@ const CATALOGO = [
       retiroHuevoDias: null,
       retiroCarneDias: null,
       noPostura: true,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Unión Europea, Reglamento (CE) n.º 1356/2004, monensina sódica como coccidiostático (2004). https://www.legislation.gov.uk/eur/2004/1356/data.xht · Manual Merck de Veterinaria, Coccidiosis in Poultry (revisión 2024). https://www.merckvetmanual.com/poultry/coccidiosis/coccidiosis-in-poultry'
@@ -1154,6 +1162,7 @@ const CATALOGO = [
       ingredienteActivo: 'Amprolio',
       retiroHuevoDias: null,
       retiroCarneDias: null,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'EE. UU., 21 CFR 520.100 Amprolio (texto del eCFR en Cornell LII, consultado 2026). https://www.law.cornell.edu/cfr/text/21/520.100 · Manual Merck de Veterinaria, Coccidiosis in Poultry (revisión 2024). https://www.merckvetmanual.com/poultry/coccidiosis/coccidiosis-in-poultry'
@@ -1171,6 +1180,7 @@ const CATALOGO = [
       retiroHuevoDias: null,
       retiroCarneDias: 16,
       noPostura: true,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'Base de datos de medicamentos veterinarios de la Unión Europea, toltrazuril en solución para agua de bebida, pollos (consultado 2026). https://medicines.health.europa.eu/veterinary/en/600000043604 · Manual Merck de Veterinaria, Coccidiosis in Poultry (revisión 2024). https://www.merckvetmanual.com/poultry/coccidiosis/coccidiosis-in-poultry'
@@ -1220,6 +1230,7 @@ const CATALOGO = [
       ingredienteActivo: 'Ciromazina',
       retiroHuevoDias: null,
       retiroCarneDias: null,
+      enAves: true,
       advertencia: CATALOGO_AVISO_QUIMICO
     },
     fuente: 'University of Kentucky Extension, ENT-28 Insect Control on Poultry (2007). https://www.uky.edu/Ag/PAT/recs/livestk/pdf/ENT-28_Poultry.pdf'
@@ -1250,6 +1261,16 @@ const CATALOGO = [
 function sugeribleAlLlegar(t, edadLlegada) {
   const e = Number(edadLlegada);
   return Number(t.cadaDias) > 0 || !(e > 0) || Number(t.desdeDia) >= e;
+}
+
+/* ¿La tarea no se puede usar en este modo? Las noPostura no aplican a gallinas de postura de huevo para consumo. */
+function bloqueadaEnModo(t, modo) {
+  return !!(t && t.quimico && t.quimico.noPostura && modo === 'huevos');
+}
+/* Por qué una tarea noPostura está bloqueada (texto de la nota deshabilitada). */
+function motivoBloqueo(t) {
+  return t && t.id === 'qui-cocci-pollitas' ? 'Solo para crianza de pollitas; no aplica en gallinas ya en postura'
+    : 'No se usa en gallinas de postura de huevo para consumo';
 }
 
 /* Tareas que aplican a una genética y un modo ('huevos' | 'carne'), por día de inicio y luego por id. */

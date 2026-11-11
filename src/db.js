@@ -152,7 +152,10 @@ const DB = (function () {
     for (const s of Object.keys(datos)) out[s] = datos[s].map(o => Object.assign({}, o, { id: String(o.id) }));
     (out.registros || []).forEach(r => {
       r.loteId = sid(r.loteId);
-      if (r.datos && typeof r.datos === 'object' && r.datos.planId !== undefined && r.datos.planId !== null) r.datos = Object.assign({}, r.datos, { planId: String(r.datos.planId) });
+      if (r.datos && typeof r.datos === 'object') {
+        for (const k of ['planId', 'tareaId']) // referencias a vacunasPlan / planTareas: como los ids, en texto
+          if (r.datos[k] !== undefined && r.datos[k] !== null) r.datos = Object.assign({}, r.datos, { [k]: String(r.datos[k]) });
+      }
     });
     (out.vacunasPlan || []).forEach(v => { v.loteId = sid(v.loteId); });
     (out.planTareas || []).forEach(t => { t.loteId = sid(t.loteId); });
