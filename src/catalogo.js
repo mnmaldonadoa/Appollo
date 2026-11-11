@@ -1243,6 +1243,15 @@ const CATALOGO = [
   }
 ];
 
+/* ¿Se sugiere/crea al iniciar el plan de un lote que llegó con `edadLlegada` días? Una tarea única (sin cadaDias)
+   cuyo día ya pasó antes de que llegaran las aves (desdeDia < edadLlegada) no se puede hacer: no se sugiere.
+   Con edadLlegada <= 0 (o inválida) entran todas, también las de antes de la llegada (desdeDia 0).
+   Las repetitivas siempre entran. Las que la persona agrega después desde el catálogo no pasan por esta regla. */
+function sugeribleAlLlegar(t, edadLlegada) {
+  const e = Number(edadLlegada);
+  return Number(t.cadaDias) > 0 || !(e > 0) || Number(t.desdeDia) >= e;
+}
+
 /* Tareas que aplican a una genética y un modo ('huevos' | 'carne'), por día de inicio y luego por id. */
 function tareasDelCatalogo(genetica, modo) {
   const gid = genetica && genetica.id;

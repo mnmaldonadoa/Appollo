@@ -45,12 +45,24 @@ const Plan = (function () {
     return serie(async () => {
       if (cerrado(lote)) return CERRADO;
       const quiere = new Set(Array.isArray(ids) ? ids : []), edad = edadDias(lote, hoyLocal()), out = [];
+      const llegadaE = Number(lote.edadLlegadaDias) || 0;
       const existentes = await listar(lote.id);
       for (const t of tareasDelCatalogo(genetica, modo)) {
         if (!quiere.has(t.id)) continue;
         if (t.hastaDia != null && t.hastaDia < edad) continue;
+        if (!sugeribleAlLlegar(t, llegadaE)) continue; // única que ya pasó antes de la llegada
         if (existentes.some(e => e.catalogoId === t.id)) continue;
-        out.push(await DB.guardar('planTareas', filaCatalogo(lote, t)));
+        const f = filaCatalogo(lote, t);
+        // Repetitiva que empezó antes de la llegada: la primera ocurrencia es la primera de su serie desde la llegada
+        // (no una "atrasada" de días en que las aves aún no estaban).
+        if (Number(f.cadaDias) > 0 && fechaValida(lote.fechaLlegada)) {
+          const inicio = masDias(f.fechaBase, Number(f.desdeDia) || 0);
+          if (inicio < lote.fechaLlegada) {
+            const d = Math.round((fechaADate(lote.fechaLlegada) - fechaADate(inicio)) / 86400000);
+            f.proxima = masDias(inicio, Math.ceil(d / f.cadaDias) * f.cadaDias);
+          }
+        }
+        out.push(await DB.guardar('planTareas', f));
       }
       return out;
     });

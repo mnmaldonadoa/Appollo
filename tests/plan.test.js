@@ -117,6 +117,27 @@ module.exports = (async () => {
   r = await P.crearInicial(l2, g, 'huevos', ['agua-analisis', 'agua-bebederos']);
   assert.deepStrictEqual(J(r).map(f => f.catalogoId), ['agua-analisis']);
 
+  // crearInicial con edad de llegada E: las únicas con desdeDia < E no se crean; las repetitivas sí, sin atrasadas
+  const todoIsa = c.tareasDelCatalogo(g, 'huevos').map(t => t.id);
+  const l30 = await mkLote({ edadLlegadaDias: 30 }); // llega hoy con 30 días
+  const f30 = J(await P.crearInicial(l30, g, 'huevos', todoIsa));
+  assert.ok(f30.every(f => Number(f.cadaDias) > 0 || f.desdeDia >= 30), 'E=30: ninguna única con desdeDia < 30');
+  assert.ok(!f30.some(f => f.catalogoId === 'lle-precalentar' || f.catalogoId === 'ali-isa-crecimiento'), 'E=30: sin precalentar (0) ni crecimiento (28)');
+  assert.ok(f30.some(f => f.catalogoId === 'qui-roedores'), 'E=30: la repetitiva de roedores (desde 0, cada 7) sí');
+  assert.strictEqual(f30.length, 30, 'E=30: 30 filas (la noPostura de cocci, única del día 0, tampoco entra)');
+  assert.strictEqual(f30.filter(f => c.estadoTarea(f, hoy) === 'atrasada').length, 0, 'E=30: 0 atrasadas el día de llegada');
+  const roe = f30.find(f => f.catalogoId === 'qui-roedores');
+  assert.strictEqual(roe.proxima, dias(hoy, 5), 'roedores: día 0 + 7k; la primera desde la llegada (día 30) es el 35');
+  assert.strictEqual(c.proximaFecha(roe, hoy), dias(hoy, 5));
+  const l0 = await mkLote({ edadLlegadaDias: 0 });
+  const f0 = J(await P.crearInicial(l0, g, 'huevos', todoIsa));
+  assert.ok(f0.some(f => f.catalogoId === 'lle-precalentar') && f0.some(f => f.catalogoId === 'lle-alimento-papel'), 'E=0: las de antes/al llegar se crean');
+  assert.strictEqual(f0.length, 62, 'E=0: 62 filas (61 sugeridas + la noPostura)');
+  assert.ok(f0.every(f => !('proxima' in f)), 'E=0: sin próxima forzada');
+  // agregar después desde el catálogo no pasa por la regla (elección explícita)
+  const tarde = J(await P.agregarCatalogo(l30, 'lle-precalentar'));
+  assert.strictEqual(tarde.catalogoId, 'lle-precalentar'); assert.strictEqual(tarde.estado, 'activa');
+
   // agregarCatalogo: sin duplicar; reactiva
   let l3 = await mkLote();
   const a1 = await P.agregarCatalogo(l3, 'agua-analisis'), a2 = await P.agregarCatalogo(l3, 'agua-analisis');

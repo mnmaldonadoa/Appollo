@@ -67,6 +67,19 @@ def main():
           titulo:'Desparasitar (prueba)', detalle:'', desdeDia:0, fechaBase:'2026-11-10', estado:'activa', hechas:[], creado:new Date().toISOString(),
           quimico:{tipo:'Antiparasitario interno', ingredienteActivo:'Flubendazol', retiroHuevoDias:7, retiroCarneDias:14, advertencia: CATALOGO_AVISO_QUIMICO}}).then(f => f.id)""", lote)
 
+        # ---------- lote nuevo que llega con 30 días y el plan sugerido completo: sin atrasadas falsas ----------
+        l30 = pg.evaluate("""(() => { const g = GENETICAS.find(x => x.id === 'isa-brown');
+          return NuevoLote.crear({genetica:'isa-brown', avesInicio:50, altitud:2800, galpon:'G30', edadDias:30, plan: NuevoLote.planSugerido(g, 30)}).then(l => l.id); })()""")
+        n30 = len(pg.evaluate("id => DB.listar('planTareas', {loteId: id})", l30))
+        pg.evaluate(f"location.hash = '#/lote/{l30}/plan'"); pg.wait_for_selector("#view .pc-plan")
+        check("llega con 30 días y el plan sugerido completo (30 labores): 0 Atrasadas",
+              n30 == 30 and pg.locator("#view [data-sec=atrasadas] .pc-item").count() == 0, (n30, pg.locator("#view [data-sec=atrasadas] .pc-item").count()))
+        al30 = pg.evaluate("""id => (async () => { const d = {}; for (const s of DB.STORES) d[s] = await DB.listar(s); d.granja = App.estado.granja;
+          return generarAlertas(d, new Date()).filter(a => a.loteId === id && a.tipo === 'plan').map(a => a.gravedad); })()""", l30)
+        check("y 0 alertas de labores atrasadas (rojas) en Alertas", al30.count("rojo") == 0, al30)
+        print(f"     (alertas de labores del lote a 30 días: {len(al30)} — de hoy/próximos 7 días: {al30})")
+        pg.evaluate("id => DB.obtener('lotes', id).then(l => DB.guardar('lotes', Object.assign({}, l, {estado:'cerrado', fechaCierre:'2026-11-10'})))", l30)
+
         # ---------- pestañas ----------
         pg.evaluate(f"location.hash = '#/lote/{lid}'"); pg.wait_for_selector("#view .detalle-lote")
         check("el detalle tiene las pestañas Resumen | Plan del ciclo, con Resumen elegida",
@@ -200,7 +213,7 @@ def main():
         pg.emulate_media(color_scheme="dark"); pg.wait_for_timeout(100)
         medir("plan oscuro")
         captura("plan-oscuro.png")
-        pg.evaluate("App.ocultarToast()"); pg.locator("#view [data-sec=atrasadas] .pc-item").first.scroll_into_view_if_needed()
+        pg.evaluate("App.ocultarToast()"); pg.locator("#view .pc-item").first.scroll_into_view_if_needed()
         captura("plan-oscuro-tarjetas.png")
         pg.click("#view [data-accion=pc-agregar]"); hoja(); pg.wait_for_selector(".hoja .pc-cat")
         pg.click(".hoja .pc-cat summary"); medir("hoja catálogo oscuro")

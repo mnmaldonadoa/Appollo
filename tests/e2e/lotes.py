@@ -325,8 +325,7 @@ def main():
             n0 = len(pred)
             check("contador «N tareas elegidas»", pg.evaluate(CONTADOR) == f"{n0} tareas elegidas", pg.evaluate(CONTADOR))
             nop = pg.evaluate("[...document.querySelectorAll('#view [data-accion=nl-plan-tarea]:disabled')].map(e => e.dataset.id)")
-            check("las tareas noPostura están deshabilitadas y sin marcar", len(nop) >= 1 and not set(nop) & set(pg.evaluate(MARCADAS)), nop)
-            check("las noPostura explican por qué", pg.locator("#view .nl-tarea:has(input:disabled)").first.inner_text().count("No se usa en gallinas de postura de huevo para consumo") == 1)
+            check("llega con 30 días: la noPostura única del día 0 (cocci de pollitas) ya no se lista", nop == [] and "qui-cocci-pollitas" not in pg.evaluate(TODAS), nop)
             check("las tareas químicas muestran retiro y aviso",
                   pg.locator("#view .nl-tarea", has_text="Retiro huevo:").count() >= 1
                   and pg.locator("#view .nl-tarea", has_text="Confirma producto, dosis y retiro con la etiqueta y tu veterinario.").count() >= 1)
@@ -425,6 +424,15 @@ def main():
             check("sin tareas: el lote se crea y no tiene filas de plan",
                   pg.evaluate("id => DB.obtener('lotes', id).then(l => !!l)", lid0) and len(pg.evaluate("id => DB.listar('planTareas', {loteId: id})", lid0)) == 0)
             check("el otro lote conserva sus tareas", len(pg.evaluate("id => DB.listar('planTareas', {loteId: id})", lid)) == len(elegida))
+            # Llegada a 0 días: la noPostura aparece deshabilitada y explicada
+            pg.goto(url + "#/nuevo-lote"); pg.wait_for_selector("#view .nuevo-lote[data-paso='1']")
+            ir_paso3(pg, "hyline-brown", 0); abrir_todas(pg)
+            nop = pg.evaluate("[...document.querySelectorAll('#view [data-accion=nl-plan-tarea]:disabled')].map(e => e.dataset.id)")
+            check("las tareas noPostura están deshabilitadas y sin marcar", len(nop) >= 1 and not set(nop) & set(pg.evaluate(MARCADAS)), nop)
+            check("las noPostura explican por qué", pg.locator("#view .nl-tarea:has(input:disabled)").first.inner_text().count("No se usa en gallinas de postura de huevo para consumo") == 1)
+            check("llegada a 0 días: «Antes de que lleguen» sí se sugiere", "lle-precalentar" in pg.evaluate(MARCADAS))
+            pg.click("#view [data-accion=nl-atras]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='2']")
+            pg.click("#view [data-accion=nl-atras]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='1']")
             # Carne: las noPostura sí se pueden elegir
             pg.goto(url + "#/nuevo-lote"); pg.wait_for_selector("#view .nuevo-lote[data-paso='1']")
             ir_paso3(pg, "cobb500", 10); abrir_todas(pg)

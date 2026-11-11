@@ -40,11 +40,15 @@ const NuevoLote = (function () {
   /* Tareas del catálogo que se muestran: las de la genética y el modo que aún no pasaron por edad (hastaDia >= edad).
      Sin edad válida (null) se muestran todas. */
   const noSirve = (t, g) => !!(t.quimico && t.quimico.noPostura && modoDe(g) === 'huevos');
-  function tareasVisibles(g, edad) {
-    return tareasDelCatalogo(g, modoDe(g)).filter(t => edad === null || edad === undefined || t.hastaDia === undefined || t.hastaDia === null || t.hastaDia >= edad);
+  /* `edadLlegada` (por defecto = edad): edad con que llegaron; las tareas únicas de días anteriores no se muestran
+     (ver sugeribleAlLlegar en catalogo.js). */
+  function tareasVisibles(g, edad, edadLlegada) {
+    const e = edadLlegada === undefined ? edad : edadLlegada;
+    return tareasDelCatalogo(g, modoDe(g)).filter(t => (edad === null || edad === undefined || t.hastaDia === undefined || t.hastaDia === null || t.hastaDia >= edad)
+      && (e === null || e === undefined || sugeribleAlLlegar(t, e)));
   }
   /* Ids marcados por defecto: todas las visibles menos las que no se usan en postura de huevo. */
-  const planSugerido = (g, edad) => tareasVisibles(g, edad).filter(t => !noSirve(t, g)).map(t => t.id);
+  const planSugerido = (g, edad, edadLlegada) => tareasVisibles(g, edad, edadLlegada).filter(t => !noSirve(t, g)).map(t => t.id);
 
   /* -> {mensaje} si algo no vale, o {lote} listo para guardar (sin id). */
   function validar(o) {
@@ -177,10 +181,11 @@ const NuevoLote = (function () {
 
   /* Edad actual de las aves según el paso 2 (null si no vale). */
   const edadActual = () => { const v = validar(Object.assign(datos(), { altitud: null })); return v.lote ? edadDias(v.lote, hoyLocal()) : null; };
+  const edadLlegada = () => { const v = validar(Object.assign(datos(), { altitud: null })); return v.lote ? Number(v.lote.edadLlegadaDias) || 0 : null; };
   /* La selección se reinicia solo si cambia lo que se sugiere (genética o edad actual). */
   function prepararPlan() {
-    const g = genDe(st.gid), edad = edadActual(), clave = st.gid + '|' + edad;
-    if (st.planClave !== clave) { st.planClave = clave; st.plan = new Set(planSugerido(g, edad)); st.abiertas = new Set(['alimento']); }
+    const g = genDe(st.gid), edad = edadActual(), llegada = edadLlegada(), clave = st.gid + '|' + edad + '|' + llegada;
+    if (st.planClave !== clave) { st.planClave = clave; st.plan = new Set(planSugerido(g, edad, llegada)); st.abiertas = new Set(['alimento']); }
   }
   function tareaHTML(t, g) {
     const bloq = noSirve(t, g), marcada = !bloq && st.plan.has(t.id), q = t.quimico;
@@ -195,7 +200,7 @@ const NuevoLote = (function () {
   }
   function paso3() {
     prepararPlan();
-    const g = genDe(st.gid), todas = tareasVisibles(g, edadActual());
+    const g = genDe(st.gid), todas = tareasVisibles(g, edadActual(), edadLlegada());
     const elegidas = todas.filter(t => st.plan.has(t.id) && !noSirve(t, g)).length;
     const cats = CATEGORIAS_PLAN.map(c => {
       const ts = todas.filter(t => t.categoria === c.id);
@@ -276,7 +281,7 @@ const NuevoLote = (function () {
     const el = $v(`[data-accion="${accion}"][data-id="${id}"]`);
     if (el) { try { el.focus({ preventScroll: true }); } catch (e) { /* sin foco */ } }
   };
-  const idsDe = cat => tareasVisibles(genDe(st.gid), edadActual()).filter(t => t.categoria === cat && !noSirve(t, genDe(st.gid))).map(t => t.id);
+  const idsDe = cat => tareasVisibles(genDe(st.gid), edadActual(), edadLlegada()).filter(t => t.categoria === cat && !noSirve(t, genDe(st.gid))).map(t => t.id);
   ACCIONES['nl-plan-tarea'] = el => conservar(() => { const id = el.dataset.id; if (st.plan.has(id)) st.plan.delete(id); else st.plan.add(id); }, 'nl-plan-tarea', el.dataset.id);
   ACCIONES['nl-plan-todo'] = el => conservar(() => idsDe(el.dataset.id).forEach(id => st.plan.add(id)), 'nl-plan-todo', el.dataset.id);
   ACCIONES['nl-plan-ninguno'] = el => conservar(() => idsDe(el.dataset.id).forEach(id => st.plan.delete(id)), 'nl-plan-ninguno', el.dataset.id);

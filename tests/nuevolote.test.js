@@ -62,7 +62,10 @@ r = plan('criolla', 0);
 assert.ok(de(r, 'v_ref').length >= 2 && dias(de(r, 'v_ref')[0], de(r, 'v_ref')[1]) === 63);
 
 // 8. planSugerido: valores esperados fijos (catálogo de Hy-Line Brown: 68 tareas; 'qui-cocci-pollitas' es noPostura, hasta el día 112)
-const sug = (id, edad) => JSON.parse(JSON.stringify(NuevoLote.planSugerido(ctx.GENETICAS.find(g => g.id === id), edad)));
+// sug(id, edad): lote que llegó con 0 días y tiene hoy `edad` (prueba solo el corte por hastaDia);
+// sugL(id, e): lote que llega hoy con `e` días (corte por hastaDia y por la edad de llegada).
+const sug = (id, edad) => JSON.parse(JSON.stringify(NuevoLote.planSugerido(ctx.GENETICAS.find(g => g.id === id), edad, 0)));
+const sugL = (id, e) => JSON.parse(JSON.stringify(NuevoLote.planSugerido(ctx.GENETICAS.find(g => g.id === id), e)));
 let s0 = sug('hyline-brown', 0);
 assert.strictEqual(s0.length, 67, 'huevos a edad 0: 68 tareas menos la noPostura');
 assert.ok(!s0.includes('qui-cocci-pollitas'), 'noPostura excluida en huevos');
@@ -77,4 +80,16 @@ const c0 = sug('cobb500', 0);
 assert.strictEqual(c0.length, 50, 'carne a edad 0: las 50 tareas');
 assert.ok(c0.includes('qui-cocci-broiler') && c0.includes('qui-cocci-toltrazuril'), 'en carne las noPostura sí se sugieren');
 assert.strictEqual(NuevoLote.tareasVisibles(ctx.GENETICAS.find(g => g.id === 'hyline-brown'), 0).length, 68, 'tareasVisibles(0) incluye la noPostura');
+// 9. Edad de llegada: una tarea única con desdeDia < edad de llegada ya pasó antes de que llegaran las aves -> no se sugiere
+const cat = id => ctx.CATALOGO.find(t => t.id === id);
+for (const [gid, e] of [['hyline-brown', 30], ['isa-brown', 30], ['isa-brown', 120], ['cobb500', 10]]) {
+  const ids = sugL(gid, e);
+  assert.ok(ids.every(id => Number(cat(id).cadaDias) > 0 || cat(id).desdeDia >= e), gid + ' a ' + e + ': ninguna única anterior a la llegada');
+  assert.ok(ids.some(id => Number(cat(id).cadaDias) > 0 && cat(id).desdeDia < e), gid + ' a ' + e + ': las repetitivas siguen');
+}
+assert.ok(!sugL('isa-brown', 30).includes('lle-precalentar') && !sugL('isa-brown', 30).includes('lle-alimento-papel'), 'llegada a 30 días: sin «antes de que lleguen» ni «al llegar»');
+assert.ok(sugL('isa-brown', 30).includes('qui-roedores') && sugL('isa-brown', 30).includes('ali-isa-crecimiento') === false, 'repetitiva sí, única del día 28 no');
+assert.ok(sug('isa-brown', 0).includes('lle-precalentar') && sugL('isa-brown', 0).includes('lle-precalentar'), 'llegada a 0 días: las de antes de la llegada se quedan');
+assert.ok(sug('isa-brown', 20).includes('amb-perchas'), 'llegó con 0 días y tiene 20: la única del día 21 sigue (corte solo por hastaDia)');
+assert.deepStrictEqual([sugL('isa-brown', 0).length, sugL('isa-brown', 30).length, sugL('isa-brown', 120).length], [61, 30, 21], 'cantidades fijas de la sugerencia ISA Brown');
 console.log('ok   nuevolote.test.js');
