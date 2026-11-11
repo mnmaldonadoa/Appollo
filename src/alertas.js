@@ -113,7 +113,7 @@ function alertaPlan(datos, hoy) {
     else continue;
     out.push({ id: 'plan-' + t.id, tipo: 'plan', gravedad, loteId: l.id,
       texto: 'Labor · ' + l.nombre + ': ' + t.titulo + ' (' + cuando + ')',
-      accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) } });
+      accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) + '/plan' } });
   }
   return out;
 }
@@ -127,7 +127,7 @@ function alertaRetiroPlan(datos, hoy) {
       if (!r[campo]) continue;
       out.push({ id: 'retiro-plan-' + campo + '-' + l.id, tipo: 'retiro', gravedad: 'rojo', loteId: l.id,
         texto: 'No vender ' + nombre + ' hasta el ' + _ddmm(r[campo]) + ' · ' + l.nombre,
-        accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) } });
+        accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) + '/plan' } });
     }
   }
   return out;

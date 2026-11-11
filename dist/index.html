@@ -481,6 +481,9 @@ button { cursor: pointer; }
 .ini-celda:not(.ini-ancha) .tarjeta { padding: 14px 14px 16px 20px; }
 .ini-celda:not(.ini-ancha) .tarjeta-cifra { font-size: 2.25rem; }
 .ini-celda:not(.ini-ancha) .tarjeta-icono { display: none; }
+.ini-aviso-plan { display: grid; gap: 12px; }
+.ini-aviso-texto { margin: 0; overflow-wrap: anywhere; }
+.ini-aviso-botones { display: grid; gap: 8px; }
 .ini-enlace { color: inherit; text-decoration: none; border-radius: var(--r-l); }
 .ini-enlace .tarjeta-pie::after { content: " ›"; font-weight: 700; }
 .ini-enlace:active .tarjeta { transform: translateY(2px); }
@@ -3429,7 +3432,7 @@ function alertaPlan(datos, hoy) {
     else continue;
     out.push({ id: 'plan-' + t.id, tipo: 'plan', gravedad, loteId: l.id,
       texto: 'Labor · ' + l.nombre + ': ' + t.titulo + ' (' + cuando + ')',
-      accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) } });
+      accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) + '/plan' } });
   }
   return out;
 }
@@ -3443,7 +3446,7 @@ function alertaRetiroPlan(datos, hoy) {
       if (!r[campo]) continue;
       out.push({ id: 'retiro-plan-' + campo + '-' + l.id, tipo: 'retiro', gravedad: 'rojo', loteId: l.id,
         texto: 'No vender ' + nombre + ' hasta el ' + _ddmm(r[campo]) + ' · ' + l.nombre,
-        accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) } });
+        accion: { etiqueta: 'Ver plan', ruta: _rutaLote(l) + '/plan' } });
     }
   }
   return out;
@@ -4366,11 +4369,13 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   function tarjeta(a) {
     const g = GRAV[a.gravedad] || GRAV.info;
     const hecha = a.tipo === 'vacuna' && String(a.id).startsWith('vacuna-');
+    const labor = a.tipo === 'plan' && String(a.id).startsWith('plan-');
     return `<li class="al-card al-${esc(a.gravedad)}" data-alerta="${esc(a.id)}">
   <div class="al-cab"><span class="al-icono">${icono(g.ic)}</span><span class="${g.clase}">${a.gravedad === 'info' ? '' : '<span class="chip-punto" aria-hidden="true"></span>'}${g.chip}</span></div>
   <p class="al-texto">${esc(a.texto)}</p>
   <div class="al-botones">
     ${Boton({ texto: a.accion && a.accion.etiqueta || 'Ver', variante: 'primario', accion: 'ir', datos: { ruta: a.accion && a.accion.ruta }, clase: 'btn-ancho' })}
+    ${labor ? Boton({ texto: 'Hecho', icono: 'sig', variante: 'secundario', accion: 'al-plan-hecho', datos: { id: String(a.id).slice('plan-'.length) }, clase: 'btn-ancho' }) : ''}
     ${hecha ? Boton({ texto: 'Marcar hecha', icono: 'jeringa', variante: 'secundario', accion: 'al-hecha', datos: { id: String(a.id).slice('vacuna-'.length) }, clase: 'btn-ancho' }) : ''}
   </div>
 </li>`;
@@ -4385,6 +4390,50 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     return `<section class="pantalla"><h1>Alertas</h1>
   <p class="pantalla-texto">${formatoNumero(lista.length)} ${lista.length === 1 ? 'aviso' : 'avisos'}, primero lo más urgente.</p>
   <ul class="al-lista">${lista.map(tarjeta).join('')}</ul></section>`;
+  };
+
+  /* Foco: tras redibujar (Hecho, Deshacer) vuelve al mismo data-accion/data-id; si esa tarjeta ya no está, a la primera
+     acción de la lista o al título; nunca a <body>. */
+  let ultimo = null, restaurando = false;
+  const cssq = x => (window.CSS && CSS.escape ? CSS.escape(x) : String(x).replace(/["\\]/g, '\\$&'));
+  const anotar = e => {
+    if (restaurando) return;
+    const el = e.target && e.target.closest ? e.target.closest('#view [data-accion]') : null;
+    if (el && el.closest('.al-card')) ultimo = { accion: el.dataset.accion || '', id: el.dataset.id || '', ruta: el.dataset.ruta || '' };
+  };
+  if (typeof document !== 'undefined' && document.addEventListener) {
+    document.addEventListener('focusin', anotar, true);
+    document.addEventListener('click', anotar, true);
+    window.addEventListener('hashchange', () => { ultimo = null; }); // otra pantalla: nada que restaurar
+  }
+  VISTAS.alertas.montar = raiz => {
+    const a = document.activeElement;
+    if (!ultimo || location.hash !== '#/alertas' || App.hojaAbierta() || (a && a !== document.body && document.contains(a))) return;
+    const q = x => raiz.querySelector(x), cands = [];
+    if (ultimo.id) cands.push(q(`[data-accion="${cssq(ultimo.accion)}"][data-id="${cssq(ultimo.id)}"]`));
+    cands.push(q('.al-card .btn'), q('h1'));
+    restaurando = true;
+    try {
+      for (const el of cands) {
+        if (!el || el.disabled || !el.getClientRects().length) continue;
+        if (el.tagName === 'H1') el.tabIndex = -1;
+        try { el.focus({ preventScroll: true }); } catch (e) { continue; }
+        if (document.activeElement === el) return;
+      }
+    } finally { restaurando = false; }
+  };
+
+  let ocupado = false; // una acción a la vez: un doble toque no duplica la labor hecha
+  ACCIONES['al-plan-hecho'] = async el => {
+    if (ocupado) return;
+    ocupado = true; el.disabled = true;
+    App.ocultarToast(); // el Deshacer anterior ya no vale
+    let r;
+    try { r = await Plan.marcarHecha(el.dataset.id); } catch (e) { r = { mensaje: 'No se pudo guardar. Intenta de nuevo.' }; }
+    ocupado = false;
+    if (r && r.mensaje) { el.disabled = false; App.toast(r.mensaje); return; }
+    await App.refrescar();
+    App.toast('Labor hecha', typeof r === 'function' ? { deshacer: r } : undefined);
   };
 
   ACCIONES['al-hecha'] = async el => {
@@ -4766,6 +4815,12 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
 (function () {
   'use strict';
   let verTodos = false, ultimo = '', previo = {};
+  /* Aviso único «Elegir tareas del ciclo»: la marca vive en localStorage (puede fallar: sin ella, el aviso sigue sin romper nada). */
+  const kAviso = id => 'appollo.v2.planAvisado:' + id;
+  const avisado = id => { try { return localStorage.getItem(kAviso(id)) === '1'; } catch (e) { return false; } };
+  const marcarAvisado = id => { try { localStorage.setItem(kAviso(id), '1'); } catch (e) { /* sin almacenamiento */ } };
+  /* Primer lote activo sin filas de plan y sin avisar (los cerrados nunca entran: `lotes` ya viene filtrado). */
+  const loteSinPlan = (lotes, filas) => lotes.find(l => !filas.some(f => f.loteId === l.id) && !avisado(l.id)) || null;
   const fin = x => (Number.isFinite(x) ? x : null);
   const r1 = x => (x === null ? null : Math.round(x * 10) / 10);
   const suma = xs => xs.reduce((s, x) => s + x, 0);
@@ -4835,7 +4890,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   const kg = x => (x === null ? '—' : formatoNumero(r1(x)) + ' kg');
 
   function construir(d) {
-    const { activos, sel, ms, a, alertas, hoy, alt } = d;
+    const { activos, sel, ms, a, alertas, hoy, alt, sinPlan } = d;
     const g = App.estado.granja || {};
     const uno = sel !== 'todos' ? ms[0] : null;
     const selector = activos.length > 1 ? `<div class="ini-selector" role="group" aria-label="Ver lote">${[{ id: 'todos', nombre: 'Todos' }].concat(activos).map(l =>
@@ -4857,6 +4912,11 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   <header class="ini-cab"><h1>${esc(g.nombre || 'Inicio')}</h1><p class="pantalla-texto">${sub}</p></header>
   ${selector}
   <div class="ini-rejilla">
+  ${sinPlan ? `<div class="ini-celda ini-ancha" data-t="plan-aviso"><article class="tarjeta ini-aviso-plan">
+    <header class="tarjeta-cab"><span class="tarjeta-icono">${icono('hoja')}</span><h3 class="tarjeta-titulo">Elegir tareas del ciclo</h3></header>
+    <p class="ini-aviso-texto">${esc(sinPlan.nombre || 'Lote')}: elige las vacunas y labores que quieres que Appollo te recuerde.</p>
+    <div class="ini-aviso-botones">${Boton({ texto: 'Elegir tareas', icono: 'sig', variante: 'primario', accion: 'ini-elegir-plan', datos: { id: sinPlan.id }, clase: 'btn-ancho' })}
+    ${Boton({ texto: 'Ahora no', variante: 'secundario', accion: 'ini-plan-despues', datos: { id: sinPlan.id }, clase: 'btn-ancho' })}</div></article></div>` : ''}
   ${celda('aves', Tarjeta({ titulo: 'Aves vivas', icono: 'gallina', cifra: a.vivas, pie: `de ${formatoNumero(a.inicio)} al llegar` }))}
   ${celda('mortalidad', Tarjeta({ titulo: 'Mortalidad', icono: 'cruz', cifra: r1(a.mortPct), unidad: a.mortPct === null ? '' : '%', pie: `Hoy: ${formatoNumero(a.muertesHoy)} ${a.muertesHoy === 1 ? 'ave' : 'aves'}` }))}
   ${celda('alimento', Tarjeta({ titulo: 'Alimento de hoy', icono: 'saco', cifra: r1(a.kg), unidad: a.kg === null ? '' : 'kg', pie: 'Estándar ' + kg(a.kgStd) }), true)}
@@ -4887,7 +4947,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
 
   VISTAS.inicio.montar = async function (raiz) {
     if (!raiz.querySelector('.inicio')) return;
-    const [lotes, registros, vacunasPlan, inventario] = await Promise.all(['lotes', 'registros', 'vacunasPlan', 'inventario'].map(s => DB.listar(s)));
+    const [lotes, registros, vacunasPlan, inventario, planTareas] = await Promise.all(['lotes', 'registros', 'vacunasPlan', 'inventario', 'planTareas'].map(s => DB.listar(s)));
     const activos = lotes.filter(l => l.estado === 'activo').sort((x, y) => String(x.fechaLlegada || '').localeCompare(String(y.fechaLlegada || '')));
     const hoy = hoyLocal(), alt = App.estado.granja && App.estado.granja.altitud;
     const id = App.estado.loteActivoId;
@@ -4895,10 +4955,10 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     const elegidos = sel === 'todos' ? activos : activos.filter(l => l.id === sel);
     const ms = elegidos.map(l => metricas(l, registros, vacunasPlan, hoy, alt));
     let alertas = [];
-    try { alertas = generarAlertas({ lotes, registros, vacunasPlan, inventario, granja: App.estado.granja }, new Date()); } catch (e) { alertas = []; }
+    try { alertas = generarAlertas({ lotes, registros, vacunasPlan, inventario, planTareas, granja: App.estado.granja }, new Date()); } catch (e) { alertas = []; }
     alertas = alertas.filter(x => x.gravedad !== 'info' && (sel === 'todos' || !x.loteId || x.loteId === sel));
     if (!raiz.isConnected) return;
-    raiz.innerHTML = construir({ activos, sel, ms, a: agregado(ms), alertas, hoy, alt });
+    raiz.innerHTML = construir({ activos, sel, ms, a: agregado(ms), alertas, hoy, alt, sinPlan: loteSinPlan(elegidos, planTareas) });
     ultimo = raiz.innerHTML;
     raiz.querySelectorAll('[data-t] .tarjeta-cifra[data-cifra]').forEach(el => {
       const t = el.closest('[data-t]').dataset.t, clave = sel + ':' + t, meta = Number(el.dataset.cifra);
@@ -4908,6 +4968,9 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
       contar(el, meta);
     });
   };
+
+  ACCIONES['ini-elegir-plan'] = el => { marcarAvisado(el.dataset.id); ultimo = ''; App.ir('#/lote/' + encodeURIComponent(el.dataset.id) + '/plan'); };
+  ACCIONES['ini-plan-despues'] = el => { marcarAvisado(el.dataset.id); ultimo = ''; App.refrescar(); };
 
   ACCIONES['ini-lote'] = el => {
     const id = el.dataset.id;

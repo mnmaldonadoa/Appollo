@@ -282,6 +282,76 @@ def main():
             check("borrar un registro creado antes del vínculo no cambia el stock", stock() == 20 and len(pg.evaluate(REGS, "alimento")) == 0, stock())
             pg.wait_for_selector("#toast", state="hidden", timeout=8000)
 
+            # ---------- 9b. Plan del ciclo: alertas con Hecho/Deshacer y aviso 'Elegir tareas del ciclo' ----------
+            CAP = Path("/tmp/claude-0/-home-claude/b1ccecc4-68b0-5c48-8f90-0cece85f2c0c/scratchpad/t9"); CAP.mkdir(parents=True, exist_ok=True)
+            AV = f"appollo.v2.planAvisado:{lid}"
+            def inicio_listo():
+                if pg.evaluate("location.hash") == "#/inicio": pg.evaluate("App.refrescar()")  # misma ruta: no hay hashchange
+                ir("#/inicio"); pg.wait_for_selector("#view .ini-rejilla"); quieto()
+            pg.evaluate("DB.listar('planTareas').then(fs => Promise.all(fs.map(f => DB.borrar('planTareas', f.id))))")
+            pg.evaluate("k => localStorage.removeItem(k)", AV)
+            pg.evaluate("DB.guardar('lotes', {id:'cerr', nombre:'Viejo', estado:'cerrado', genetica:'hyline-brown', avesInicio:10, fechaLlegada:'2026-01-01', edadLlegadaDias:0, galpon:'G9'})")
+            inicio_listo(); pg.wait_for_selector("#view [data-t=plan-aviso]")
+            check("lote sin plan: una sola tarjeta 'Elegir tareas del ciclo' (sin lote cerrado)",
+                  pg.locator("#view [data-t=plan-aviso]").count() == 1 and "Elegir tareas del ciclo" in pg.inner_text("#view [data-t=plan-aviso]")
+                  and "Viejo" not in pg.inner_text("#view [data-t=plan-aviso]"), pg.inner_text("#view"))
+            medir("inicio con aviso de plan"); pg.screenshot(path=str(CAP / "inicio-aviso.png"))
+            pg.click("#view [data-accion=ini-elegir-plan]"); pg.wait_for_function("location.hash === '#/lote/%s/plan'" % lid)
+            pg.wait_for_selector("#view [role=tab][aria-selected=true]")
+            check("abrir la tarjeta lleva a la pestaña Plan y marca el aviso",
+                  pg.evaluate("k => localStorage.getItem(k)", AV) == "1" and pg.locator("#view [role=tab][aria-selected=true]", has_text="Plan").count() == 1)
+            inicio_listo()
+            check("la tarjeta no vuelve a salir", pg.locator("#view [data-t=plan-aviso]").count() == 0)
+            pg.evaluate("k => localStorage.removeItem(k)", AV); inicio_listo(); pg.wait_for_selector("#view [data-t=plan-aviso]")
+            pg.click("#view [data-accion=ini-plan-despues]"); pg.wait_for_function("!document.querySelector('#view [data-t=plan-aviso]')")
+            check("'Ahora no' descarta el aviso y queda marcado", pg.evaluate("k => localStorage.getItem(k)", AV) == "1")
+            # sin localStorage la página sigue funcionando
+            pg.evaluate("k => localStorage.removeItem(k)", AV)
+            pg.evaluate("() => { Storage.prototype._g = Storage.prototype.getItem; Storage.prototype.getItem = function () { throw new Error('bloqueado'); }; }")
+            inicio_listo(); pg.wait_for_selector("#view [data-t=plan-aviso]")
+            check("con localStorage bloqueado Inicio sigue mostrando la tarjeta sin errores", pg.locator("#view [data-t=plan-aviso]").count() == 1)
+            pg.evaluate("() => { Storage.prototype.getItem = Storage.prototype._g; }")
+            pg.evaluate("k => localStorage.setItem(k, '1')", AV)
+
+            # tarea vencida -> alerta roja -> Hecho / Deshacer
+            pg.evaluate("""lid => DB.guardar('planTareas', {id:'pt1', loteId: lid, origen:'propia', categoria:'manejo', titulo:'Desparasitar <b>x</b>',
+               desdeDia:0, fechaBase:'2026-10-30', estado:'activa', hechas:[]})""", lid)
+            pg.evaluate("location.reload()"); pg.wait_for_selector("#view .pantalla")
+            inicio_listo()
+            check("Inicio cuenta la alerta de plan (tarjeta Alertas pendientes con 1+)", int(pg.locator("#view [data-t=alertas] .tarjeta-cifra").get_attribute("data-cifra")) >= 1)
+            pg.screenshot(path=str(CAP / "inicio-plan.png"))
+            ir("#/alertas"); quieto()
+            card = pg.locator("#view [data-alerta=plan-pt1]")
+            check("tarea vencida: alerta roja 'Urgente' con texto escapado y botones Ver plan / Hecho",
+                  card.count() == 1 and "al-rojo" in card.get_attribute("class") and "Urgente" in card.inner_text() and "Desparasitar <b>x</b>" in card.inner_text()
+                  and card.locator("b").count() == 0 and card.locator("[data-accion=ir]").inner_text().strip() == "Ver plan"
+                  and card.locator("[data-accion=al-plan-hecho]").inner_text().strip() == "Hecho", card.inner_text() if card.count() else pg.inner_text("#view"))
+            check("'Ver plan' usa el enlace profundo de la pestaña Plan", card.locator("[data-accion=ir]").get_attribute("data-ruta") == "#/lote/%s/plan" % lid)
+            medir("alertas con plan"); pg.screenshot(path=str(CAP / "alertas-plan.png"))
+            pg.click("#view [data-alerta=plan-pt1] [data-accion=al-plan-hecho]")
+            pg.wait_for_selector("#toast:not([hidden]) [data-accion=deshacer]")
+            esperar("() => DB.obtener('planTareas', 'pt1').then(t => t.hechas.length === 1)")
+            pg.wait_for_function("!document.querySelector('#view [data-alerta=plan-pt1]')")
+            check("Hecho quita la alerta, anota la hecha y crea el registro de plan",
+                  pg.evaluate("DB.obtener('planTareas', 'pt1')")["hechas"][0]["fecha"] == pg.evaluate(HOY()) and len(pg.evaluate(REGS, "plan")) == 1)
+            check("tras Hecho el foco no queda en <body>", pg.evaluate("document.activeElement && document.activeElement !== document.body") or pg.locator("#view .al-card").count() == 0)
+            pg.click("#toast [data-accion=deshacer]")
+            pg.wait_for_selector("#view [data-alerta=plan-pt1]")
+            esperar("() => DB.obtener('planTareas', 'pt1').then(t => t.hechas.length === 0)")
+            check("Deshacer restaura la alerta y borra el registro", len(pg.evaluate(REGS, "plan")) == 0)
+            check("tras Deshacer el foco vuelve al botón Hecho de esa alerta",
+                  pg.evaluate("(document.activeElement.dataset || {}).accion === 'al-plan-hecho' && document.activeElement.dataset.id === 'pt1'"))
+            # doble toque: un solo registro
+            pg.wait_for_selector("#toast", state="hidden", timeout=8000)
+            pg.evaluate("document.querySelector('#view [data-accion=al-plan-hecho]').click(); document.querySelector('#view [data-accion=al-plan-hecho]').click()")
+            esperar("() => DB.listar('registros').then(r => r.filter(x => x.tipo === 'plan').length >= 1)")
+            pg.wait_for_timeout(300)
+            check("doble toque en Hecho registra una sola vez", len(pg.evaluate(REGS, "plan")) == 1)
+            pg.evaluate("DB.listar('registros').then(rs => Promise.all(rs.filter(r => r.tipo === 'plan').map(r => DB.borrar('registros', r.id))))")
+            pg.evaluate("DB.listar('planTareas').then(fs => Promise.all(fs.map(f => DB.borrar('planTareas', f.id))))")
+            pg.evaluate("DB.borrar('lotes', 'cerr')")
+            pg.wait_for_selector("#toast", state="hidden", timeout=8000)
+
             # ---------- 10. A las 19:00: aviso 'sin registro' no suma al contador ----------
             ctx2 = U.nuevo_contexto(br, viewport={"width": 360, "height": 740}); ctx2.clock.set_fixed_time("2026-11-04T19:00:00")
             p2 = ctx2.new_page(); p2.on("pageerror", lambda e: errores.append("pageerror: " + str(e)))

@@ -9,6 +9,12 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
 (function () {
   'use strict';
   let verTodos = false, ultimo = '', previo = {};
+  /* Aviso único «Elegir tareas del ciclo»: la marca vive en localStorage (puede fallar: sin ella, el aviso sigue sin romper nada). */
+  const kAviso = id => 'appollo.v2.planAvisado:' + id;
+  const avisado = id => { try { return localStorage.getItem(kAviso(id)) === '1'; } catch (e) { return false; } };
+  const marcarAvisado = id => { try { localStorage.setItem(kAviso(id), '1'); } catch (e) { /* sin almacenamiento */ } };
+  /* Primer lote activo sin filas de plan y sin avisar (los cerrados nunca entran: `lotes` ya viene filtrado). */
+  const loteSinPlan = (lotes, filas) => lotes.find(l => !filas.some(f => f.loteId === l.id) && !avisado(l.id)) || null;
   const fin = x => (Number.isFinite(x) ? x : null);
   const r1 = x => (x === null ? null : Math.round(x * 10) / 10);
   const suma = xs => xs.reduce((s, x) => s + x, 0);
@@ -78,7 +84,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   const kg = x => (x === null ? '—' : formatoNumero(r1(x)) + ' kg');
 
   function construir(d) {
-    const { activos, sel, ms, a, alertas, hoy, alt } = d;
+    const { activos, sel, ms, a, alertas, hoy, alt, sinPlan } = d;
     const g = App.estado.granja || {};
     const uno = sel !== 'todos' ? ms[0] : null;
     const selector = activos.length > 1 ? `<div class="ini-selector" role="group" aria-label="Ver lote">${[{ id: 'todos', nombre: 'Todos' }].concat(activos).map(l =>
@@ -100,6 +106,11 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   <header class="ini-cab"><h1>${esc(g.nombre || 'Inicio')}</h1><p class="pantalla-texto">${sub}</p></header>
   ${selector}
   <div class="ini-rejilla">
+  ${sinPlan ? `<div class="ini-celda ini-ancha" data-t="plan-aviso"><article class="tarjeta ini-aviso-plan">
+    <header class="tarjeta-cab"><span class="tarjeta-icono">${icono('hoja')}</span><h3 class="tarjeta-titulo">Elegir tareas del ciclo</h3></header>
+    <p class="ini-aviso-texto">${esc(sinPlan.nombre || 'Lote')}: elige las vacunas y labores que quieres que Appollo te recuerde.</p>
+    <div class="ini-aviso-botones">${Boton({ texto: 'Elegir tareas', icono: 'sig', variante: 'primario', accion: 'ini-elegir-plan', datos: { id: sinPlan.id }, clase: 'btn-ancho' })}
+    ${Boton({ texto: 'Ahora no', variante: 'secundario', accion: 'ini-plan-despues', datos: { id: sinPlan.id }, clase: 'btn-ancho' })}</div></article></div>` : ''}
   ${celda('aves', Tarjeta({ titulo: 'Aves vivas', icono: 'gallina', cifra: a.vivas, pie: `de ${formatoNumero(a.inicio)} al llegar` }))}
   ${celda('mortalidad', Tarjeta({ titulo: 'Mortalidad', icono: 'cruz', cifra: r1(a.mortPct), unidad: a.mortPct === null ? '' : '%', pie: `Hoy: ${formatoNumero(a.muertesHoy)} ${a.muertesHoy === 1 ? 'ave' : 'aves'}` }))}
   ${celda('alimento', Tarjeta({ titulo: 'Alimento de hoy', icono: 'saco', cifra: r1(a.kg), unidad: a.kg === null ? '' : 'kg', pie: 'Estándar ' + kg(a.kgStd) }), true)}
@@ -130,7 +141,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
 
   VISTAS.inicio.montar = async function (raiz) {
     if (!raiz.querySelector('.inicio')) return;
-    const [lotes, registros, vacunasPlan, inventario] = await Promise.all(['lotes', 'registros', 'vacunasPlan', 'inventario'].map(s => DB.listar(s)));
+    const [lotes, registros, vacunasPlan, inventario, planTareas] = await Promise.all(['lotes', 'registros', 'vacunasPlan', 'inventario', 'planTareas'].map(s => DB.listar(s)));
     const activos = lotes.filter(l => l.estado === 'activo').sort((x, y) => String(x.fechaLlegada || '').localeCompare(String(y.fechaLlegada || '')));
     const hoy = hoyLocal(), alt = App.estado.granja && App.estado.granja.altitud;
     const id = App.estado.loteActivoId;
@@ -138,10 +149,10 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     const elegidos = sel === 'todos' ? activos : activos.filter(l => l.id === sel);
     const ms = elegidos.map(l => metricas(l, registros, vacunasPlan, hoy, alt));
     let alertas = [];
-    try { alertas = generarAlertas({ lotes, registros, vacunasPlan, inventario, granja: App.estado.granja }, new Date()); } catch (e) { alertas = []; }
+    try { alertas = generarAlertas({ lotes, registros, vacunasPlan, inventario, planTareas, granja: App.estado.granja }, new Date()); } catch (e) { alertas = []; }
     alertas = alertas.filter(x => x.gravedad !== 'info' && (sel === 'todos' || !x.loteId || x.loteId === sel));
     if (!raiz.isConnected) return;
-    raiz.innerHTML = construir({ activos, sel, ms, a: agregado(ms), alertas, hoy, alt });
+    raiz.innerHTML = construir({ activos, sel, ms, a: agregado(ms), alertas, hoy, alt, sinPlan: loteSinPlan(elegidos, planTareas) });
     ultimo = raiz.innerHTML;
     raiz.querySelectorAll('[data-t] .tarjeta-cifra[data-cifra]').forEach(el => {
       const t = el.closest('[data-t]').dataset.t, clave = sel + ':' + t, meta = Number(el.dataset.cifra);
@@ -151,6 +162,9 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
       contar(el, meta);
     });
   };
+
+  ACCIONES['ini-elegir-plan'] = el => { marcarAvisado(el.dataset.id); ultimo = ''; App.ir('#/lote/' + encodeURIComponent(el.dataset.id) + '/plan'); };
+  ACCIONES['ini-plan-despues'] = el => { marcarAvisado(el.dataset.id); ultimo = ''; App.refrescar(); };
 
   ACCIONES['ini-lote'] = el => {
     const id = el.dataset.id;

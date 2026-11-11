@@ -21,11 +21,13 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   function tarjeta(a) {
     const g = GRAV[a.gravedad] || GRAV.info;
     const hecha = a.tipo === 'vacuna' && String(a.id).startsWith('vacuna-');
+    const labor = a.tipo === 'plan' && String(a.id).startsWith('plan-');
     return `<li class="al-card al-${esc(a.gravedad)}" data-alerta="${esc(a.id)}">
   <div class="al-cab"><span class="al-icono">${icono(g.ic)}</span><span class="${g.clase}">${a.gravedad === 'info' ? '' : '<span class="chip-punto" aria-hidden="true"></span>'}${g.chip}</span></div>
   <p class="al-texto">${esc(a.texto)}</p>
   <div class="al-botones">
     ${Boton({ texto: a.accion && a.accion.etiqueta || 'Ver', variante: 'primario', accion: 'ir', datos: { ruta: a.accion && a.accion.ruta }, clase: 'btn-ancho' })}
+    ${labor ? Boton({ texto: 'Hecho', icono: 'sig', variante: 'secundario', accion: 'al-plan-hecho', datos: { id: String(a.id).slice('plan-'.length) }, clase: 'btn-ancho' }) : ''}
     ${hecha ? Boton({ texto: 'Marcar hecha', icono: 'jeringa', variante: 'secundario', accion: 'al-hecha', datos: { id: String(a.id).slice('vacuna-'.length) }, clase: 'btn-ancho' }) : ''}
   </div>
 </li>`;
@@ -40,6 +42,50 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     return `<section class="pantalla"><h1>Alertas</h1>
   <p class="pantalla-texto">${formatoNumero(lista.length)} ${lista.length === 1 ? 'aviso' : 'avisos'}, primero lo más urgente.</p>
   <ul class="al-lista">${lista.map(tarjeta).join('')}</ul></section>`;
+  };
+
+  /* Foco: tras redibujar (Hecho, Deshacer) vuelve al mismo data-accion/data-id; si esa tarjeta ya no está, a la primera
+     acción de la lista o al título; nunca a <body>. */
+  let ultimo = null, restaurando = false;
+  const cssq = x => (window.CSS && CSS.escape ? CSS.escape(x) : String(x).replace(/["\\]/g, '\\$&'));
+  const anotar = e => {
+    if (restaurando) return;
+    const el = e.target && e.target.closest ? e.target.closest('#view [data-accion]') : null;
+    if (el && el.closest('.al-card')) ultimo = { accion: el.dataset.accion || '', id: el.dataset.id || '', ruta: el.dataset.ruta || '' };
+  };
+  if (typeof document !== 'undefined' && document.addEventListener) {
+    document.addEventListener('focusin', anotar, true);
+    document.addEventListener('click', anotar, true);
+    window.addEventListener('hashchange', () => { ultimo = null; }); // otra pantalla: nada que restaurar
+  }
+  VISTAS.alertas.montar = raiz => {
+    const a = document.activeElement;
+    if (!ultimo || location.hash !== '#/alertas' || App.hojaAbierta() || (a && a !== document.body && document.contains(a))) return;
+    const q = x => raiz.querySelector(x), cands = [];
+    if (ultimo.id) cands.push(q(`[data-accion="${cssq(ultimo.accion)}"][data-id="${cssq(ultimo.id)}"]`));
+    cands.push(q('.al-card .btn'), q('h1'));
+    restaurando = true;
+    try {
+      for (const el of cands) {
+        if (!el || el.disabled || !el.getClientRects().length) continue;
+        if (el.tagName === 'H1') el.tabIndex = -1;
+        try { el.focus({ preventScroll: true }); } catch (e) { continue; }
+        if (document.activeElement === el) return;
+      }
+    } finally { restaurando = false; }
+  };
+
+  let ocupado = false; // una acción a la vez: un doble toque no duplica la labor hecha
+  ACCIONES['al-plan-hecho'] = async el => {
+    if (ocupado) return;
+    ocupado = true; el.disabled = true;
+    App.ocultarToast(); // el Deshacer anterior ya no vale
+    let r;
+    try { r = await Plan.marcarHecha(el.dataset.id); } catch (e) { r = { mensaje: 'No se pudo guardar. Intenta de nuevo.' }; }
+    ocupado = false;
+    if (r && r.mensaje) { el.disabled = false; App.toast(r.mensaje); return; }
+    await App.refrescar();
+    App.toast('Labor hecha', typeof r === 'function' ? { deshacer: r } : undefined);
   };
 
   ACCIONES['al-hecha'] = async el => {
