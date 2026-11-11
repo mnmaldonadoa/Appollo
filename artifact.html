@@ -1670,6 +1670,9 @@ function validarRegistro(tipo, datos, lote, registros, fecha) {
       if (d.retiroDias !== undefined && d.retiroDias !== null && d.retiroDias !== '' &&
         (!entero(d.retiroDias) || Number(d.retiroDias) < 0)) return no('Los días de retiro deben ser un número entero de 0 o más');
       break;
+    case 'plan': // labor del plan del ciclo (la crea Plan.marcarHecha)
+      if (!texto(d.titulo)) return no('Falta el título de la labor');
+      break;
     default:
       return no('Tipo de registro desconocido');
   }
@@ -3418,10 +3421,21 @@ const DB = (function () {
     tx.onabort = () => mal(tx.error || new Error('Transacción cancelada'));
   });
 
-  function abrirIDB() {
+  const ESPERA_BLOQUEO_MS = 3000;
+  /* Abre la base. Si otra pestaña aún tiene abierta una versión anterior, `onblocked` no es un fallo: la petición
+     sigue pendiente y se resuelve en cuanto esa conexión se cierra (db.onversionchange la cierra en las pestañas
+     nuevas). Se espera hasta ~3 s; pasado ese tiempo se rechaza para que abrir() reintente una vez. */
+  function abrirIDB(espera) {
     return new Promise((ok, mal) => {
-      let req;
-      try { req = indexedDB.open(NOMBRE, VERSION); } catch (e) { mal(e); return; }
+      let req, fin = false, timer = 0;
+      const resolver = db => {
+        if (fin) { try { db.close(); } catch (e) { /* ya cerrada */ } return; } // llegó tarde: no deja conexiones colgadas
+        fin = true; clearTimeout(timer);
+        db.onversionchange = () => { try { db.close(); } catch (e) { /* ya cerrada */ } };
+        ok(db);
+      };
+      const fallar = e => { if (fin) return; fin = true; clearTimeout(timer); mal(e); };
+      try { req = indexedDB.open(NOMBRE, VERSION); } catch (e) { fallar(e); return; }
       req.onupgradeneeded = () => {
         const db = req.result;
         // Crea solo los almacenes que faltan: una base v1 conserva sus datos y recibe planTareas (v2).
@@ -3432,9 +3446,9 @@ const DB = (function () {
           if (s === 'vacunasPlan' || s === 'planTareas') st.createIndex('loteId', 'loteId');
         });
       };
-      req.onsuccess = () => ok(req.result);
-      req.onerror = () => mal(req.error || new Error('No se pudo abrir IndexedDB'));
-      req.onblocked = () => mal(new Error('IndexedDB bloqueada'));
+      req.onsuccess = () => resolver(req.result);
+      req.onerror = () => fallar(req.error || new Error('No se pudo abrir IndexedDB'));
+      req.onblocked = () => { if (!timer) timer = setTimeout(() => fallar(new Error('IndexedDB bloqueada')), espera === undefined ? ESPERA_BLOQUEO_MS : espera); };
     }).then(db => ({
       modo: 'indexeddb',
       async todos(s) { return pedido(db.transaction(s).objectStore(s).getAll()); },
@@ -3474,7 +3488,7 @@ const DB = (function () {
   function abrir() {
     if (impl) return Promise.resolve({ modo: impl.modo });
     if (!abriendo) {
-      abriendo = (typeof indexedDB === 'undefined' || !indexedDB ? Promise.reject(new Error('Sin IndexedDB')) : abrirIDB())
+      abriendo = (typeof indexedDB === 'undefined' || !indexedDB ? Promise.reject(new Error('Sin IndexedDB')) : abrirIDB().catch(() => abrirIDB()))
         .catch(() => abrirMemoria())
         .then(i => { impl = i; return { modo: i.modo }; });
     }
@@ -3583,7 +3597,158 @@ const DB = (function () {
     return n;
   }
 
-  return { abrir, listar, obtener, guardar, borrar, exportar, importar, migrarLS, STORES };
+  return { get modo() { return impl ? impl.modo : null; }, abrir, listar, obtener, guardar, borrar, exportar, importar, migrarLS, STORES };
+})();
+
+</script>
+<script>
+/* =========================================================================
+   APPOLLO · Servicio Plan (plan del ciclo): operaciones sobre planTareas con Deshacer.
+   Script plano: define el global Plan. Todas las operaciones son async. Fechas locales 'YYYY-MM-DD'.
+   Las escrituras se encolan (una a la vez) para que dos llamadas seguidas no dupliquen filas.
+   Operaciones de escritura sobre un lote cerrado -> {mensaje:'El lote está cerrado'} sin tocar nada.
+   Las que se pueden deshacer devuelven una función async que restaura las filas previas.
+   ========================================================================= */
+const Plan = (function () {
+  'use strict';
+  const CERRADO = { mensaje: 'El lote está cerrado' };
+  const copia = o => JSON.parse(JSON.stringify(o));
+  const masDias = (f, n) => { const d = fechaADate(f); d.setDate(d.getDate() + n); return hoyLocal(d); };
+  const no = mensaje => ({ mensaje });
+  const cerrado = l => !l || l.estado === 'cerrado';
+  const ahora = () => new Date().toISOString();
+
+  let cola = Promise.resolve();
+  const serie = fn => { const p = cola.then(fn); cola = p.catch(() => { /* la cola sigue */ }); return p; };
+
+  const fechaBaseDe = lote => masDias(lote.fechaLlegada, -(Number(lote.edadLlegadaDias) || 0));
+
+  function filaCatalogo(lote, t) {
+    const f = { loteId: lote.id, origen: 'catalogo', catalogoId: t.id, categoria: t.categoria, titulo: t.titulo, detalle: t.detalle || '',
+      desdeDia: t.desdeDia, fechaBase: fechaBaseDe(lote), estado: 'activa', hechas: [], creado: ahora() };
+    if (t.cadaDias != null) f.cadaDias = t.cadaDias;
+    if (t.hastaDia != null) f.hastaDia = t.hastaDia;
+    if (t.quimico) f.quimico = copia(t.quimico); // copia: el retiro sigue valiendo aunque cambie el catálogo
+    return f;
+  }
+
+  /* Carga la fila y su lote; devuelve {t, lote} o {mensaje}. */
+  async function cargar(tareaId) {
+    const t = await DB.obtener('planTareas', tareaId);
+    if (!t) return no('La tarea ya no existe');
+    const lote = await DB.obtener('lotes', t.loteId);
+    if (!lote) return no('El lote ya no existe');
+    if (cerrado(lote)) return CERRADO;
+    return { t, lote };
+  }
+  const restaurar = previo => async () => { await DB.guardar('planTareas', previo); };
+
+  const listar = loteId => DB.listar('planTareas', { loteId });
+
+  function crearInicial(lote, genetica, modo, ids) {
+    return serie(async () => {
+      if (cerrado(lote)) return CERRADO;
+      const quiere = new Set(Array.isArray(ids) ? ids : []), edad = edadDias(lote, hoyLocal()), out = [];
+      const existentes = await listar(lote.id);
+      for (const t of tareasDelCatalogo(genetica, modo)) {
+        if (!quiere.has(t.id)) continue;
+        if (t.hastaDia != null && t.hastaDia < edad) continue;
+        if (existentes.some(e => e.catalogoId === t.id)) continue;
+        out.push(await DB.guardar('planTareas', filaCatalogo(lote, t)));
+      }
+      return out;
+    });
+  }
+
+  function agregarCatalogo(lote, catalogoId) {
+    return serie(async () => {
+      if (cerrado(lote)) return CERRADO;
+      const t = CATALOGO.find(x => x.id === catalogoId);
+      if (!t) return no('Esa tarea no existe en el catálogo');
+      const previa = (await listar(lote.id)).find(f => f.catalogoId === catalogoId);
+      if (previa) {
+        if (previa.estado === 'activa') return previa;
+        const f = Object.assign({}, previa, { estado: 'activa' });
+        delete f.quitadaEn;
+        return DB.guardar('planTareas', f);
+      }
+      return DB.guardar('planTareas', filaCatalogo(lote, t));
+    });
+  }
+
+  function agregarPropia(lote, datos) {
+    return serie(async () => {
+      if (cerrado(lote)) return CERRADO;
+      const v = validarTareaPropia(datos);
+      if (v.mensaje) return v;
+      const f = Object.assign({ loteId: lote.id, estado: 'activa', hechas: [], creado: ahora() }, v.tarea);
+      return { tarea: await DB.guardar('planTareas', f) };
+    });
+  }
+
+  function cambiarEstado(tareaId, quitar) {
+    return serie(async () => {
+      const c = await cargar(tareaId);
+      if (c.mensaje) return c;
+      const previo = copia(c.t), f = copia(c.t);
+      if (quitar) { f.estado = 'quitada'; f.quitadaEn = ahora(); } else { f.estado = 'activa'; delete f.quitadaEn; }
+      await DB.guardar('planTareas', f);
+      return restaurar(previo);
+    });
+  }
+  const quitar = id => cambiarEstado(id, true);
+  const reactivar = id => cambiarEstado(id, false);
+
+  function marcarHecha(tareaId, opciones) {
+    return serie(async () => {
+      const c = await cargar(tareaId);
+      if (c.mensaje) return c;
+      const o = opciones || {}, fecha = o.fecha === undefined || o.fecha === null || o.fecha === '' ? hoyLocal() : o.fecha;
+      if (c.t.estado === 'quitada') return no('La tarea está quitada: reactívala primero');
+      const datos = { tareaId: c.t.id, titulo: c.t.titulo };
+      const producto = typeof o.producto === 'string' ? o.producto.trim() : '';
+      if (producto) datos.producto = producto;
+      const v = validarRegistro('plan', datos, c.lote, [], fecha);
+      if (!v.ok) return no(v.mensaje);
+      const previo = copia(c.t), f = copia(c.t);
+      const h = { fecha };
+      const nota = typeof o.nota === 'string' ? o.nota.trim() : '';
+      if (nota) h.nota = nota;
+      if (producto) h.producto = producto;
+      f.hechas = (f.hechas || []).concat([h]);
+      let reg = null;
+      try {
+        reg = await DB.guardar('registros', { loteId: c.t.loteId, fecha, tipo: 'plan', datos, creado: ahora() });
+        await DB.guardar('planTareas', f);
+      } catch (e) {
+        if (reg) { try { await DB.borrar('registros', reg.id); } catch (x) { /* sigue */ } }
+        throw e;
+      }
+      return async () => { await DB.borrar('registros', reg.id); await DB.guardar('planTareas', previo); };
+    });
+  }
+
+  function mover(tareaId, nuevaFecha) {
+    return serie(async () => {
+      const c = await cargar(tareaId);
+      if (c.mensaje) return c;
+      if (!fechaValida(nuevaFecha)) return no('La fecha no es válida');
+      const previo = copia(c.t), f = copia(c.t);
+      f.fechaBase = masDias(nuevaFecha, -(Number(f.desdeDia) || 0));
+      // Con hechas, una tarea repetitiva se rige por la última hecha: la fecha base no la mueve.
+      if (proximaFecha(f, hoyLocal()) !== nuevaFecha) return no('No se puede mover esta tarea a esa fecha');
+      await DB.guardar('planTareas', f);
+      return restaurar(previo);
+    });
+  }
+
+  function borrarDeLote(loteId) {
+    return serie(async () => {
+      for (const f of await listar(loteId)) await DB.borrar('planTareas', f.id);
+    });
+  }
+
+  return { crearInicial, agregarCatalogo, agregarPropia, quitar, reactivar, marcarHecha, mover, listar, borrarDeLote };
 })();
 
 </script>
@@ -4202,7 +4367,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   const n = x => (Number.isFinite(Number(x)) ? formatoNumero(Number(x)) : '—');
   const copia = o => JSON.parse(JSON.stringify(o));
   const TIPO = { mortalidad: ['Mortalidad', 'cruz'], alimento: ['Alimento', 'saco'], huevos: ['Huevos', 'huevo'],
-    peso: ['Peso', 'balanza'], vacuna: ['Vacuna', 'jeringa'], sanidad: ['Sanidad', 'termo'] };
+    peso: ['Peso', 'balanza'], vacuna: ['Vacuna', 'jeringa'], sanidad: ['Sanidad', 'termo'], plan: ['Labor', 'hoja'] };
 
   function valorReg(r) {
     const d = r.datos || {};
@@ -4212,6 +4377,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
       case 'huevos': return `${n(d.cantidad)} huevos${Number(d.rotos) > 0 ? ' · ' + n(d.rotos) + ' rotos' : ''}`;
       case 'peso': return `${n(d.gramos)} g por ave`;
       case 'vacuna': return d.nombre || 'Vacuna';
+      case 'plan': return d.titulo || 'Labor del plan';
       case 'sanidad': return [d.enfermedad, d.tratamiento].filter(Boolean).join(' · ') + (Number(d.retiroDias) > 0 ? ` · retiro ${n(d.retiroDias)} días` : '');
     }
     return '';
@@ -4280,7 +4446,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   <h2 class="seccion-titulo">Historial</h2>
   ${orden.length ? `<ul class="dl-lista">${orden.slice(0, lim).map(r => {
     const t = TIPO[r.tipo] || [r.tipo, 'hoja'];
-    return `<li class="dl-reg"><span class="dl-icono">${icono(t[1])}</span><div class="dl-fila-texto"><b>${esc(t[0])} · ${esc(valorReg(r))}</b><span>${esc(fechaTxt(r.fecha))}</span></div>
+    return `<li class="dl-reg"><span class="dl-icono">${icono(t[1])}</span><div class="dl-fila-texto"><b>${r.tipo === 'plan' ? esc(t[0] + ': ' + valorReg(r)) : esc(t[0] + ' · ' + valorReg(r))}</b><span>${esc(fechaTxt(r.fecha))}</span></div>
   ${Boton({ texto: 'Borrar', variante: 'secundario', accion: 'dl-borrar', datos: { id: r.id }, clase: 'dl-borrar' })}</li>`;
   }).join('')}</ul>${orden.length > lim ? Boton({ texto: `Ver más (${formatoNumero(orden.length - lim)})`, variante: 'secundario', accion: 'dl-mas', datos: { id: l.id }, clase: 'btn-ancho' }) : ''}`
     : '<p class="pantalla-texto">Aún no hay registros. Usa ＋ Registrar en la barra de abajo.</p>'}
@@ -4336,13 +4502,21 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     const previo = copia(r), kg = r.tipo === 'alimento' ? Number(r.datos && r.datos.descontadoKg) || 0 : 0;
     const plan = r.tipo === 'vacuna' && r.datos && r.datos.planId ? await DB.obtener('vacunasPlan', r.datos.planId) : null;
     const planPrevio = plan ? copia(plan) : null;
+    const tarea = r.tipo === 'plan' && r.datos && r.datos.tareaId ? await DB.obtener('planTareas', r.datos.tareaId) : null;
+    const tareaPrevia = tarea ? copia(tarea) : null;
     await hacer(async () => {
       await DB.borrar('registros', r.id);
+      if (tarea) { // la labor ya no consta como hecha
+        const t = copia(tarea), i = (t.hechas || []).findIndex(h => h.fecha === r.fecha);
+        if (i >= 0) t.hechas.splice(i, 1);
+        await DB.guardar('planTareas', t);
+      }
       if (plan) { const p = copia(plan); delete p.fechaAplicada; await DB.guardar('vacunasPlan', p); }
       await inventario(-kg);
     }, 'Registro borrado', async () => {
       await DB.guardar('registros', previo);
       if (planPrevio) await DB.guardar('vacunasPlan', planPrevio);
+      if (tareaPrevia) await DB.guardar('planTareas', tareaPrevia);
       const ap = await inventario(kg);
       if (kg && ap !== kg) await DB.guardar('registros', Object.assign({}, previo, { datos: Object.assign({}, previo.datos, { descontadoKg: ap }) }));
     });
@@ -4400,6 +4574,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
       const [regs, vacs] = await Promise.all([DB.listar('registros', { loteId: id }), DB.listar('vacunasPlan', { loteId: id })]);
       for (const r of regs) await DB.borrar('registros', r.id);
       for (const v of vacs) await DB.borrar('vacunasPlan', v.id);
+      await Plan.borrarDeLote(id);
       await DB.borrar('lotes', id);
       if (App.estado.loteActivoId === id) App.fijarLote(null);
     } catch (e) { el.disabled = false; App.toast('No se pudo borrar. Intenta de nuevo.'); return; }
@@ -4923,6 +5098,7 @@ const NuevoLote = (function () {
       for (const p of planVacunas(g, lote)) hechos.push((await DB.guardar('vacunasPlan', p)).id);
     } catch (e) {
       for (const id of hechos) { try { await DB.borrar('vacunasPlan', id); } catch (x) { /* sigue */ } }
+      if (lote) { try { await Plan.borrarDeLote(lote.id); } catch (x) { /* sigue */ } }
       if (lote) { try { await DB.borrar('lotes', lote.id); } catch (x) { /* sigue */ } }
       throw new Error('No se pudo guardar el lote. Intenta de nuevo.');
     }
@@ -6404,7 +6580,7 @@ const App = (function () {
     franjaRed();
 
     try { estado.modo = (await DB.abrir()).modo; } catch (e) { estado.modo = 'memoria'; }
-    if (estado.modo === 'memoria') $('#franja-memoria').hidden = false;
+    if (estado.modo === 'memoria') { $('#franja-memoria').hidden = false; toast('No se pudo guardar en este dispositivo: tus datos se perderán al cerrar'); }
     if (legado) { try { await DB.migrarLS(); } catch (e) { /* la app sigue sin migrar */ } }
     try {
       estado.granja = await DB.obtener('granja', 'granja') ||
