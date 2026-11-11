@@ -1852,6 +1852,1261 @@ function textoReporte(resumen, lote, periodo, granja) {
 
 </script>
 <script>
+/* Catálogo de tareas del ciclo de vida (huevos y carne). Contenido revisado en docs/catalogo-borrador.json.
+   Sin dosis: solo tipo de producto, ingrediente activo y días de retiro. Cada tarea cita su fuente. */
+const CATEGORIAS_PLAN = [
+  { id: 'alimento', nombre: 'Alimento', icono: 'grano' },
+  { id: 'ambiente', nombre: 'Ambiente y espacio', icono: 'termo' },
+  { id: 'seleccion', nombre: 'Selección y peso', icono: 'balanza' },
+  { id: 'limpieza', nombre: 'Limpieza y bioseguridad', icono: 'escudo' },
+  { id: 'agua', nombre: 'Agua', icono: 'gota' },
+  { id: 'registros', nombre: 'Registros', icono: 'grafico' },
+  { id: 'plagas', nombre: 'Plagas y parásitos', icono: 'aviso' },
+  { id: 'mortalidad', nombre: 'Mortalidad', icono: 'cruz' },
+  { id: 'llegada', nombre: 'Llegada de los pollitos', icono: 'huevo' },
+  { id: 'quimico', nombre: 'Productos y retiros', icono: 'capsula' }
+];
+
+const CATALOGO_AVISO_QUIMICO = 'Confirma producto, dosis y retiro con la etiqueta y tu veterinario.';
+
+const CATALOGO = [
+  {
+    id: 'lle-precalentar',
+    categoria: 'llegada',
+    titulo: 'Antes de que lleguen: precalienta el galpón de 24 a 48 horas',
+    detalle: 'En clima templado basta 24 horas; en clima frío (sierra) empieza 48 a 72 horas antes. El piso y la cama deben estar tibios cuando entren los pollitos.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf · Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'lle-lineas-agua',
+    categoria: 'llegada',
+    titulo: 'Antes de que lleguen: lava, desinfecta y enjuaga las líneas de agua y los bebederos',
+    detalle: 'Deja el desinfectante en las tuberías unas horas, vacía, enjuaga con agua limpia y vuelve a llenar. Así el agua no sabe a producto cuando lleguen.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf · Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'lle-cama',
+    categoria: 'llegada',
+    titulo: 'Antes de que lleguen: pon cama nueva, seca y pareja de 2 a 5 cm',
+    detalle: 'Usa viruta o cascarilla seca. Más gruesa en clima frío. La cama mojada o apelmazada enferma las patas y sube el amoníaco.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm'
+  },
+  {
+    id: 'lle-alimento-papel',
+    categoria: 'llegada',
+    titulo: 'Al llegar: pon alimento sobre papel o bandejas, junto al agua, y activa los bebederos',
+    detalle: 'Llena los comederos y riega alimento en papel para que lo encuentren rápido. Toca las tetinas o llena los bebederos mientras los colocas.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf · Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf'
+  },
+  {
+    id: 'lle-buche-carne',
+    categoria: 'llegada',
+    titulo: 'Primeras 24 horas: deja descansar a los pollitos 1 a 2 horas y luego revisa el buche',
+    detalle: 'Toca el buche de varios pollitos. A las 8 horas más del 80 % debe tener el buche lleno, y a las 24 horas más del 95 %. Si no, revisa agua, alimento y temperatura.',
+    modos: ['carne'],
+    geneticas: ['cobb500', 'ross308'],
+    desdeDia: 0,
+    hastaDia: 1,
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf · Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf'
+  },
+  {
+    id: 'lle-buche-postura',
+    categoria: 'llegada',
+    titulo: 'Primeras 24 horas: revisa el buche de las pollitas (6, 12 y 24 horas)',
+    detalle: 'Debe haber alimento en el buche de cerca del 75 % a las 6 horas, 85 % a las 12 horas y todas a las 24 horas.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 0,
+    hastaDia: 1,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Lohmann Breeders, Management Guide Alternative Housing Systems (2021, versión 06.21). https://lohmann-breeders.com/media/2022/06/LB_eMG_Alternative-Haltung_Printversion_EN_06.21_V01-21_high.pdf'
+  },
+  {
+    id: 'lle-temperatura-pollito',
+    categoria: 'llegada',
+    titulo: 'Primeros 5 días: toma la temperatura de algunos pollitos en varios puntos del galpón',
+    detalle: 'La temperatura ideal en la cloaca es de unos 39,4 a 40,5 °C. Si están fríos, sube la calefacción; si jadean, bájala.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    hastaDia: 5,
+    cadaDias: 1,
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'lle-tetinas',
+    categoria: 'llegada',
+    titulo: 'Primeros 3 días: activa las tetinas o bebederos 3 veces al día',
+    detalle: 'Tocar las tetinas hace que salga una gota y los pollitos aprenden a beber.',
+    modos: ['huevos'],
+    desdeDia: 0,
+    hastaDia: 3,
+    cadaDias: 1,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'lle-retiro-apoyo-carne',
+    categoria: 'llegada',
+    titulo: 'Desde el día 3: quita el papel y los bebederos de apoyo; pasa a los comederos principales hacia el día 6 o 7',
+    detalle: 'Si el papel no se ha deshecho, retíralo desde el día 3. Los bebederos de apoyo se usan solo los primeros 3 días.',
+    modos: ['carne'],
+    geneticas: ['cobb500', 'ross308'],
+    desdeDia: 3,
+    hastaDia: 7,
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf'
+  },
+  {
+    id: 'lle-retiro-apoyo-postura',
+    categoria: 'llegada',
+    titulo: 'Días 7 a 14: retira poco a poco el papel, los bebederos y comederos de apoyo',
+    detalle: 'Si vacunaste contra coccidiosis, deja el papel hasta el día 14. Lava a diario los bebederos de apoyo mientras estén puestos.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 7,
+    hastaDia: 14,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'lle-mortalidad-7',
+    categoria: 'mortalidad',
+    titulo: 'Día 7: revisa que la mortalidad de la primera semana no pase del 1 %',
+    detalle: 'Si murieron más, revisa la calidad del pollito, la temperatura y el agua, y anótalo para reclamar a la incubadora.',
+    modos: ['carne'],
+    geneticas: ['cobb500', 'ross308'],
+    desdeDia: 7,
+    fuente: 'Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf'
+  },
+  {
+    id: 'amb-temperatura',
+    categoria: 'ambiente',
+    titulo: 'Revisa temperatura y humedad del galpón: 2 veces al día los primeros 5 días y luego a diario',
+    detalle: 'Mira también cómo están repartidas las aves: amontonadas es frío, alejadas de la fuente de calor y jadeando es calor.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    hastaDia: 21,
+    cadaDias: 1,
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf'
+  },
+  {
+    id: 'amb-ventilacion',
+    categoria: 'ambiente',
+    titulo: 'Cada semana: revisa la ventilación y el amoníaco (ideal bajo 10 ppm; nunca más de 25 ppm a la altura de las aves)',
+    detalle: 'La ventilación mínima va desde el primer día. Revisa también la humedad, la condensación y el polvo.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 1,
+    cadaDias: 7,
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 7.10 Bienestar de los pollos de engorde (ed. 2024). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2024/en_chapitre_aw_broiler_chicken.htm'
+  },
+  {
+    id: 'amb-luz-carne-inicio',
+    categoria: 'ambiente',
+    titulo: 'Días 0 a 7: da 23 horas de luz y 1 hora de oscuridad',
+    detalle: 'Luz fuerte en la zona de cría la primera semana para que encuentren agua y alimento.',
+    modos: ['carne'],
+    geneticas: ['cobb500', 'ross308'],
+    desdeDia: 0,
+    hastaDia: 7,
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf'
+  },
+  {
+    id: 'amb-luz-carne-oscuridad',
+    categoria: 'ambiente',
+    titulo: 'Desde el día 7: da cada noche al menos 4 a 6 horas seguidas de oscuridad',
+    detalle: 'Haz los cambios de luz poco a poco, en 2 o 3 días. Las aves necesitan un periodo de oscuridad continua para descansar.',
+    modos: ['carne'],
+    geneticas: ['cobb500', 'ross308'],
+    desdeDia: 7,
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 7.10 Bienestar de los pollos de engorde (ed. 2024). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2024/en_chapitre_aw_broiler_chicken.htm'
+  },
+  {
+    id: 'amb-circulos-carne',
+    categoria: 'ambiente',
+    titulo: 'Desde el día 3: abre los círculos de cría y quítalos entre los días 5 y 7',
+    detalle: 'Agranda el espacio poco a poco según crecen los pollitos.',
+    modos: ['carne'],
+    geneticas: ['cobb500', 'ross308'],
+    desdeDia: 3,
+    hastaDia: 7,
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf'
+  },
+  {
+    id: 'amb-galpon-completo-carne',
+    categoria: 'ambiente',
+    titulo: 'Días 14 a 16: si criaste en una parte del galpón, abre todo el galpón',
+    detalle: 'Calienta y ventila la parte nueva al menos 24 horas antes de soltar a las aves.',
+    modos: ['carne'],
+    geneticas: ['cobb500', 'ross308'],
+    desdeDia: 14,
+    hastaDia: 16,
+    fuente: 'Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf'
+  },
+  {
+    id: 'amb-luz-postura-cria',
+    categoria: 'ambiente',
+    titulo: 'Semana 1: usa luz intermitente o 20 horas de luz; nunca 24 horas',
+    detalle: 'Luz de 30 a 50 lux sobre bebederos y comederos la primera semana.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 0,
+    hastaDia: 7,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'amb-circulos-postura',
+    categoria: 'ambiente',
+    titulo: 'Día 3: agranda los círculos de cría; quítalos del todo hasta el día 14',
+    detalle: 'Ve dando más espacio a medida que crecen las pollitas.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 3,
+    hastaDia: 14,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'amb-luz-postura-bajar',
+    categoria: 'ambiente',
+    titulo: 'Semanas 2 a 8: baja poco a poco las horas de luz cada semana',
+    detalle: 'Según la guía, de 20 horas en la semana 2 a unas 13,5 horas hacia el día 42; luego se mantiene sin subir hasta la estimulación.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 8,
+    hastaDia: 56,
+    cadaDias: 7,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Hy-Line International, Hy-Line Brown estándares de rendimiento en jaula (2025). https://www.hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/BRN%20STD%20ENG.pdf'
+  },
+  {
+    id: 'amb-perchas',
+    categoria: 'ambiente',
+    titulo: 'Antes de la semana 4: pon perchas o barras al alcance de las pollitas',
+    detalle: 'Usar perchas desde temprano reduce el picoteo más adelante.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 21,
+    hastaDia: 35,
+    fuente: 'Lohmann Breeders, Management Guide Alternative Housing Systems (2021, versión 06.21). https://lohmann-breeders.com/media/2022/06/LB_eMG_Alternative-Haltung_Printversion_EN_06.21_V01-21_high.pdf'
+  },
+  {
+    id: 'amb-no-manipular',
+    categoria: 'ambiente',
+    titulo: '2 semanas antes del traslado: no manipules a las pollitas salvo los controles de rutina',
+    detalle: 'Los cambios de luz y temperatura para el traslado deben quedar listos al menos una semana antes.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 84,
+    hastaDia: 98,
+    fuente: 'Hendrix Genetics, ISA Management Guide for Alternative Production Systems (copia publicada en cpif.org, 2014). https://cpif.org/wp-content/uploads/2014/04/ISA-Alternative-Productions-Management-Guide-copy.pdf'
+  },
+  {
+    id: 'amb-traslado',
+    categoria: 'ambiente',
+    titulo: 'Semanas 14 a 16: traslada a las pollitas al galpón de postura, todas el mismo día y temprano',
+    detalle: 'Da vitaminas y electrolitos en el agua desde 3 días antes. Deben beber normal en 6 horas. Evita el mismo día de una vacuna. Es normal que pierdan 10–12 % de peso.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 98,
+    hastaDia: 112,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Hy-Line International, Hy-Line Brown Management Guide, Commercial Layers (2018; copia alojada por la Royal Agricultural Society of Victoria). https://www.melbourneroyal.com.au/media/8310/hy-line-brown-management-guide-for-commercial-layers.pdf'
+  },
+  {
+    id: 'amb-luz-estimulo',
+    categoria: 'ambiente',
+    titulo: 'Estimulación de luz: sube la luz solo cuando las pollitas lleguen al peso meta y la uniformidad pase del 85 %',
+    detalle: 'Hy-Line Max indica subir en pasos de 30 a 60 minutos por semana hasta 16 horas, hacia la semana 25; la pantalla de manejo de Appollo dice 15 a 30 minutos. Si dudas, consulta la guía de tu genética. Si están bajas de peso, espera.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 112,
+    hastaDia: 175,
+    cadaDias: 7,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Hy-Line International, Hy-Line Brown Management Guide, Commercial Layers (2018; copia alojada por la Royal Agricultural Society of Victoria). https://www.melbourneroyal.com.au/media/8310/hy-line-brown-management-guide-for-commercial-layers.pdf · Hendrix Genetics, ISA Management Guide for Alternative Production Systems (copia publicada en cpif.org, 2014). https://cpif.org/wp-content/uploads/2014/04/ISA-Alternative-Productions-Management-Guide-copy.pdf'
+  },
+  {
+    id: 'amb-luz-postura-no-bajar',
+    categoria: 'ambiente',
+    titulo: 'Durante la postura: nunca reduzcas las horas de luz',
+    detalle: 'Bajar la luz en postura hace caer la producción.',
+    modos: ['huevos'],
+    desdeDia: 140,
+    fuente: 'Lohmann Breeders, Management Guide Alternative Housing Systems (2021, versión 06.21). https://lohmann-breeders.com/media/2022/06/LB_eMG_Alternative-Haltung_Printversion_EN_06.21_V01-21_high.pdf'
+  },
+  {
+    id: 'amb-nidos',
+    categoria: 'ambiente',
+    titulo: 'Antes de la postura: ten listos los nidos, uno por cada 4 gallinas',
+    detalle: 'La guía ISA pide mantenerlos cerrados hasta ver el primer huevo y entonces abrirlos. Sigue la indicación de la guía de tu genética.',
+    modos: ['huevos'],
+    desdeDia: 119,
+    fuente: 'Lohmann Breeders, Management Guide Alternative Housing Systems (2021, versión 06.21). https://lohmann-breeders.com/media/2022/06/LB_eMG_Alternative-Haltung_Printversion_EN_06.21_V01-21_high.pdf · Hendrix Genetics, ISA Management Guide for Alternative Production Systems (copia publicada en cpif.org, 2014). https://cpif.org/wp-content/uploads/2014/04/ISA-Alternative-Productions-Management-Guide-copy.pdf'
+  },
+  {
+    id: 'amb-pastoreo',
+    categoria: 'ambiente',
+    titulo: 'Aves de pastoreo: cambia el corral o potrero cuando el suelo esté muy usado',
+    detalle: 'Mover a las aves a terreno nuevo corta en parte el ciclo de las lombrices, aunque el efecto dura poco.',
+    modos: ['huevos', 'carne'],
+    geneticas: ['campero', 'rhode-island', 'plymouth-rock', 'criolla'],
+    desdeDia: 42,
+    fuente: 'Manual Merck de Veterinaria, Helminthiasis in Poultry (revisión 2025). https://www.merckvetmanual.com/poultry/helminthiasis/helminthiasis-in-poultry'
+  },
+  {
+    id: 'ali-peso-postura-1',
+    categoria: 'alimento',
+    titulo: 'Semanas 0 a 3: pesa cada semana 10 cajas de 10 pollitas',
+    detalle: 'Pesa el mismo día y a la misma hora. Al día 7 la pollita debe pesar el doble que al llegar.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 0,
+    hastaDia: 21,
+    cadaDias: 7,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'ali-peso-postura-2',
+    categoria: 'alimento',
+    titulo: 'Desde la semana 4: pesa cada semana 100 aves una por una y calcula la uniformidad',
+    detalle: 'Pesa siempre el mismo día, a la misma hora y antes de cada cambio de alimento. Meta: más del 85 % de uniformidad antes de la postura.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 28,
+    hastaDia: 203,
+    cadaDias: 7,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Lohmann Breeders, Management Guide Alternative Housing Systems (2021, versión 06.21). https://lohmann-breeders.com/media/2022/06/LB_eMG_Alternative-Haltung_Printversion_EN_06.21_V01-21_high.pdf · Hendrix Genetics, ISA Management Guide for Alternative Production Systems (copia publicada en cpif.org, 2014). https://cpif.org/wp-content/uploads/2014/04/ISA-Alternative-Productions-Management-Guide-copy.pdf'
+  },
+  {
+    id: 'ali-peso-postura-3',
+    categoria: 'alimento',
+    titulo: 'Desde la semana 30: pesa 100 gallinas cada 5 semanas',
+    detalle: 'Sirve para ver si comen lo suficiente durante la postura.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown'],
+    desdeDia: 210,
+    cadaDias: 35,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'ali-hl-inicio2',
+    categoria: 'alimento',
+    titulo: 'Hacia la semana 3: cambia a Iniciador 2 cuando las pollitas pesen unos 186–197 g',
+    detalle: 'Cambia por peso, no por edad. Si están bajas de peso o poco parejas, espera.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown'],
+    desdeDia: 21,
+    fuente: 'Hy-Line International, Hy-Line Brown estándares de rendimiento en jaula (2025). https://www.hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/BRN%20STD%20ENG.pdf · Hy-Line International, Hy-Line Brown Management Guide, Commercial Layers (2018; copia alojada por la Royal Agricultural Society of Victoria). https://www.melbourneroyal.com.au/media/8310/hy-line-brown-management-guide-for-commercial-layers.pdf'
+  },
+  {
+    id: 'ali-hl-crecimiento',
+    categoria: 'alimento',
+    titulo: 'Hacia la semana 6: cambia a alimento de Crecimiento cuando pesen unos 456–482 g',
+    detalle: 'Cambia por peso, no por edad. Si están bajas de peso, sigue con el alimento anterior.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown'],
+    desdeDia: 42,
+    fuente: 'Hy-Line International, Hy-Line Brown estándares de rendimiento en jaula (2025). https://www.hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/BRN%20STD%20ENG.pdf · Hy-Line International, Hy-Line Brown Management Guide, Commercial Layers (2018; copia alojada por la Royal Agricultural Society of Victoria). https://www.melbourneroyal.com.au/media/8310/hy-line-brown-management-guide-for-commercial-layers.pdf'
+  },
+  {
+    id: 'ali-hl-desarrollo',
+    categoria: 'alimento',
+    titulo: 'Hacia la semana 12: cambia a alimento de Desarrollo cuando pesen unos 1046–1105 g',
+    detalle: 'Cambia por peso, no por edad.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown'],
+    desdeDia: 84,
+    fuente: 'Hy-Line International, Hy-Line Brown estándares de rendimiento en jaula (2025). https://www.hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/BRN%20STD%20ENG.pdf · Hy-Line International, Hy-Line Brown Management Guide, Commercial Layers (2018; copia alojada por la Royal Agricultural Society of Victoria). https://www.melbourneroyal.com.au/media/8310/hy-line-brown-management-guide-for-commercial-layers.pdf'
+  },
+  {
+    id: 'ali-hl-prepostura',
+    categoria: 'alimento',
+    titulo: 'Hacia la semana 15 a 17: da Pre-postura (nunca antes de la semana 15) y quítalo al primer huevo',
+    detalle: 'El Pre-postura se da solo 10 a 14 días antes de que empiecen a poner.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown'],
+    desdeDia: 105,
+    hastaDia: 119,
+    fuente: 'Hy-Line International, Hy-Line Brown estándares de rendimiento en jaula (2025). https://www.hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/BRN%20STD%20ENG.pdf · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'ali-loh-crecimiento',
+    categoria: 'alimento',
+    titulo: 'Semana 5: pasa de Iniciador a Crecimiento si las pollitas ya llegaron al peso meta',
+    detalle: 'Cambia de alimento solo cuando se cumple el peso de la tabla.',
+    modos: ['huevos'],
+    geneticas: ['lohmann-brown', 'lohmann-lsl'],
+    desdeDia: 35,
+    fuente: 'Lohmann Breeders, Management Guide Alternative Housing Systems (2021, versión 06.21). https://lohmann-breeders.com/media/2022/06/LB_eMG_Alternative-Haltung_Printversion_EN_06.21_V01-21_high.pdf'
+  },
+  {
+    id: 'ali-loh-desarrollo',
+    categoria: 'alimento',
+    titulo: 'Semana 10: pasa a alimento de Desarrollo si ya llegaron al peso meta',
+    detalle: 'Cambia de alimento solo cuando se cumple el peso de la tabla.',
+    modos: ['huevos'],
+    geneticas: ['lohmann-brown', 'lohmann-lsl'],
+    desdeDia: 70,
+    fuente: 'Lohmann Breeders, Management Guide Alternative Housing Systems (2021, versión 06.21). https://lohmann-breeders.com/media/2022/06/LB_eMG_Alternative-Haltung_Printversion_EN_06.21_V01-21_high.pdf'
+  },
+  {
+    id: 'ali-loh-prepostura',
+    categoria: 'alimento',
+    titulo: 'Semana 16: pasa a Pre-postura antes de que la producción llegue al 5 %',
+    detalle: 'El Pre-postura es corto; luego pasa al alimento de inicio de postura.',
+    modos: ['huevos'],
+    geneticas: ['lohmann-brown', 'lohmann-lsl'],
+    desdeDia: 112,
+    fuente: 'Lohmann Breeders, Management Guide Alternative Housing Systems (2021, versión 06.21). https://lohmann-breeders.com/media/2022/06/LB_eMG_Alternative-Haltung_Printversion_EN_06.21_V01-21_high.pdf'
+  },
+  {
+    id: 'ali-isa-crecimiento',
+    categoria: 'alimento',
+    titulo: 'Semana 4: pasa de Iniciador a Crecimiento',
+    detalle: 'Revisa antes que el peso esté en la meta de la guía.',
+    modos: ['huevos'],
+    geneticas: ['isa-brown'],
+    desdeDia: 28,
+    fuente: 'Hendrix Genetics, ISA Management Guide for Alternative Production Systems (copia publicada en cpif.org, 2014). https://cpif.org/wp-content/uploads/2014/04/ISA-Alternative-Productions-Management-Guide-copy.pdf'
+  },
+  {
+    id: 'ali-isa-polla',
+    categoria: 'alimento',
+    titulo: 'Semana 10: pasa a alimento de Pollona',
+    detalle: 'Revisa antes que el peso esté en la meta de la guía.',
+    modos: ['huevos'],
+    geneticas: ['isa-brown'],
+    desdeDia: 70,
+    fuente: 'Hendrix Genetics, ISA Management Guide for Alternative Production Systems (copia publicada en cpif.org, 2014). https://cpif.org/wp-content/uploads/2014/04/ISA-Alternative-Productions-Management-Guide-copy.pdf'
+  },
+  {
+    id: 'ali-isa-prepostura',
+    categoria: 'alimento',
+    titulo: 'Día 112: pasa a Pre-postura hasta que la producción llegue al 2 %',
+    detalle: 'Luego cambia al alimento de postura.',
+    modos: ['huevos'],
+    geneticas: ['isa-brown'],
+    desdeDia: 112,
+    fuente: 'Hendrix Genetics, ISA Management Guide for Alternative Production Systems (copia publicada en cpif.org, 2014). https://cpif.org/wp-content/uploads/2014/04/ISA-Alternative-Productions-Management-Guide-copy.pdf'
+  },
+  {
+    id: 'ali-peso-carne',
+    categoria: 'alimento',
+    titulo: 'Cada semana: pesa al menos 100 pollos (o el 1 % del lote) en 3 sitios del galpón',
+    detalle: 'Pesa a la misma hora. Hasta el día 21 se pesa en grupo; después, uno por uno. Anota el peso promedio.',
+    modos: ['carne'],
+    geneticas: ['cobb500', 'ross308'],
+    desdeDia: 7,
+    cadaDias: 7,
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf · Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf'
+  },
+  {
+    id: 'ali-ross-crecimiento',
+    categoria: 'alimento',
+    titulo: 'Día 11: cambia de Iniciador a Crecimiento',
+    detalle: 'Si no llegaron al peso, puedes alargar el Iniciador hasta el día 14.',
+    modos: ['carne'],
+    geneticas: ['ross308'],
+    desdeDia: 11,
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf'
+  },
+  {
+    id: 'ali-ross-engorde',
+    categoria: 'alimento',
+    titulo: 'Día 25: cambia de Crecimiento a Engorde (Finalizador)',
+    detalle: 'Si los vas a sacar después del día 42 hace falta un segundo Finalizador.',
+    modos: ['carne'],
+    geneticas: ['ross308'],
+    desdeDia: 25,
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf'
+  },
+  {
+    id: 'ali-ayuno-carne',
+    categoria: 'alimento',
+    titulo: 'Antes de la venta: retira el alimento 8 a 12 horas antes del sacrificio, con agua hasta la captura',
+    detalle: 'Cuenta en las horas el tiempo de captura y transporte. Más de 12 horas sin comer daña el intestino; menos de 8 deja comida en el buche.',
+    modos: ['carne'],
+    geneticas: ['cobb500', 'ross308'],
+    desdeDia: 41,
+    fuente: 'Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf · Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 7.10 Bienestar de los pollos de engorde (ed. 2024). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2024/en_chapitre_aw_broiler_chicken.htm'
+  },
+  {
+    id: 'ali-cobb-crecimiento1',
+    categoria: 'alimento',
+    titulo: 'Día 13: cambia de Iniciador a Crecimiento 1',
+    detalle: 'Periodos de referencia de Cobb para pollo mediano y grande: cambia solo si el lote va en el peso esperado. Si vendes pollo pequeño, la guía usa otros periodos (0–8, 9–18, 19–28 y desde el día 29).',
+    modos: ['carne'],
+    geneticas: ['cobb500'],
+    desdeDia: 13,
+    fuente: 'Cobb-Vantress, Cobb500 Broiler Performance & Nutrition Supplement (2022, L-054-01-22 EN). https://cobbgenetics.com/assets/Cobb-Files/2022-Cobb500-Broiler-Performance-Nutrition-Supplement.pdf'
+  },
+  {
+    id: 'ali-cobb-crecimiento2',
+    categoria: 'alimento',
+    titulo: 'Día 29: cambia a Crecimiento 2',
+    detalle: 'Periodos de referencia de Cobb para pollo mediano y grande: cambia solo si el lote va en el peso esperado. Si vendes pollo pequeño, la guía usa otros periodos (0–8, 9–18, 19–28 y desde el día 29).',
+    modos: ['carne'],
+    geneticas: ['cobb500'],
+    desdeDia: 29,
+    fuente: 'Cobb-Vantress, Cobb500 Broiler Performance & Nutrition Supplement (2022, L-054-01-22 EN). https://cobbgenetics.com/assets/Cobb-Files/2022-Cobb500-Broiler-Performance-Nutrition-Supplement.pdf'
+  },
+  {
+    id: 'ali-cobb-engorde1',
+    categoria: 'alimento',
+    titulo: 'Día 40: cambia a Engorde (Finalizador 1)',
+    detalle: 'Periodos de referencia de Cobb para pollo mediano y grande: cambia solo si el lote va en el peso esperado. Si vendes pollo pequeño, la guía usa otros periodos (0–8, 9–18, 19–28 y desde el día 29).',
+    modos: ['carne'],
+    geneticas: ['cobb500'],
+    desdeDia: 40,
+    fuente: 'Cobb-Vantress, Cobb500 Broiler Performance & Nutrition Supplement (2022, L-054-01-22 EN). https://cobbgenetics.com/assets/Cobb-Files/2022-Cobb500-Broiler-Performance-Nutrition-Supplement.pdf'
+  },
+  {
+    id: 'ali-cobb-engorde2',
+    categoria: 'alimento',
+    titulo: 'Día 50: si el lote sigue, cambia a Finalizador 2',
+    detalle: 'Periodos de referencia de Cobb para pollo mediano y grande: cambia solo si el lote va en el peso esperado. Si vendes pollo pequeño, la guía usa otros periodos (0–8, 9–18, 19–28 y desde el día 29).',
+    modos: ['carne'],
+    geneticas: ['cobb500'],
+    desdeDia: 50,
+    fuente: 'Cobb-Vantress, Cobb500 Broiler Performance & Nutrition Supplement (2022, L-054-01-22 EN). https://cobbgenetics.com/assets/Cobb-Files/2022-Cobb500-Broiler-Performance-Nutrition-Supplement.pdf'
+  },
+  {
+    id: 'ali-acceso-carne',
+    categoria: 'alimento',
+    titulo: 'Cada día: asegura que todas las aves lleguen al alimento y tengan agua todo el tiempo',
+    detalle: 'Revisa la altura de comederos y bebederos y que haya espacio suficiente para todas.',
+    modos: ['carne'],
+    desdeDia: 0,
+    cadaDias: 1,
+    fuente: 'OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 7.10 Bienestar de los pollos de engorde (ed. 2024). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2024/en_chapitre_aw_broiler_chicken.htm · Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf'
+  },
+  {
+    id: 'sel-pico',
+    categoria: 'seleccion',
+    titulo: 'Días 8 a 10: despique de precisión, solo si las pollitas no vinieron con tratamiento infrarrojo',
+    detalle: 'Evita el día de la vacuna. Después del despique deja el comedero lleno y alimento en papel unos 7 días.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown'],
+    desdeDia: 8,
+    hastaDia: 10,
+    fuente: 'Hy-Line International, Hy-Line Brown Management Guide, Commercial Layers (2018; copia alojada por la Royal Agricultural Society of Victoria). https://www.melbourneroyal.com.au/media/8310/hy-line-brown-management-guide-for-commercial-layers.pdf · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'sel-pico-vitk',
+    categoria: 'seleccion',
+    titulo: '2 días antes y 2 días después del despique: da electrolitos con vitamina K en el agua',
+    detalle: 'Ayuda a que el pico no sangre. Sigue la etiqueta del producto. El día de una vacuna en el agua (días 7 y 12) no pongas vitaminas ni electrolitos; reanúdalos al día siguiente.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown'],
+    desdeDia: 6,
+    hastaDia: 12,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Hendrix Genetics, ISA Management Guide for Alternative Production Systems (copia publicada en cpif.org, 2014). https://cpif.org/wp-content/uploads/2014/04/ISA-Alternative-Productions-Management-Guide-copy.pdf'
+  },
+  {
+    id: 'sel-pico-retoque',
+    categoria: 'seleccion',
+    titulo: 'Semanas 12 a 14: retoque de pico solo si hace falta (se recomienda en galpón abierto)',
+    detalle: 'Hazlo antes del traslado y lejos de los días de vacuna.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown'],
+    desdeDia: 84,
+    hastaDia: 98,
+    fuente: 'Hy-Line International, Hy-Line Brown Management Guide, Commercial Layers (2018; copia alojada por la Royal Agricultural Society of Victoria). https://www.melbourneroyal.com.au/media/8310/hy-line-brown-management-guide-for-commercial-layers.pdf'
+  },
+  {
+    id: 'sel-machos',
+    categoria: 'seleccion',
+    titulo: 'Hacia la semana 7 y al trasladar: saca los machos que vinieron mezclados',
+    detalle: 'Los gallos crecen más rápido y tienen la cresta más grande.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 50,
+    hastaDia: 56,
+    fuente: 'Hy-Line International, Hy-Line Brown Management Guide, Commercial Layers (2018; copia alojada por la Royal Agricultural Society of Victoria). https://www.melbourneroyal.com.au/media/8310/hy-line-brown-management-guide-for-commercial-layers.pdf'
+  },
+  {
+    id: 'sel-emplume',
+    categoria: 'seleccion',
+    titulo: 'Semana 13: revisa el emplume; si es malo, el lote está bajo de peso o poco parejo',
+    detalle: 'Corrige pronto el alimento y el espacio.',
+    modos: ['huevos'],
+    geneticas: ['lohmann-brown', 'lohmann-lsl'],
+    desdeDia: 91,
+    fuente: 'Lohmann Breeders, Management Guide Alternative Housing Systems (2021, versión 06.21). https://lohmann-breeders.com/media/2022/06/LB_eMG_Alternative-Haltung_Printversion_EN_06.21_V01-21_high.pdf'
+  },
+  {
+    id: 'sel-clasificar',
+    categoria: 'seleccion',
+    titulo: 'Si la uniformidad está baja: separa las aves por peso (livianas, medias, pesadas)',
+    detalle: 'Da más atención a las livianas. Es una medida para corregir, no de rutina.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 42,
+    hastaDia: 112,
+    cadaDias: 28,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'sel-diaria-postura',
+    categoria: 'seleccion',
+    titulo: 'Cada día: saca las aves heridas y las que picotean a otras',
+    detalle: 'Anota cada descarte junto con la mortalidad del día.',
+    modos: ['huevos'],
+    desdeDia: 0,
+    cadaDias: 1,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'sel-diaria-carne',
+    categoria: 'seleccion',
+    titulo: 'Cada día: recorre el galpón y sacrifica de forma humana a las aves enfermas, lisiadas o que no llegan al agua',
+    detalle: 'Camina despacio y en silencio entre las aves. Las que no pueden comer ni beber se sacrifican cuanto antes.',
+    modos: ['carne'],
+    desdeDia: 0,
+    cadaDias: 1,
+    fuente: 'OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 7.10 Bienestar de los pollos de engorde (ed. 2024). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2024/en_chapitre_aw_broiler_chicken.htm'
+  },
+  {
+    id: 'lim-vacio',
+    categoria: 'limpieza',
+    titulo: 'Antes del lote: deja el galpón limpio, desinfectado y vacío al menos 15 días (vacío sanitario)',
+    detalle: 'El vacío cuenta desde que terminaste de limpiar y desinfectar. Agrocalidad pide 15 a 21 días en pollo de engorde y ponedoras.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf · Agrocalidad (Ecuador), Resolución 047, Guía general de Buenas Prácticas Avícolas (año no visible en la copia de FAOLEX). https://faolex.fao.org/docs/pdf/ecu96517.pdf · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'lim-pediluvio',
+    categoria: 'limpieza',
+    titulo: 'Revisa cada día el pediluvio de la entrada y cambia la solución cuando esté sucia',
+    detalle: 'Debe tener de 20 a 40 cm de profundidad y cubrir las botas. Sin retiro oficial en la fuente; consulta la etiqueta. No se aplica a las aves.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    cadaDias: 1,
+    quimico: {
+      tipo: 'Desinfectante para pediluvio',
+      ingredienteActivo: 'Agua clorada (hipoclorito de sodio) o desinfectante de acción residual registrado en Agrocalidad',
+      retiroHuevoDias: null,
+      retiroCarneDias: null,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm · FAO, Preparándose para la Influenza Aviar Altamente Patógena, Serie Producción y Sanidad Animal n.º 3 (2007). https://fao.org/4/a0632s/a0632s.pdf'
+  },
+  {
+    id: 'lim-visitas',
+    categoria: 'limpieza',
+    titulo: 'Desde el primer día: toda visita se lava las manos, se cambia botas y se anota en el cuaderno',
+    detalle: 'No dejes entrar a quien estuvo con aves de otra granja; si viene del extranjero, mínimo 5 días sin contacto con aves.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm · FAO, Preparándose para la Influenza Aviar Altamente Patógena, Serie Producción y Sanidad Animal n.º 3 (2007). https://fao.org/4/a0632s/a0632s.pdf'
+  },
+  {
+    id: 'lim-ropa',
+    categoria: 'limpieza',
+    titulo: 'Usa ropa y botas solo para el galpón y lávate las manos al entrar',
+    detalle: 'Lava la ropa de trabajo con detergente y sécala al sol.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'FAO, Preparándose para la Influenza Aviar Altamente Patógena, Serie Producción y Sanidad Animal n.º 3 (2007). https://fao.org/4/a0632s/a0632s.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm'
+  },
+  {
+    id: 'lim-cama',
+    categoria: 'limpieza',
+    titulo: 'Cada semana: revisa la cama; debe estar seca y suelta, cambia las partes mojadas',
+    detalle: 'Rompe las costras cerca de bebederos y puertas y agrega cama seca si hace falta.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 7,
+    cadaDias: 7,
+    fuente: 'Lohmann Breeders, Management Guide Alternative Housing Systems (2021, versión 06.21). https://lohmann-breeders.com/media/2022/06/LB_eMG_Alternative-Haltung_Printversion_EN_06.21_V01-21_high.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 7.10 Bienestar de los pollos de engorde (ed. 2024). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2024/en_chapitre_aw_broiler_chicken.htm · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm'
+  },
+  {
+    id: 'lim-separar',
+    categoria: 'limpieza',
+    titulo: 'No mezcles aves de distintas edades ni especies; las aves compradas van aparte al menos 14 días',
+    detalle: 'Lo ideal es "todo dentro, todo fuera": un solo lote y una sola edad por galpón.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'FAO, Preparándose para la Influenza Aviar Altamente Patógena, Serie Producción y Sanidad Animal n.º 3 (2007). https://fao.org/4/a0632s/a0632s.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm'
+  },
+  {
+    id: 'qui-desinfeccion-broiler',
+    categoria: 'quimico',
+    titulo: 'Al sacar el lote (día 42): lava y desinfecta el galpón vacío',
+    detalle: 'Saca toda la cama y el alimento sobrante. Barre el polvo, vacía las tuberías de agua, lava de arriba abajo con detergente, desinfecta con un producto de amplio espectro y deja secar. Sin retiro oficial en la fuente; consulta la etiqueta. Se aplica con el galpón vacío.',
+    modos: ['carne'],
+    geneticas: ['cobb500', 'ross308'],
+    desdeDia: 42,
+    quimico: {
+      tipo: 'Desinfectante de amplio espectro',
+      ingredienteActivo: 'Detergente y luego desinfectante registrado en Agrocalidad (por ejemplo hipoclorito de sodio o peroximonosulfato de potasio)',
+      retiroHuevoDias: null,
+      retiroCarneDias: null,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm · Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf · FAO, Preparándose para la Influenza Aviar Altamente Patógena, Serie Producción y Sanidad Animal n.º 3 (2007). https://fao.org/4/a0632s/a0632s.pdf'
+  },
+  {
+    id: 'qui-desinfeccion-campero',
+    categoria: 'quimico',
+    titulo: 'Al sacar el lote (día 70): lava y desinfecta el galpón vacío',
+    detalle: 'Saca toda la cama y el alimento sobrante. Barre el polvo, vacía las tuberías de agua, lava de arriba abajo con detergente, desinfecta con un producto de amplio espectro y deja secar. Sin retiro oficial en la fuente; consulta la etiqueta. Se aplica con el galpón vacío.',
+    modos: ['carne'],
+    geneticas: ['campero'],
+    desdeDia: 70,
+    quimico: {
+      tipo: 'Desinfectante de amplio espectro',
+      ingredienteActivo: 'Detergente y luego desinfectante registrado en Agrocalidad (por ejemplo hipoclorito de sodio o peroximonosulfato de potasio)',
+      retiroHuevoDias: null,
+      retiroCarneDias: null,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm · Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf · FAO, Preparándose para la Influenza Aviar Altamente Patógena, Serie Producción y Sanidad Animal n.º 3 (2007). https://fao.org/4/a0632s/a0632s.pdf'
+  },
+  {
+    id: 'qui-desinfeccion-doble-carne',
+    categoria: 'quimico',
+    titulo: 'Al sacar el lote (día 112): lava y desinfecta el galpón vacío',
+    detalle: 'Saca toda la cama y el alimento sobrante. Barre el polvo, vacía las tuberías de agua, lava de arriba abajo con detergente, desinfecta con un producto de amplio espectro y deja secar. Sin retiro oficial en la fuente; consulta la etiqueta. Se aplica con el galpón vacío.',
+    modos: ['carne'],
+    geneticas: ['rhode-island', 'plymouth-rock'],
+    desdeDia: 112,
+    quimico: {
+      tipo: 'Desinfectante de amplio espectro',
+      ingredienteActivo: 'Detergente y luego desinfectante registrado en Agrocalidad (por ejemplo hipoclorito de sodio o peroximonosulfato de potasio)',
+      retiroHuevoDias: null,
+      retiroCarneDias: null,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm · Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf · FAO, Preparándose para la Influenza Aviar Altamente Patógena, Serie Producción y Sanidad Animal n.º 3 (2007). https://fao.org/4/a0632s/a0632s.pdf'
+  },
+  {
+    id: 'qui-desinfeccion-criolla-carne',
+    categoria: 'quimico',
+    titulo: 'Al sacar el lote (día 140): lava y desinfecta el galpón vacío',
+    detalle: 'Saca toda la cama y el alimento sobrante. Barre el polvo, vacía las tuberías de agua, lava de arriba abajo con detergente, desinfecta con un producto de amplio espectro y deja secar. Sin retiro oficial en la fuente; consulta la etiqueta. Se aplica con el galpón vacío.',
+    modos: ['carne'],
+    geneticas: ['criolla'],
+    desdeDia: 140,
+    quimico: {
+      tipo: 'Desinfectante de amplio espectro',
+      ingredienteActivo: 'Detergente y luego desinfectante registrado en Agrocalidad (por ejemplo hipoclorito de sodio o peroximonosulfato de potasio)',
+      retiroHuevoDias: null,
+      retiroCarneDias: null,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm · Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf · FAO, Preparándose para la Influenza Aviar Altamente Patógena, Serie Producción y Sanidad Animal n.º 3 (2007). https://fao.org/4/a0632s/a0632s.pdf'
+  },
+  {
+    id: 'qui-desinfeccion-postura',
+    categoria: 'quimico',
+    titulo: 'Al sacar el lote (semana 80): lava y desinfecta el galpón vacío',
+    detalle: 'Saca toda la cama y el alimento sobrante. Barre el polvo, vacía las tuberías de agua, lava de arriba abajo con detergente, desinfecta con un producto de amplio espectro y deja secar. Sin retiro oficial en la fuente; consulta la etiqueta. Se aplica con el galpón vacío.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 560,
+    quimico: {
+      tipo: 'Desinfectante de amplio espectro',
+      ingredienteActivo: 'Detergente y luego desinfectante registrado en Agrocalidad (por ejemplo hipoclorito de sodio o peroximonosulfato de potasio)',
+      retiroHuevoDias: null,
+      retiroCarneDias: null,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm · Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf · FAO, Preparándose para la Influenza Aviar Altamente Patógena, Serie Producción y Sanidad Animal n.º 3 (2007). https://fao.org/4/a0632s/a0632s.pdf'
+  },
+  {
+    id: 'qui-desinfeccion-doble-huevos',
+    categoria: 'quimico',
+    titulo: 'Al sacar el lote (semana 72): lava y desinfecta el galpón vacío',
+    detalle: 'Saca toda la cama y el alimento sobrante. Barre el polvo, vacía las tuberías de agua, lava de arriba abajo con detergente, desinfecta con un producto de amplio espectro y deja secar. Sin retiro oficial en la fuente; consulta la etiqueta. Se aplica con el galpón vacío.',
+    modos: ['huevos'],
+    geneticas: ['rhode-island', 'plymouth-rock', 'criolla'],
+    desdeDia: 504,
+    quimico: {
+      tipo: 'Desinfectante de amplio espectro',
+      ingredienteActivo: 'Detergente y luego desinfectante registrado en Agrocalidad (por ejemplo hipoclorito de sodio o peroximonosulfato de potasio)',
+      retiroHuevoDias: null,
+      retiroCarneDias: null,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm · Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf · FAO, Preparándose para la Influenza Aviar Altamente Patógena, Serie Producción y Sanidad Animal n.º 3 (2007). https://fao.org/4/a0632s/a0632s.pdf'
+  },
+  {
+    id: 'agua-purga-carne-1',
+    categoria: 'agua',
+    titulo: 'Primera semana: purga las líneas de agua 2 o 3 veces al día',
+    detalle: 'El agua fresca y limpia ayuda a que beban más.',
+    modos: ['carne'],
+    geneticas: ['cobb500', 'ross308'],
+    desdeDia: 0,
+    hastaDia: 7,
+    cadaDias: 1,
+    fuente: 'Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf'
+  },
+  {
+    id: 'agua-purga-carne',
+    categoria: 'agua',
+    titulo: 'Desde el día 8: purga las líneas de agua a diario o, como mínimo, 3 veces por semana',
+    detalle: 'Purgar a diario también está bien. En días de calor purga más seguido para que el agua llegue fresca.',
+    modos: ['carne'],
+    geneticas: ['cobb500', 'ross308'],
+    desdeDia: 8,
+    cadaDias: 2,
+    fuente: 'Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf · Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf'
+  },
+  {
+    id: 'agua-purga-postura',
+    categoria: 'agua',
+    titulo: 'Cada semana: purga las líneas de agua, mejor de noche antes de encender la luz',
+    detalle: 'Usa con regularidad un desinfectante de agua seguro para las aves.',
+    modos: ['huevos'],
+    desdeDia: 7,
+    cadaDias: 7,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'agua-bebederos',
+    categoria: 'agua',
+    titulo: 'Lava los bebederos cada día las 2 primeras semanas y luego cada semana',
+    detalle: 'Los bebederos sucios son una fuente de diarrea.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    hastaDia: 14,
+    cadaDias: 1,
+    fuente: 'Hendrix Genetics, ISA Management Guide for Alternative Production Systems (copia publicada en cpif.org, 2014). https://cpif.org/wp-content/uploads/2014/04/ISA-Alternative-Productions-Management-Guide-copy.pdf · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'agua-analisis',
+    categoria: 'agua',
+    titulo: 'Una vez al año: analiza el agua en un laboratorio acreditado (en la fuente y al final de la línea)',
+    detalle: 'El agua de las aves debe ser potable; si es de pozo o de tanque, analízala al menos una vez al año.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    cadaDias: 365,
+    fuente: 'Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm'
+  },
+  {
+    id: 'agua-cloro-vacuna-postura',
+    categoria: 'agua',
+    titulo: '2 días antes de vacunar por el agua: apaga el clorador y limpia los filtros',
+    detalle: 'El cloro mata la vacuna. Repite antes de cada vacuna en el agua (mira la pestaña de vacunas). Quita el agua máximo 1 hora antes de vacunar.',
+    modos: ['huevos'],
+    desdeDia: 5,
+    fuente: 'Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf'
+  },
+  {
+    id: 'agua-cloro-vacuna-carne',
+    categoria: 'agua',
+    titulo: '2 días antes de vacunar por el agua: apaga el clorador y limpia los filtros',
+    detalle: 'El cloro mata la vacuna. Repite antes de cada vacuna en el agua (mira la pestaña de vacunas). Quita el agua máximo 1 hora antes de vacunar.',
+    modos: ['carne'],
+    desdeDia: 6,
+    fuente: 'Cobb-Vantress, Cobb Broiler Management Guide (2021). https://cobbgenetics.com/assets/Cobb-Files/Broiler-Guide_English-2021-min.pdf'
+  },
+  {
+    id: 'reg-diario',
+    categoria: 'registros',
+    titulo: 'Cada día: anota muertes, descartes, alimento, agua consumida y temperatura',
+    detalle: 'Una baja en el consumo de agua suele ser la primera señal de un problema.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    cadaDias: 1,
+    fuente: 'Lohmann Breeders, Management Guide Alternative Housing Systems (2021, versión 06.21). https://lohmann-breeders.com/media/2022/06/LB_eMG_Alternative-Haltung_Printversion_EN_06.21_V01-21_high.pdf · Hendrix Genetics, ISA Management Guide for Alternative Production Systems (copia publicada en cpif.org, 2014). https://cpif.org/wp-content/uploads/2014/04/ISA-Alternative-Productions-Management-Guide-copy.pdf · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf'
+  },
+  {
+    id: 'reg-tratamientos',
+    categoria: 'registros',
+    titulo: 'Anota cada vacuna y tratamiento: fecha, producto, lote del producto y días de retiro; guárdalo 3 años',
+    detalle: 'Usa solo productos registrados en Agrocalidad y lleva también el inventario de medicamentos.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf · Agrocalidad (Ecuador), Resolución 047, Guía general de Buenas Prácticas Avícolas (año no visible en la copia de FAOLEX). https://faolex.fao.org/docs/pdf/ecu96517.pdf'
+  },
+  {
+    id: 'reg-cloro-ph',
+    categoria: 'registros',
+    titulo: 'Lleva un registro del cloro y el pH del agua',
+    detalle: 'Agrocalidad lo pide entre los registros de la granja; la frecuencia la acuerdas con tu veterinario.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf'
+  },
+  {
+    id: 'reg-heces',
+    categoria: 'registros',
+    titulo: 'Cada mes: lleva una muestra de heces al laboratorio para buscar huevos de lombriz',
+    detalle: 'Desparasita solo si el resultado lo justifica. Un resultado negativo no siempre significa que no haya lombrices.',
+    modos: ['huevos'],
+    desdeDia: 56,
+    cadaDias: 30,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Manual Merck de Veterinaria, Helminthiasis in Poultry (revisión 2025). https://www.merckvetmanual.com/poultry/helminthiasis/helminthiasis-in-poultry'
+  },
+  {
+    id: 'reg-peso-huevo',
+    categoria: 'registros',
+    titulo: 'Cada semana: pesa 100 huevos tomados al azar de los nidos, a la misma hora',
+    detalle: 'Compara con la tabla de tu genética para ver si el tamaño va bien.',
+    modos: ['huevos'],
+    desdeDia: 140,
+    cadaDias: 7,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'reg-recoger-huevos',
+    categoria: 'registros',
+    titulo: 'Cada día: recoge los huevos al menos 2 veces y guárdalos en frío; descarta los rotos',
+    detalle: 'No vendas huevos recogidos del suelo. Limpia los sucios en seco, sin remojar. Al inicio de la postura recoge varias veces los huevos de piso.',
+    modos: ['huevos'],
+    desdeDia: 140,
+    cadaDias: 1,
+    fuente: 'New Mexico State University, Guía E-218 Fresh Egg Safety (2023). https://pubs.nmsu.edu/_e/E218/index.html · Hendrix Genetics, ISA Management Guide for Alternative Production Systems (copia publicada en cpif.org, 2014). https://cpif.org/wp-content/uploads/2014/04/ISA-Alternative-Productions-Management-Guide-copy.pdf · Lohmann Breeders, Management Guide Alternative Housing Systems (2021, versión 06.21). https://lohmann-breeders.com/media/2022/06/LB_eMG_Alternative-Haltung_Printversion_EN_06.21_V01-21_high.pdf'
+  },
+  {
+    id: 'reg-plano-cebos',
+    categoria: 'registros',
+    titulo: 'Haz un plano con la ubicación de las estaciones de cebo y anota cada revisión',
+    detalle: 'Agrocalidad pide este registro junto con el inventario de plaguicidas.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf'
+  },
+  {
+    id: 'pla-franja',
+    categoria: 'plagas',
+    titulo: 'Mantén una franja de 1 m de grava o cemento alrededor del galpón y el pasto corto',
+    detalle: 'A los roedores no les gusta cruzar espacios abiertos. Recoge escombros y alimento regado.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · University of Maryland Extension, FS 985 Rodent Control on Small Poultry Farms (sin año visible). https://extension.umd.edu/node/5341'
+  },
+  {
+    id: 'pla-alimento',
+    categoria: 'plagas',
+    titulo: 'Guarda el alimento en recipientes cerrados, fuera del alcance de roedores y aves silvestres',
+    detalle: 'Ajusta los comederos para que no se desperdicie alimento.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm · University of Maryland Extension, FS 985 Rodent Control on Small Poultry Farms (sin año visible). https://extension.umd.edu/node/5341'
+  },
+  {
+    id: 'pla-malla',
+    categoria: 'plagas',
+    titulo: 'Pon malla en ventanas y aberturas para que no entren aves silvestres',
+    detalle: 'Las aves silvestres pueden traer influenza aviar y otras enfermedades.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'FAO, Preparándose para la Influenza Aviar Altamente Patógena, Serie Producción y Sanidad Animal n.º 3 (2007). https://fao.org/4/a0632s/a0632s.pdf · OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm'
+  },
+  {
+    id: 'pla-estiercol',
+    categoria: 'plagas',
+    titulo: 'En postura: saca el estiércol cada semana y mantenlo seco',
+    detalle: 'Arregla los bebederos que gotean y retira huevos rotos y aves muertas: así hay menos moscas.',
+    modos: ['huevos'],
+    desdeDia: 112,
+    cadaDias: 7,
+    fuente: 'University of Kentucky Extension, ENT-28 Insect Control on Poultry (2007). https://www.uky.edu/Ag/PAT/recs/livestk/pdf/ENT-28_Poultry.pdf'
+  },
+  {
+    id: 'pla-acaros-revision',
+    categoria: 'plagas',
+    titulo: 'Cada semana: busca ácaros en nidos, perchas y bandejas, y en las plumas alrededor de la cloaca',
+    detalle: 'El ácaro rojo se esconde en grietas y sale de noche; el ácaro del norte y los piojos se ven al abrir las plumas.',
+    modos: ['huevos'],
+    desdeDia: 112,
+    cadaDias: 7,
+    fuente: 'Lohmann Breeders, Management Guide Alternative Housing Systems (2021, versión 06.21). https://lohmann-breeders.com/media/2022/06/LB_eMG_Alternative-Haltung_Printversion_EN_06.21_V01-21_high.pdf · Mississippi State University Extension, P3800 Control External Parasites of Poultry (2025). https://extension.msstate.edu/publications/control-external-parasites-poultry · Manual Merck de Veterinaria, Mites of Poultry (revisión 2026). https://www.merckvetmanual.com/poultry/ectoparasites/mites-of-poultry'
+  },
+  {
+    id: 'mor-retirar',
+    categoria: 'mortalidad',
+    titulo: 'Cada día: retira las aves muertas (en clima caliente cada 12 horas) y guárdalas en un recipiente cerrado',
+    detalle: 'Anota cuántas murieron y, si sabes, la causa.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    cadaDias: 1,
+    fuente: 'OMSA/WOAH, Código Sanitario para los Animales Terrestres, cap. 6.5 Bioseguridad en la producción avícola (ed. 2021). https://www.woah.org/fileadmin/Home/eng/Health_standards/tahc/2021/en_chapitre_biosecu_poul_production.htm · Agrocalidad (Ecuador), Resolución 047, Guía general de Buenas Prácticas Avícolas (año no visible en la copia de FAOLEX). https://faolex.fao.org/docs/pdf/ecu96517.pdf · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'mor-compostera',
+    categoria: 'mortalidad',
+    titulo: 'Prepara una compostera o una fosa sellada, lejos de fuentes de agua, para las aves muertas',
+    detalle: 'Nunca botes aves muertas a ríos, quebradas o caminos.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf · Agrocalidad (Ecuador), Resolución 047, Guía general de Buenas Prácticas Avícolas (año no visible en la copia de FAOLEX). https://faolex.fao.org/docs/pdf/ecu96517.pdf'
+  },
+  {
+    id: 'mor-alerta',
+    categoria: 'mortalidad',
+    titulo: 'Si mueren muchas aves de golpe: no muevas ni vendas aves ni huevos y avisa a Agrocalidad antes de enterrarlas',
+    detalle: 'La mortalidad alta sin explicación debe notificarse antes de eliminar los cuerpos.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    fuente: 'Agrocalidad (Ecuador), Resolución 047, Guía general de Buenas Prácticas Avícolas (año no visible en la copia de FAOLEX). https://faolex.fao.org/docs/pdf/ecu96517.pdf · Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf · FAO, Preparándose para la Influenza Aviar Altamente Patógena, Serie Producción y Sanidad Animal n.º 3 (2007). https://fao.org/4/a0632s/a0632s.pdf'
+  },
+  {
+    id: 'mor-meta-postura',
+    categoria: 'mortalidad',
+    titulo: 'Semana 17: compara la mortalidad acumulada con la meta (cerca del 2 %)',
+    detalle: 'Si es más alta, revisa con tu veterinario antes del inicio de la postura.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown'],
+    desdeDia: 119,
+    fuente: 'Hy-Line International, Hy-Line Brown estándares de rendimiento en jaula (2025). https://www.hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/BRN%20STD%20ENG.pdf'
+  },
+  {
+    id: 'qui-despara-postura',
+    categoria: 'quimico',
+    titulo: 'Semanas 13 a 15: desparasitación interna antes del traslado, según el análisis de heces',
+    detalle: 'Si tu veterinario indica repetir, sigue su indicación y la etiqueta. Evita el día de una vacuna. Retiro de referencia en el Reino Unido (VMD). En Ecuador manda la etiqueta del producto registrado en Agrocalidad.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 91,
+    hastaDia: 104,
+    quimico: {
+      tipo: 'Antiparasitario interno (lombrices)',
+      ingredienteActivo: 'Flubendazol',
+      retiroHuevoDias: 0,
+      retiroCarneDias: 7,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · VMD (Reino Unido), Resumen de las características del producto de flubendazol para aves, SPC 1032750 (vigente, consultado 2026). https://www.vmd.defra.gov.uk/productinformationDatabase/files/SPC_Documents/SPC_1032750.PDF · Manual Merck de Veterinaria, Helminthiasis in Poultry (revisión 2025). https://www.merckvetmanual.com/poultry/helminthiasis/helminthiasis-in-poultry'
+  },
+  {
+    id: 'qui-despara-pastoreo',
+    categoria: 'quimico',
+    titulo: 'Aves de pastoreo: desparasitación interna solo si el análisis de heces sale positivo',
+    detalle: 'Tratar solo cuando hace falta reduce la resistencia. Si tu veterinario indica repetir, sigue su indicación y la etiqueta. Evita el día de una vacuna. Retiro de referencia en el Reino Unido (VMD). En Ecuador manda la etiqueta del producto registrado en Agrocalidad.',
+    modos: ['huevos', 'carne'],
+    geneticas: ['campero', 'rhode-island', 'plymouth-rock', 'criolla'],
+    desdeDia: 57,
+    quimico: {
+      tipo: 'Antiparasitario interno (lombrices)',
+      ingredienteActivo: 'Flubendazol',
+      retiroHuevoDias: 0,
+      retiroCarneDias: 7,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Manual Merck de Veterinaria, Helminthiasis in Poultry (revisión 2025). https://www.merckvetmanual.com/poultry/helminthiasis/helminthiasis-in-poultry · VMD (Reino Unido), Resumen de las características del producto de flubendazol para aves, SPC 1032750 (vigente, consultado 2026). https://www.vmd.defra.gov.uk/productinformationDatabase/files/SPC_Documents/SPC_1032750.PDF · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'qui-piojos-acaros',
+    categoria: 'quimico',
+    titulo: 'Si encuentras piojos o ácaro del norte: aplica el producto a presión en las plumas de la cloaca',
+    detalle: 'La resistencia a los piretroides está muy extendida (Manual Merck): confirma con tu veterinario que el producto funcione. Puede necesitar repetirse. Retiro en carne de referencia en EE. UU. (extensión universitaria). En Ecuador manda la etiqueta del producto registrado en Agrocalidad. Para huevo: Sin retiro oficial en la fuente; consulta la etiqueta.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 28,
+    quimico: {
+      tipo: 'Control externo (piojos y ácaros)',
+      ingredienteActivo: 'Permetrina',
+      retiroHuevoDias: null,
+      retiroCarneDias: 0,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Mississippi State University Extension, P3800 Control External Parasites of Poultry (2025). https://extension.msstate.edu/publications/control-external-parasites-poultry · University of Kentucky Extension, ENT-28 Insect Control on Poultry (2007). https://www.uky.edu/Ag/PAT/recs/livestk/pdf/ENT-28_Poultry.pdf · Manual Merck de Veterinaria, Mites of Poultry (revisión 2026). https://www.merckvetmanual.com/poultry/ectoparasites/mites-of-poultry'
+  },
+  {
+    id: 'qui-acaro-rojo-agua',
+    categoria: 'quimico',
+    titulo: 'Si hay ácaro rojo en las gallinas: tratamiento en el agua de bebida, con receta veterinaria',
+    detalle: 'Trata además las grietas del galpón. Retiro de referencia en la Unión Europea (y 0 días en huevo en EE. UU.). En Ecuador manda la etiqueta del producto registrado en Agrocalidad.',
+    modos: ['huevos'],
+    desdeDia: 141,
+    quimico: {
+      tipo: 'Acaricida sistémico (ácaro rojo)',
+      ingredienteActivo: 'Fluralaner',
+      retiroHuevoDias: 0,
+      retiroCarneDias: 14,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Base de datos de medicamentos veterinarios de la Unión Europea, fluralaner en solución para agua de bebida, pollos (consultado 2026). https://medicines.health.europa.eu/veterinary/en/600000000062 · Manual Merck de Veterinaria, Mites of Poultry (revisión 2026). https://www.merckvetmanual.com/poultry/ectoparasites/mites-of-poultry · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf'
+  },
+  {
+    id: 'qui-acaro-rojo-vacio-postura',
+    categoria: 'quimico',
+    titulo: 'Al sacar las gallinas (semana 80): trata el galpón vacío contra ácaro rojo en 3 aplicaciones (días 0, 10 y 20)',
+    detalle: 'Aplica de noche, a presión, en grietas y escondites. Así se corta el ciclo de 7 a 10 días del ácaro. La resistencia a los piretroides es común: rota familias químicas. Sin retiro oficial en la fuente; consulta la etiqueta. Se aplica sin aves.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 560,
+    hastaDia: 580,
+    quimico: {
+      tipo: 'Acaricida para instalaciones',
+      ingredienteActivo: 'Acaricida registrado para galpones (por ejemplo permetrina)',
+      retiroHuevoDias: null,
+      retiroCarneDias: null,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Mississippi State University Extension, P3800 Control External Parasites of Poultry (2025). https://extension.msstate.edu/publications/control-external-parasites-poultry · Manual Merck de Veterinaria, Mites of Poultry (revisión 2026). https://www.merckvetmanual.com/poultry/ectoparasites/mites-of-poultry'
+  },
+  {
+    id: 'qui-acaro-rojo-vacio-doble',
+    categoria: 'quimico',
+    titulo: 'Al sacar las gallinas (semana 72): trata el galpón vacío contra ácaro rojo en 3 aplicaciones (días 0, 10 y 20)',
+    detalle: 'Aplica de noche, a presión, en grietas y escondites. Así se corta el ciclo de 7 a 10 días del ácaro. La resistencia a los piretroides es común: rota familias químicas. Sin retiro oficial en la fuente; consulta la etiqueta. Se aplica sin aves.',
+    modos: ['huevos'],
+    geneticas: ['rhode-island', 'plymouth-rock', 'criolla'],
+    desdeDia: 504,
+    hastaDia: 524,
+    quimico: {
+      tipo: 'Acaricida para instalaciones',
+      ingredienteActivo: 'Acaricida registrado para galpones (por ejemplo permetrina)',
+      retiroHuevoDias: null,
+      retiroCarneDias: null,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Mississippi State University Extension, P3800 Control External Parasites of Poultry (2025). https://extension.msstate.edu/publications/control-external-parasites-poultry · Manual Merck de Veterinaria, Mites of Poultry (revisión 2026). https://www.merckvetmanual.com/poultry/ectoparasites/mites-of-poultry'
+  },
+  {
+    id: 'qui-cocci-broiler',
+    categoria: 'quimico',
+    titulo: 'Prevención de coccidiosis: usa alimento de inicio con anticoccidial (pregunta a tu proveedor si ya lo trae; no añadas otro)',
+    detalle: 'Suspéndelo antes del sacrificio según la etiqueta. No lo combines con otros medicamentos sin tu veterinario. No sirve para granjas "sin antibióticos". No usar en gallinas que ponen huevo para consumo (por eso no hay retiro en huevo). Retiro en carne de referencia en la Unión Europea. En Ecuador manda la etiqueta del producto registrado en Agrocalidad.',
+    modos: ['carne'],
+    geneticas: ['cobb500', 'ross308'],
+    desdeDia: 0,
+    hastaDia: 41,
+    quimico: {
+      tipo: 'Anticoccidial preventivo en el alimento (ionóforo)',
+      ingredienteActivo: 'Monensina sódica',
+      retiroHuevoDias: null,
+      retiroCarneDias: 1,
+      noPostura: true,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Manual Merck de Veterinaria, Coccidiosis in Poultry (revisión 2024). https://www.merckvetmanual.com/poultry/coccidiosis/coccidiosis-in-poultry · Unión Europea, Reglamento (CE) n.º 1356/2004, monensina sódica como coccidiostático (2004). https://www.legislation.gov.uk/eur/2004/1356/data.xht'
+  },
+  {
+    id: 'qui-cocci-pollitas',
+    categoria: 'quimico',
+    titulo: 'Crianza de pollitas: alimento con anticoccidial solo hasta la semana 16 (pregunta a tu proveedor si ya lo trae; no añadas otro), o vacuna',
+    detalle: 'Antes del traslado las pollitas deben haber ganado resistencia. Nunca lo des en postura. Si usas vacuna, no des anticoccidial. No lo combines con otros medicamentos sin tu veterinario. No hay retiro en huevo porque no se permite en postura. Para carne: Sin retiro oficial en la fuente; consulta la etiqueta. Referencia: autorización de la Unión Europea. En Ecuador manda la etiqueta del producto registrado en Agrocalidad.',
+    modos: ['huevos'],
+    geneticas: ['hyline-brown', 'lohmann-brown', 'isa-brown', 'hisex-brown', 'lohmann-lsl'],
+    desdeDia: 0,
+    hastaDia: 112,
+    quimico: {
+      tipo: 'Anticoccidial preventivo en el alimento (ionóforo)',
+      ingredienteActivo: 'Monensina sódica',
+      retiroHuevoDias: null,
+      retiroCarneDias: null,
+      noPostura: true,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Unión Europea, Reglamento (CE) n.º 1356/2004, monensina sódica como coccidiostático (2004). https://www.legislation.gov.uk/eur/2004/1356/data.xht · Manual Merck de Veterinaria, Coccidiosis in Poultry (revisión 2024). https://www.merckvetmanual.com/poultry/coccidiosis/coccidiosis-in-poultry'
+  },
+  {
+    id: 'qui-cocci-amprolio',
+    categoria: 'quimico',
+    titulo: 'Coccidiosis en pollitas o gallinas de postura: amprolio en el agua, solo con diagnóstico (en EE. UU. está aprobado para ponedoras)',
+    detalle: 'Úsalo solo si tu veterinario lo indica. Su uso principal es tratar brotes por el agua de bebida. La aprobación citada es de EE. UU.: confirma el registro y la etiqueta en Ecuador. En Ecuador manda la etiqueta del producto registrado en Agrocalidad. Para huevo y carne: Sin retiro oficial en la fuente; consulta la etiqueta.',
+    modos: ['huevos'],
+    desdeDia: 15,
+    quimico: {
+      tipo: 'Anticoccidial de tratamiento en el agua',
+      ingredienteActivo: 'Amprolio',
+      retiroHuevoDias: null,
+      retiroCarneDias: null,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'EE. UU., 21 CFR 520.100 Amprolio (texto del eCFR en Cornell LII, consultado 2026). https://www.law.cornell.edu/cfr/text/21/520.100 · Manual Merck de Veterinaria, Coccidiosis in Poultry (revisión 2024). https://www.merckvetmanual.com/poultry/coccidiosis/coccidiosis-in-poultry'
+  },
+  {
+    id: 'qui-cocci-toltrazuril',
+    categoria: 'quimico',
+    titulo: 'Coccidiosis en aves de carne: toltrazuril en el agua solo con diagnóstico veterinario',
+    detalle: 'No usar en aves que ponen o pondrán huevo para consumo, ni en las 6 semanas antes de la postura (por eso no hay retiro en huevo). Retiro en carne de referencia en la Unión Europea. En Ecuador manda la etiqueta del producto registrado en Agrocalidad.',
+    modos: ['carne'],
+    desdeDia: 15,
+    quimico: {
+      tipo: 'Anticoccidial de tratamiento en el agua',
+      ingredienteActivo: 'Toltrazuril',
+      retiroHuevoDias: null,
+      retiroCarneDias: 16,
+      noPostura: true,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Base de datos de medicamentos veterinarios de la Unión Europea, toltrazuril en solución para agua de bebida, pollos (consultado 2026). https://medicines.health.europa.eu/veterinary/en/600000043604 · Manual Merck de Veterinaria, Coccidiosis in Poultry (revisión 2024). https://www.merckvetmanual.com/poultry/coccidiosis/coccidiosis-in-poultry'
+  },
+  {
+    id: 'qui-roedores',
+    categoria: 'quimico',
+    titulo: 'Cada semana: revisa las estaciones de cebo para roedores alrededor y dentro del galpón',
+    detalle: 'Usa estaciones cerradas donde no lleguen aves, niños ni perros. Rota el producto durante el año y recoge los roedores muertos. Sin retiro oficial en la fuente; consulta la etiqueta. No se da a las aves.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 0,
+    cadaDias: 7,
+    quimico: {
+      tipo: 'Rodenticida en estaciones de cebo',
+      ingredienteActivo: 'Anticoagulante (por ejemplo bromadiolona, difetialona o brodifacum) registrado en Agrocalidad',
+      retiroHuevoDias: null,
+      retiroCarneDias: null,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'University of Maryland Extension, FS 985 Rodent Control on Small Poultry Farms (sin año visible). https://extension.umd.edu/node/5341 · University of Tennessee Extension, D 166 Rodent Control on Poultry Farms (2022). https://utia.tennessee.edu/publications/wp-content/uploads/sites/269/2023/10/D166.pdf · UF/IFAS Extension, PI284 Rodenticides (2019). https://ask.ifas.ufl.edu/publication/PI284/pdf · Hy-Line International, Guía de manejo Hy-Line Brown Max, ponedoras comerciales (2023, código BRN MAX COM ENG 101923). https://hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Max/HLB%20Max%20Guide%20ENG.pdf · Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf'
+  },
+  {
+    id: 'qui-moscas',
+    categoria: 'quimico',
+    titulo: 'Si hay muchas moscas: aplica insecticida residual en paredes, techos y postes, sin mojar aves, alimento ni agua',
+    detalle: 'Cambia de familia de insecticida durante la temporada (no uses siempre piretroides). Nunca pongas cebos donde lleguen las aves. Sin retiro oficial en la fuente; consulta la etiqueta.',
+    modos: ['huevos', 'carne'],
+    desdeDia: 15,
+    quimico: {
+      tipo: 'Insecticida residual para moscas',
+      ingredienteActivo: 'Insecticida residual registrado en Agrocalidad (rotar familias químicas)',
+      retiroHuevoDias: null,
+      retiroCarneDias: null,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'University of Kentucky Extension, ENT-28 Insect Control on Poultry (2007). https://www.uky.edu/Ag/PAT/recs/livestk/pdf/ENT-28_Poultry.pdf · Agrocalidad (Ecuador), Guía de Buenas Prácticas Avícolas, Resolución Técnica 0017 (2013). https://faolex.fao.org/docs/pdf/ecu165859.pdf'
+  },
+  {
+    id: 'qui-larvicida-jaula',
+    categoria: 'quimico',
+    titulo: 'Gallinas en jaula con muchas moscas: larvicida en el alimento (solo en galpones de jaula)',
+    detalle: 'Actúa sobre las larvas en el estiércol. Sin retiro oficial en la fuente; consulta la etiqueta.',
+    modos: ['huevos'],
+    desdeDia: 141,
+    quimico: {
+      tipo: 'Larvicida en el alimento',
+      ingredienteActivo: 'Ciromazina',
+      retiroHuevoDias: null,
+      retiroCarneDias: null,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'University of Kentucky Extension, ENT-28 Insect Control on Poultry (2007). https://www.uky.edu/Ag/PAT/recs/livestk/pdf/ENT-28_Poultry.pdf'
+  },
+  {
+    id: 'qui-escarabajos-cama',
+    categoria: 'quimico',
+    titulo: '2 semanas antes de sacar el lote (día 28 si vendes al día 42): trata la cama y los equipos contra escarabajos',
+    detalle: 'Si vendes antes, mueve esta tarea para respetar los días de retiro. Repite al vaciar el galpón, antes de desinfectar. Retiro en carne de referencia en EE. UU. (extensión universitaria); revisa que el producto esté permitido en la lista de Agrocalidad. En Ecuador manda la etiqueta del producto registrado en Agrocalidad. Para huevo: Sin retiro oficial en la fuente; consulta la etiqueta.',
+    modos: ['carne'],
+    geneticas: ['cobb500', 'ross308'],
+    desdeDia: 28,
+    quimico: {
+      tipo: 'Insecticida para cama',
+      ingredienteActivo: 'Carbaril',
+      retiroHuevoDias: null,
+      retiroCarneDias: 7,
+      advertencia: CATALOGO_AVISO_QUIMICO
+    },
+    fuente: 'Aviagen, Ross Broiler Pocket Guide (2020). https://aa-intl.aviagen.com/assets/Tech_Center/Ross_Broiler/Ross-Broiler-Pocket-Guide-2020-EN.pdf · University of Kentucky Extension, ENT-28 Insect Control on Poultry (2007). https://www.uky.edu/Ag/PAT/recs/livestk/pdf/ENT-28_Poultry.pdf'
+  }
+];
+
+/* Tareas que aplican a una genética y un modo ('huevos' | 'carne'), por día de inicio y luego por id. */
+function tareasDelCatalogo(genetica, modo) {
+  const gid = genetica && genetica.id;
+  return CATALOGO
+    .filter(t => t.modos.includes(modo) && (!t.geneticas || t.geneticas.includes(gid)))
+    .sort((a, b) => a.desdeDia - b.desdeDia || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+}
+
+</script>
+<script>
 /* =========================================================================
    APPOLLO · Reglas de alerta (puras: sin DOM, sin almacenamiento)
    Cada regla devuelve Alerta[]; generarAlertas las compone y ordena.

@@ -23,7 +23,7 @@ FUENTES = [
     ("Zilla Slab", 600, "zilla-slab-latin-600-normal.woff2"),
     ("Zilla Slab", 700, "zilla-slab-latin-700-normal.woff2"),
 ]
-SCRIPTS = ("data.js", "model.js", "calc.js", "alertas.js", "db.js",
+SCRIPTS = ("data.js", "model.js", "calc.js", "catalogo.js", "alertas.js", "db.js",
            "ui/componentes.js", "ui/grafico.js", "ui/animar.js")
 
 
