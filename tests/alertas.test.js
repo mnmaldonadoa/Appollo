@@ -81,3 +81,56 @@ as = gen({ inventario: [{ id: 'i1', nombre: 'M', categoria: 'a', cantidad: 1, un
   vacunasPlan: [{ id: 'v1', loteId: 'L1', nombre: 'N', fechaPrevista: '2026-11-02', via: 'ocular' }] });
 const orden = { rojo: 0, ambar: 1, info: 2 };
 for (let i = 1; i < as.length; i++) assert.ok(orden[as[i - 1].gravedad] <= orden[as[i].gravedad]);
+
+// Plan del ciclo: alertaPlan
+const tar = (id, o = {}) => ({ id, loteId: 'L1', titulo: 'Desparasitar', categoria: 'sanidad', estado: 'activa', fechaBase: HOY, desdeDia: 0, hechas: [], ...o });
+as = gen({ planTareas: [tar('t1', { fechaBase: '2026-10-30' })] });
+let p = de(as, 'plan');
+assert.strictEqual(p.length, 1); assert.strictEqual(p[0].gravedad, 'rojo'); assert.strictEqual(p[0].id, 'plan-t1');
+assert.strictEqual(p[0].texto, 'Labor · A: Desparasitar (atrasada desde 30/10)');
+assert.deepStrictEqual(JSON.parse(JSON.stringify(p[0].accion)), { etiqueta: 'Ver plan', ruta: '#/lote/L1' });
+assert.strictEqual(p[0].loteId, 'L1');
+as = gen({ planTareas: [tar('t2')] });
+p = de(as, 'plan'); assert.strictEqual(p[0].gravedad, 'ambar'); assert.strictEqual(p[0].texto, 'Labor · A: Desparasitar (hoy)');
+as = gen({ planTareas: [tar('t3', { fechaBase: '2026-11-10' })] });
+p = de(as, 'plan'); assert.strictEqual(p[0].gravedad, 'info'); assert.strictEqual(p[0].texto, 'Labor · A: Desparasitar (el 10/11)');
+as = gen({ planTareas: [tar('t4', { fechaBase: '2026-11-11' })] });
+assert.strictEqual(de(as, 'plan').length, 0, 'a 8 días no genera');
+as = gen({ planTareas: [tar('t5', { fechaBase: '2026-10-30', estado: 'quitada' })] });
+assert.strictEqual(de(as, 'plan').length, 0, 'quitada no genera');
+as = gen({ planTareas: [tar('t6', { fechaBase: '2026-10-30', hastaDia: 1 })] });
+assert.strictEqual(de(as, 'plan').length, 0, 'omitida no genera');
+as = gen({ planTareas: [tar('t7', { fechaBase: '2026-10-30', hechas: [{ fecha: '2026-10-30' }] })] });
+assert.strictEqual(de(as, 'plan').length, 0, 'hecha no genera');
+as = c.generarAlertas({ ...base({ planTareas: [tar('t8', { fechaBase: '2026-10-30' })] }), lotes: [{ ...lote, estado: 'cerrado' }] }, dia(10));
+assert.strictEqual(de(as, 'plan').length, 0, 'lote no activo no genera');
+// Sin planTareas (respaldos viejos): no falla
+assert.doesNotThrow(() => c.generarAlertas(base(), dia(10)));
+assert.deepStrictEqual(c.alertaPlan(base(), HOY), []);
+assert.deepStrictEqual(c.alertaRetiroPlan(base(), HOY), []);
+// Genética desconocida no rompe
+as = c.generarAlertas({ ...base({ planTareas: [tar('t9', { fechaBase: '2026-10-30' }),
+  tar('r9', { titulo: 'Tratamiento', fechaBase: '2026-11-01', hechas: [{ fecha: '2026-11-01' }], quimico: { retiroHuevoDias: 3 } })] }),
+  lotes: [{ ...lote, genetica: 'no-existe' }] }, dia(10));
+assert.strictEqual(de(as, 'plan').length, 1); assert.strictEqual(de(as, 'retiro').length, 1);
+
+// Retiro del plan
+const quim = (id, o = {}) => tar(id, { titulo: 'Antibiótico', fechaBase: '2026-11-01', hechas: [{ fecha: '2026-11-01' }],
+  quimico: { retiroHuevoDias: 5, retiroCarneDias: 10 }, ...o });
+as = gen({ planTareas: [quim('q1')] });
+r = de(as, 'retiro').filter(a => a.id.startsWith('retiro-plan'));
+assert.deepStrictEqual(r.map(a => a.id), ['retiro-plan-huevo-L1', 'retiro-plan-carne-L1']);
+assert.strictEqual(r[0].texto, 'No vender huevos hasta el 06/11 · A');
+assert.strictEqual(r[1].texto, 'No vender carne hasta el 11/11 · A');
+assert.ok(r.every(a => a.gravedad === 'rojo' && a.loteId === 'L1' && a.accion.ruta === '#/lote/L1'));
+as = gen({ planTareas: [quim('q2', { estado: 'quitada' })] });
+assert.strictEqual(de(as, 'retiro').filter(a => a.id.startsWith('retiro-plan')).length, 2, 'retiro vigente aunque la tarea esté quitada');
+as = gen({ planTareas: [quim('q3', { quimico: { retiroHuevoDias: 5 } })] });
+assert.deepStrictEqual(de(as, 'retiro').map(a => a.id), ['retiro-plan-huevo-L1']);
+as = gen({ planTareas: [quim('q4', { fechaBase: '2026-10-01', hechas: [{ fecha: '2026-10-01' }] })] });
+assert.strictEqual(de(as, 'retiro').length, 0, 'retiro vencido no genera');
+as = c.generarAlertas({ ...base({ planTareas: [quim('q5')] }), lotes: [{ ...lote, estado: 'cerrado' }] }, dia(10));
+assert.strictEqual(de(as, 'retiro').length, 0);
+// Orden con plan: rojo antes que ámbar antes que info
+as = gen({ planTareas: [tar('a1', { fechaBase: '2026-11-10' }), tar('a2'), tar('a3', { fechaBase: '2026-10-30' }), quim('q6')] });
+for (let i = 1; i < as.length; i++) assert.ok(orden[as[i - 1].gravedad] <= orden[as[i].gravedad]);
