@@ -12,6 +12,9 @@
     ['sobre-primario/primario', 'primario', 'sobre-primario', 'Sobre primario'],
     ['sobre-alerta/alerta', 'alerta', 'sobre-alerta', 'Sobre alerta'],
     ['sobre-huevo/huevo', 'huevo', 'sobre-huevo', 'Sobre huevo'],
+    ['texto/t-coral', 't-coral', 'texto', 'Tinte coral'],
+    ['texto/t-salvia', 't-salvia', 'texto', 'Tinte salvia'],
+    ['texto/t-menta', 't-menta', 'texto', 'Tinte menta'],
   ];
   const iconos = ['gallina', 'huevo', 'saco', 'balanza', 'jeringa', 'cruz', 'gota', 'termo', 'inicio', 'mas', 'campana'];
   const nombres = { termo: 'termómetro', cruz: 'sanidad', mas: 'registrar', campana: 'alertas' };

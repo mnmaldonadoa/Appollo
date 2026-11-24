@@ -1,0 +1,51 @@
+/* Paleta del estilo visual: cada par texto/superficie declarado en styles.css cumple >= 7:1 (WCAG) en claro y
+   oscuro, y los trazos de ilustración >= 3:1 sobre sus fondos (objetos gráficos, WCAG 1.4.11). */
+const assert = require('node:assert');
+const fs = require('fs');
+const path = require('path');
+
+const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'styles.css'), 'utf8');
+
+function bloque(selector) {
+  const i = css.indexOf(selector);
+  assert.ok(i >= 0, 'falta el bloque ' + selector);
+  const a = css.indexOf('{', i), b = css.indexOf('}', a);
+  const tokens = {};
+  for (const m of css.slice(a + 1, b).matchAll(/--([a-z0-9-]+)\s*:\s*(#[0-9A-Fa-f]{6})\b/g)) tokens[m[1]] = m[2].toUpperCase();
+  return tokens;
+}
+const claro = bloque(':root, [data-tema="claro"]');
+const oscuro = bloque('[data-tema="oscuro"] {');
+const media = bloque(':root:not([data-tema="claro"])');
+
+const lum = h => {
+  const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(x => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+};
+const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+
+// El bloque de prefers-color-scheme: dark declara lo mismo que [data-tema="oscuro"]
+assert.deepStrictEqual(media, oscuro, 'prefers-color-scheme: dark y [data-tema="oscuro"] deben coincidir');
+
+const SUPERFICIES_TEXTO = ['fondo', 'superficie', 'superficie-2', 't-menta', 't-cielo', 't-lila', 't-coral', 't-salvia', 't-durazno', 't-marron'];
+const PARES_7 = [
+  ...SUPERFICIES_TEXTO.map(s => ['texto', s]),
+  ['secundario', 'fondo'], ['secundario', 'superficie'],
+  ...['primario', 'ok', 'alerta', 'precaucion'].flatMap(c => [[c, 'fondo'], [c, 'superficie']]),
+  ['sobre-primario', 'primario'], ['sobre-alerta', 'alerta'], ['sobre-huevo', 'huevo'],
+];
+const FONDOS_IL = ['crema', 'menta', 'cielo', 'lila', 'coral', 'salvia', 'durazno'].map(f => 'il-fondo-' + f);
+const AVES = ['ave-hueso', 'ave-pollito', 'ave-marron', 'ave-gris'];
+
+const fallos = [];
+for (const [nombre, t] of [['claro', claro], ['oscuro', oscuro]]) {
+  const ver = (a, b, min) => {
+    if (!t[a] || !t[b]) { fallos.push(`falta --${!t[a] ? a : b} (${nombre})`); return; }
+    const r = ratio(t[a], t[b]);
+    if (r < min) fallos.push(`${a}/${b} ${nombre}: ${r.toFixed(2)} < ${min}`);
+  };
+  PARES_7.forEach(([a, b]) => ver(a, b, 7));
+  FONDOS_IL.forEach(f => ver('il-trazo', f, 3));
+  AVES.forEach(a => ver('il-ojo', a, 3));
+}
+assert.deepStrictEqual(fallos, [], 'contrastes de la paleta:\n' + fallos.join('\n'));

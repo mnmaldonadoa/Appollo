@@ -20,63 +20,88 @@
   --t-toque: 120ms;
 }
 
-/* ---------- Tema claro (por defecto) ---------- */
+/* ---------- Tema claro (por defecto) ----------
+   Pastel mate: los pasteles puros (--p-*, --ave-*, --il-fondo-*) nunca llevan texto. Donde hay texto se usan los
+   tintes --t-* con texto carbón, y los acentos profundos (--alerta, --ok, --precaucion) solo como texto, borde o
+   botón de acción. tests/paleta.test.js valida cada par. */
 :root, [data-tema="claro"] {
-  --fondo: #F6F1E7;
+  --fondo: #F7F3E8;
   --superficie: #FFFDF8;
-  --superficie-2: #EFE6D6;
-  --linea: #E2D6C2;
-  --linea-fuerte: #CDBDA4;
-  --texto: #2B2118;
-  --secundario: #5D4E3F;      /* spec #6B5A48 -> 7:1 sobre fondo */
-  --primario: #285A31;        /* spec #2F6B3A -> 7:1 con texto crema encima */
-  --primario-suave: #E3ECDC;
+  --superficie-2: #EFE9DA;
+  --linea: #E4DCCB;
+  --linea-fuerte: #CFC4AE;
+  --texto: #2D3142;           /* carbón suave */
+  --secundario: #424A5C;      /* solo sobre crema o blanco */
+  --primario: #2D3142;        /* botón principal: carbón con texto crema */
+  --primario-suave: #E4EAE5;
   --sobre-primario: #FFFDF8;
-  --huevo: #E8A317;
-  --huevo-suave: #FBEBC4;
-  --sobre-huevo: #2B2118;
-  --cielo: #4A90B8;
-  --alerta: #902F23;          /* spec #B23A2B -> 7:1 */
+  --huevo: #F6BD60;
+  --huevo-suave: #FBE6C2;
+  --sobre-huevo: #2D3142;
+  --cielo: #7E9CC4;
+  --alerta: #86352F;          /* coral profundo */
   --sobre-alerta: #FFFDF8;
-  --precaucion: #724708;      /* spec #C77C0E -> 7:1 como texto */
-  --ok: #285A31;
-  --alerta-viva: #B23A2B;
-  --precaucion-viva: #C77C0E;
-  --ok-viva: #3D8A4A;
-  --velo: rgba(43, 33, 24, .52);
-  /* Elevación (sombras con tinte tierra, nunca gris): 1 filas, 2 tarjetas, 3 barra/toast, 4 hoja */
+  --precaucion: #6A4A12;      /* durazno profundo */
+  --ok: #3A564E;              /* salvia profunda: selección, enlaces, "Bien" */
+  --alerta-viva: #F28482;
+  --precaucion-viva: #F6BD60;
+  --ok-viva: #84A59D;
+  /* tintes con texto */
+  --t-menta: #D8E2DC; --t-cielo: #D0E1F9; --t-lila: #E8DFF5; --t-coral: #F5C7BF; --t-salvia: #C9D4CA; --t-durazno: #F6BD60; --t-marron: #E9D3B9;
+  /* pasteles puros (decoración) */
+  --p-coral: #F28482; --p-salvia: #84A59D; --p-durazno: #F6BD60; --p-menta: #D8E2DC; --p-cielo: #D0E1F9; --p-lila: #E8DFF5; --p-crema: #F7F3E8;
+  /* ilustración */
+  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE;
+  --il-trazo: #2D3142; --il-ojo: #2D3142;
+  --il-fondo-crema: #EFE6D2; --il-fondo-menta: #D8E2DC; --il-fondo-cielo: #D0E1F9; --il-fondo-lila: #E8DFF5; --il-fondo-coral: #F5C7BF; --il-fondo-salvia: #C9D4CA; --il-fondo-durazno: #FBE3B8;
+  --foco: #2D3142;
+  --velo: rgba(45, 49, 66, .52);
   --sombra-1: 0 1px 2px rgba(112, 72, 30, .10), 0 3px 8px -4px rgba(112, 72, 30, .18);
   --sombra: 0 1px 2px rgba(112, 72, 30, .08), 0 8px 18px -8px rgba(112, 72, 30, .26), 0 20px 30px -22px rgba(112, 72, 30, .30);
   --sombra-nav: 0 -8px 24px -12px rgba(112, 72, 30, .38);
   --sombra-alta: 0 -14px 44px -12px rgba(74, 44, 16, .42);
-  --foco: #2B2118;
-  --tinta: rgba(74, 44, 16, .10);
+  --tinta: rgba(45, 49, 66, .10);
   --brillo-esq: rgba(255, 253, 248, .75);
+  --il-sombra: rgba(45, 49, 66, .12);
   color-scheme: light;
 }
 
-/* ---------- Tema oscuro: noche en el galpón (verde muy oscuro, tierra, texto crema) ---------- */
+/* ---------- Tema oscuro: noche en el galpón (base verde muy oscura, pasteles apagados, texto crema) ---------- */
 @media (prefers-color-scheme: dark) {
   :root:not([data-tema="claro"]) {
-    --fondo: #121A14; --superficie: #1B241D; --superficie-2: #26322A; --linea: #2F3B31; --linea-fuerte: #46553F;
-    --texto: #F3EBDD; --secundario: #BFB09E; --primario: #7CC88A; --primario-suave: #203327; --sobre-primario: #0F1A11;
-    --huevo: #E8A317; --huevo-suave: #3A2E14; --sobre-huevo: #1A140D; --cielo: #6FAAD0;
-    --alerta: #EBA197; --sobre-alerta: #1F0E0B; --precaucion: #F0A53A; --ok: #7CC88A;
-    --alerta-viva: #E0705F; --precaucion-viva: #E8A33A; --ok-viva: #5FAE6E;
-    --velo: rgba(5, 9, 6, .66);
-    --sombra-1: inset 0 1px 0 rgba(243, 235, 221, .05), 0 2px 6px -2px rgba(0, 0, 0, .6);
-    --sombra: inset 0 1px 0 rgba(243, 235, 221, .06), 0 10px 24px -12px rgba(0, 0, 0, .85), 0 2px 4px rgba(0, 0, 0, .35);
-    --sombra-nav: 0 -8px 24px -10px rgba(0, 0, 0, .8); --sombra-alta: 0 -14px 44px -10px rgba(0, 0, 0, .8);
-    --foco: #F3EBDD; --tinta: rgba(243, 235, 221, .10); --brillo-esq: rgba(243, 235, 221, .07);
-    color-scheme: dark;
+    --fondo: #121A14; --superficie: #1B241D; --superficie-2: #26322A; --linea: #34413A; --linea-fuerte: #4E5C54;
+  --texto: #F3EBDD; --secundario: #DDD6CA;
+  --primario: #F3EBDD; --primario-suave: #29362F; --sobre-primario: #2D3142;
+  --huevo: #F6BD60; --huevo-suave: #403B23; --sobre-huevo: #2D3142; --cielo: #9DB8DC;
+  --alerta: #F5C7BF; --sobre-alerta: #2D3142; --precaucion: #F6BD60; --ok: #C9D4CA;
+  --alerta-viva: #F28482; --precaucion-viva: #F6BD60; --ok-viva: #84A59D;
+  --t-menta: #3A423C; --t-cielo: #384242; --t-lila: #3D4141; --t-coral: #3F2F2A; --t-salvia: #29362F; --t-durazno: #403B23; --t-marron: #393527;
+  --p-coral: #F28482; --p-salvia: #84A59D; --p-durazno: #F6BD60; --p-menta: #D8E2DC; --p-cielo: #D0E1F9; --p-lila: #E8DFF5; --p-crema: #F7F3E8;
+  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE;
+  --il-trazo: #F3EBDD; --il-ojo: #2D3142;
+  --il-fondo-crema: #54574D; --il-fondo-menta: #4D5650; --il-fondo-cielo: #4B5659; --il-fondo-lila: #525558; --il-fondo-coral: #553A35; --il-fondo-salvia: #34443D; --il-fondo-durazno: #564B2B;
+  --il-sombra: rgba(0, 0, 0, .28);
+  --velo: rgba(5, 9, 6, .66);
+  --sombra-1: inset 0 1px 0 rgba(243, 235, 221, .05), 0 2px 6px -2px rgba(0, 0, 0, .6);
+  --sombra: inset 0 1px 0 rgba(243, 235, 221, .06), 0 10px 24px -12px rgba(0, 0, 0, .85), 0 2px 4px rgba(0, 0, 0, .35);
+  --sombra-nav: 0 -8px 24px -10px rgba(0, 0, 0, .8); --sombra-alta: 0 -14px 44px -10px rgba(0, 0, 0, .8);
+  --foco: #F3EBDD; --tinta: rgba(243, 235, 221, .10); --brillo-esq: rgba(243, 235, 221, .07);
+  color-scheme: dark;
   }
 }
 [data-tema="oscuro"] {
-  --fondo: #121A14; --superficie: #1B241D; --superficie-2: #26322A; --linea: #2F3B31; --linea-fuerte: #46553F;
-  --texto: #F3EBDD; --secundario: #BFB09E; --primario: #7CC88A; --primario-suave: #203327; --sobre-primario: #0F1A11;
-  --huevo: #E8A317; --huevo-suave: #3A2E14; --sobre-huevo: #1A140D; --cielo: #6FAAD0;
-  --alerta: #EBA197; --sobre-alerta: #1F0E0B; --precaucion: #F0A53A; --ok: #7CC88A;
-  --alerta-viva: #E0705F; --precaucion-viva: #E8A33A; --ok-viva: #5FAE6E;
+  --fondo: #121A14; --superficie: #1B241D; --superficie-2: #26322A; --linea: #34413A; --linea-fuerte: #4E5C54;
+  --texto: #F3EBDD; --secundario: #DDD6CA;
+  --primario: #F3EBDD; --primario-suave: #29362F; --sobre-primario: #2D3142;
+  --huevo: #F6BD60; --huevo-suave: #403B23; --sobre-huevo: #2D3142; --cielo: #9DB8DC;
+  --alerta: #F5C7BF; --sobre-alerta: #2D3142; --precaucion: #F6BD60; --ok: #C9D4CA;
+  --alerta-viva: #F28482; --precaucion-viva: #F6BD60; --ok-viva: #84A59D;
+  --t-menta: #3A423C; --t-cielo: #384242; --t-lila: #3D4141; --t-coral: #3F2F2A; --t-salvia: #29362F; --t-durazno: #403B23; --t-marron: #393527;
+  --p-coral: #F28482; --p-salvia: #84A59D; --p-durazno: #F6BD60; --p-menta: #D8E2DC; --p-cielo: #D0E1F9; --p-lila: #E8DFF5; --p-crema: #F7F3E8;
+  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE;
+  --il-trazo: #F3EBDD; --il-ojo: #2D3142;
+  --il-fondo-crema: #54574D; --il-fondo-menta: #4D5650; --il-fondo-cielo: #4B5659; --il-fondo-lila: #525558; --il-fondo-coral: #553A35; --il-fondo-salvia: #34443D; --il-fondo-durazno: #564B2B;
+  --il-sombra: rgba(0, 0, 0, .28);
   --velo: rgba(5, 9, 6, .66);
   --sombra-1: inset 0 1px 0 rgba(243, 235, 221, .05), 0 2px 6px -2px rgba(0, 0, 0, .6);
   --sombra: inset 0 1px 0 rgba(243, 235, 221, .06), 0 10px 24px -12px rgba(0, 0, 0, .85), 0 2px 4px rgba(0, 0, 0, .35);
