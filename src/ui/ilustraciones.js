@@ -172,3 +172,14 @@ function ilustracionDe(contexto, id, respaldo) {
   if (existe(respaldo)) return respaldo;
   return _RESPALDO[contexto] || 'est-exito';
 }
+
+/* Tarjeta para elegir una genética (Nuevo lote y Planificar): el ave a la izquierda, nombre, tipo y rasgo.
+   `extra`: HTML ya armado que se agrega al final (p. ej. los datos del Planificador). */
+function TarjetaGenetica({ g, elegida = false, accion, clase = '', extra = '' } = {}) {
+  const k = ilustracionDe('genetica', g.id);
+  const tipo = typeof TIPOS !== 'undefined' && TIPOS[g.tipo] ? TIPOS[g.tipo].corto : g.tipo;
+  return `<button type="button" class="gen-opcion tg${elegida ? ' tg-elegida' : ''}${clase ? ' ' + esc(clase) : ''}" data-accion="${esc(accion)}" data-id="${esc(g.id)}" aria-pressed="${elegida ? 'true' : 'false'}">
+  <span class="tg-ave" data-il="${k}">${Ilustracion(k, { tamano: 'media' })}</span>
+  <span class="tg-texto"><span class="gen-cab"><b class="gen-nombre">${esc(g.nombre)}</b><span class="gen-tipo gen-tipo-${esc(g.tipo)}">${esc(tipo)}</span></span>
+  <span class="gen-desc">${esc(g.rasgo)}${g.origen ? ' · ' + esc(g.origen) : ''}</span>${extra}</span></button>`;
+}

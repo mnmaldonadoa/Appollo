@@ -156,9 +156,7 @@ const NuevoLote = (function () {
     const t = (App.estado.granja && App.estado.granja.tipo) || '', orden = ORDEN[t] || ORDEN.postura;
     const lista = GENETICAS.slice().sort((a, b) => orden.indexOf(a.tipo) - orden.indexOf(b.tipo));
     return `<h1>¿Qué aves llegan?</h1>
-  <div class="gen-lista">${lista.map(g => `<button type="button" class="gen-opcion" data-accion="nl-genetica" data-id="${esc(g.id)}" aria-pressed="${st.gid === g.id}">
-    <span class="gen-cab"><b class="gen-nombre">${esc(g.nombre)}</b><span class="gen-tipo gen-tipo-${esc(g.tipo)}">${esc(TIPOS[g.tipo].corto)}</span></span>
-    <span class="gen-desc">${esc(g.rasgo)} · ${esc(g.origen)}</span></button>`).join('')}</div>
+  <div class="gen-lista">${lista.map(g => TarjetaGenetica({ g, elegida: st.gid === g.id, accion: 'nl-genetica' })).join('')}</div>
   ${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'ir', datos: { ruta: '#/lotes' }, clase: 'btn-ancho' })}`;
   }
 
@@ -171,7 +169,7 @@ const NuevoLote = (function () {
         `Máximo para ${esc(g.nombre)}: ${formatoNumero(max)} días (${semanas(max)})`)
       : campo('nl-fecha', 'Fecha de llegada', texto('nl-fecha', st.fecha, `type="date" max="${hoyLocal()}"`)) +
         campo('nl-edad-llegada', 'Edad al llegar (días)', Contador({ id: 'nl-edad-llegada', valor: st.edadLlegada, min: 0, paso: 1, etiqueta: 'Edad al llegar en días' }), 'Pon 0 o 1 si llegaron pollitos recién nacidos');
-    return `<h1>${esc(g.nombre)}</h1>
+    return `<div class="cab-il">${Ilustracion('man-densidad', { tamano: 'mini' })}<h1>${esc(g.nombre)}</h1></div>
   ${campo('nl-aves', '¿Cuántas aves llegaron?', Contador({ id: 'nl-aves', valor: st.aves, min: 1, paso: 10, etiqueta: 'Cantidad de aves' }))}
   <div class="reg-campo"><p class="reg-etiqueta">¿Qué sabes de su edad?</p>${seg('nl-modo', 'modo', [['edad', 'Su edad hoy'], ['fecha', 'Fecha de llegada']])}</div>
   ${edad}
@@ -207,7 +205,7 @@ const NuevoLote = (function () {
       if (!ts.length) return '';
       const k = ts.filter(t => st.plan.has(t.id) && !noSirve(t, g)).length, abierta = st.abiertas.has(c.id);
       return `<section class="nl-cat" data-cat="${esc(c.id)}">
-    <button type="button" class="nl-cat-cab" data-accion="nl-plan-abrir" data-id="${esc(c.id)}" aria-expanded="${abierta}"><b>${esc(c.nombre)}</b><span class="nl-cat-cuenta">${k}/${ts.length}</span></button>
+    <button type="button" class="nl-cat-cab" data-accion="nl-plan-abrir" data-id="${esc(c.id)}" aria-expanded="${abierta}"><span class="nl-cat-nombre">${Ilustracion(ilustracionDe('categoriaPlan', c.id), { tamano: 'mini' })}<b>${esc(c.nombre)}</b></span><span class="nl-cat-cuenta">${k}/${ts.length}</span></button>
     ${abierta ? `<div class="nl-cat-cuerpo"><div class="nl-cat-botones">${Boton({ texto: 'Todo', variante: 'secundario', accion: 'nl-plan-todo', datos: { id: c.id } })}${Boton({ texto: 'Ninguno', variante: 'secundario', accion: 'nl-plan-ninguno', datos: { id: c.id } })}</div>
       <div class="plan-items">${ts.map(t => tareaHTML(t, g)).join('')}</div></div>` : ''}</section>`;
     }).join('');
@@ -220,7 +218,7 @@ const NuevoLote = (function () {
 
   function paso4() {
     const g = genDe(st.gid), v = validar(datos()), def = v.lote ? `${corta(g)} · ${String(st.galpon || '').trim() || 'Lote'}` : '';
-    return `<h1>¿Dónde están?</h1>
+    return `<div class="cab-il">${Ilustracion('man-temperatura', { tamano: 'mini' })}<h1>¿Dónde están?</h1></div>
   <div class="reg-campo"><label class="reg-etiqueta" for="nl-altitud">Altitud de la granja (metros)</label>
     <div class="nl-alturas">${ALTITUDES.map(([m, t]) => `<button type="button" class="segmento-btn nl-altura" data-accion="nl-altitud" data-valor="${m}" aria-pressed="${String(st.altitud) === String(m)}"><b>${formatoNumero(m)} m</b><span>${t}</span></button>`).join('')}</div>
     ${texto('nl-altitud', st.altitud, 'type="number" inputmode="numeric" min="0" max="6000" step="1" placeholder="Otra altitud en metros"')}

@@ -441,6 +441,14 @@ button { cursor: pointer; }
   background: var(--superficie); color: var(--texto); border: 2px solid var(--linea-fuerte); touch-action: manipulation; }
 .gen-opcion:active { background: var(--primario-suave); }
 .gen-opcion[aria-pressed="true"] { border-color: var(--ok);  }
+.tg { grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 12px; padding: 10px 14px 10px 10px; }
+.tg-ave .il { width: 80px; height: 80px; }
+.tg-texto { display: grid; gap: 4px; min-width: 0; }
+.gen-opcion.tg-elegida { background: var(--t-salvia); border-color: var(--texto); }
+.plan-gen.tg { align-items: start; }
+.cab-il { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.cab-il h1 { min-width: 0; overflow-wrap: anywhere; }
+.nl-cat-nombre { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .gen-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .gen-nombre { font-family: var(--f-titulo); font-size: 1.25rem; line-height: 1.2; }
 .gen-tipo { flex: none; padding: 2px 10px; border-radius: 999px; font-size: 1rem; font-weight: 700; color: var(--texto); background: var(--superficie-2); }

@@ -30,13 +30,10 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   /* ============================ 1 · GENÉTICA ============================ */
   const FILTROS = [['todas', 'Todas'], ['postura', 'Postura'], ['carne', 'Carne'], ['doble', 'Doble propósito'], ['criolla', 'Criolla']];
   function listaGen() {
-    return GENETICAS.filter(g => S.filtro === 'todas' || g.tipo === S.filtro).map(g => `
-    <button type="button" class="gen-opcion plan-gen" data-accion="plan-genetica" data-id="${esc(g.id)}" aria-pressed="${S.gid === g.id}">
-      <span class="gen-cab"><b class="gen-nombre">${esc(g.nombre)}</b><span class="gen-tipo gen-tipo-${esc(g.tipo)}">${esc(TIPOS[g.tipo].corto)}</span></span>
-      <span class="gen-desc">${esc(g.desc)}</span>
-      <span class="plan-datos">${g.datos.map(d => `<span><span class="plan-dt">${esc(d[0])}</span><b class="num">${esc(d[1])}</b></span>`).join('')}</span>
-      <span class="gen-desc">${esc(g.rasgo)} · ${esc(g.origen)}</span>
-    </button>`).join('');
+    return GENETICAS.filter(g => S.filtro === 'todas' || g.tipo === S.filtro).map(g => TarjetaGenetica({
+      g, elegida: S.gid === g.id, accion: 'plan-genetica', clase: 'plan-gen',
+      extra: `<span class="gen-desc">${esc(g.desc)}</span>
+      <span class="plan-datos">${g.datos.map(d => `<span><span class="plan-dt">${esc(d[0])}</span><b class="num">${esc(d[1])}</b></span>`).join('')}</span>` })).join('');
   }
   function pasoGenetica() {
     return `<h1>¿Qué gallinas vas a manejar?</h1>
@@ -63,7 +60,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     const alts = [[100, 'Costa'], [400, 'Amazonía'], [1800, 'Valle'], [2800, 'Sierra']];
     const seg = (accion, actual, ops, etiqueta) => `<div class="segmento" role="group" aria-label="${etiqueta}">${ops.map(([v, t]) =>
       `<button type="button" class="segmento-btn" data-accion="${accion}" data-v="${v}" aria-pressed="${actual === v}">${t}</button>`).join('')}</div>`;
-    return `<h1>Datos del lote</h1>
+    return `<div class="cab-il">${Ilustracion('man-densidad', { tamano: 'mini' })}<h1>Datos del lote</h1></div>
   <p class="pantalla-texto">Con la edad, el número de aves y la altitud se ajustan las recomendaciones y la proyección.</p>
   <div class="plan-elegida"><div><b class="gen-nombre">${esc(g.nombre)}</b><p class="gen-desc">${esc(g.rasgo)} · ${esc(TIPOS[g.tipo].nombre)}</p></div>
     ${Boton({ texto: 'Cambiar', variante: 'secundario', accion: 'plan-ir', datos: { paso: 'genetica' } })}</div>

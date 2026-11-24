@@ -135,3 +135,18 @@ assert.ok(!/function ilustracion\(/.test(src('ui/componentes.js')), 'componentes
 const VACIOS = { 'alertas.js': 'sin-alertas', 'bienvenida.js': 'bienvenida', 'registrar.js': 'sin-lotes', 'lotes.js': 'sin-lotes',
   'inicio.js': 'sin-lotes', 'detalleLote.js': 'sin-registros', 'reportes.js': 'sin-registros', 'inventario.js': 'sin-inventario' };
 for (const [f, e] of Object.entries(VACIOS)) assert.ok(src('vistas/' + f).includes(`ilustracionDe('estado', '${e}')`), `${f}: vacío con est-${e}`);
+
+// TarjetaGenetica: botón de elección de genética con su ave (Nuevo lote y Planificar)
+{
+  const g = c.GENETICAS[0];
+  let t = c.TarjetaGenetica({ g, elegida: false, accion: 'nl-genetica' });
+  assert.ok(/^<button type="button" class="gen-opcion tg"/.test(t), 'botón con clases gen-opcion tg');
+  assert.ok(t.includes('data-accion="nl-genetica"') && t.includes(`data-id="${g.id}"`), 'data-accion y data-id');
+  assert.ok(t.includes('aria-pressed="false"') && !t.includes('tg-elegida'), 'no elegida');
+  assert.ok(t.includes('data-il="gen-hyline-brown"') && t.includes('#p-cuerpo'), 'lleva el ave de su genética');
+  assert.ok(t.includes(g.nombre) && t.includes(g.rasgo), 'nombre y rasgo');
+  t = c.TarjetaGenetica({ g: { ...g, nombre: '<b>x</b>' }, elegida: true, accion: 'plan-genetica', clase: 'plan-gen', extra: '<span class="plan-datos"></span>' });
+  assert.ok(t.includes('aria-pressed="true"') && t.includes('tg-elegida') && t.includes('plan-gen'), 'elegida y clase extra');
+  assert.ok(t.includes('&lt;b&gt;x') && !t.includes('<b>x</b>'), 'nombre escapado');
+  assert.ok(t.includes('<span class="plan-datos"></span>'), 'contenido extra');
+}
