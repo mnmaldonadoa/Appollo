@@ -103,7 +103,7 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Appollo</title>
 <meta name="description" content="Manejo de gallinas por genética y proyección de huevos o carne. Funciona sin internet.">
-<meta name="theme-color" content="#F6F1E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#F7F3E8" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121A14" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
@@ -134,8 +134,8 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
         "scope": "./",
         "display": "standalone",
         "orientation": "portrait",
-        "background_color": "#F6F1E7",
-        "theme_color": "#F6F1E7",
+        "background_color": "#F7F3E8",
+        "theme_color": "#F7F3E8",
         "icons": [
             {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
             {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},

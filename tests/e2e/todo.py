@@ -231,10 +231,10 @@ def main():
         # ---------- 6. Sin conexión ----------
         pg.evaluate("navigator.serviceWorker.ready.then(() => 0)")
         esperar(pg, "navigator.serviceWorker.controller !== null", 8000)
-        faltan = pg.evaluate("""async lista => { const c = await caches.open('appollo-v5'); const ks = (await c.keys()).map(r => new URL(r.url).pathname);
+        faltan = pg.evaluate("""async lista => { const c = await caches.open('appollo-v6'); const ks = (await c.keys()).map(r => new URL(r.url).pathname);
             return lista.filter(p => !ks.includes('/' + p)); }""", [p for p in precache if p])
         check("el service worker precargó todos los archivos (fuentes, íconos, manifest)", not faltan and len(precache) >= 10, faltan)
-        check("el caché 'appollo-v5' es el único", pg.evaluate("caches.keys()") == ["appollo-v5"], pg.evaluate("caches.keys()"))
+        check("el caché 'appollo-v6' es el único", pg.evaluate("caches.keys()") == ["appollo-v6"], pg.evaluate("caches.keys()"))
         ctx.set_offline(True)
         pg.reload(); pg.wait_for_selector("#view .pantalla, #view .vista-error", timeout=8000)
         check("sin conexión: la app carga desde el service worker", pg.locator("#view .vista-error").count() == 0 and pg.title() == "Appollo")

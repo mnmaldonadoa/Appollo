@@ -70,13 +70,13 @@ Nicolás aprobó esta regla de contraste: **los pasteles puros solo van en pieza
 | Solo decoración (sin texto) | coral `#F28482`, salvia `#84A59D`, durazno `#F6BD60`, cuerpos `#FAF9F6`, `#FCE181`, `#D4A373`, `#CCD5AE` | |
 | Pastel puro con texto carbón (prohibido) | coral 5,15:1 · salvia 4,82:1 · marrón 5,70:1 · gris pizarra `#5C677D` como texto ≤ 5,4:1 | no pasan |
 
-**Acentos profundos para texto y señales** (decidido por Nicolás, 2026-11-24, opción 1): tres tonos oscuros de la misma familia pastel, **solo para texto, bordes finos, íconos y botones de acción**, nunca como relleno grande de superficie:
+**Acentos profundos para texto y señales** (decidido por Nicolás, 2026-11-24, opción 1; oscurecidos un poco en la implementación para pasar 7:1 también sobre superficie-2, primario-suave y huevo-suave): tres tonos oscuros de la misma familia pastel, **solo para texto, bordes finos, íconos y botones de acción**, nunca como relleno grande de superficie:
 
 | Token | Claro | Oscuro | Usos |
 |---|---|---|---|
-| `--alerta` (coral profundo) | `#86352F`: 7,4:1 sobre crema, 8,1:1 sobre `#FFFDF8`; crema sobre él 8,1:1 | tinte coral `#F5C7BF` como texto (11,7:1 sobre la base) | texto de `.chip-rojo`, errores, fondo de `.btn-peligro` (con texto crema en claro, carbón en oscuro) |
-| `--ok` / `--primario` (salvia profunda) | `#3A564E`: 7,2:1 sobre crema, 7,9:1 sobre `#FFFDF8` | tinte salvia `#C9D4CA` (11,6:1) | pestaña activa, genética elegida, segmentos presionados, enlaces, texto y borde de `.btn-secundario`, chips de "Bien" |
-| `--precaucion` (durazno profundo) | `#6A4A12`: 7,3:1 sobre crema, 7,9:1 sobre `#FFFDF8` | durazno `#F6BD60` (10,4:1) | texto de chips "Revisar" y avisos ámbar |
+| `--alerta` (coral profundo) | `#7A2F2A`: 8,4:1 sobre crema, 7,7:1 sobre superficie-2; crema sobre él 9,1:1 | tinte coral `#F5C7BF` como texto (11,7:1 sobre la base) | texto de `.chip-rojo`, errores, fondo de `.btn-peligro` (con texto crema en claro, carbón en oscuro) |
+| `--ok` / `--primario` (salvia profunda) | `#344E47`: 8,1:1 sobre crema, 7,5:1 sobre superficie-2 | tinte salvia `#C9D4CA` (11,6:1) | pestaña activa, genética elegida, segmentos presionados, enlaces, texto y borde de `.btn-secundario`, chips de "Bien" |
+| `--precaucion` (durazno profundo) | `#5E4210`: 8,4:1 sobre crema, 7,7:1 sobre superficie-2 | durazno `#F6BD60` (10,4:1) | texto de chips "Revisar" y avisos ámbar |
 
 El botón principal sigue en carbón (§ arriba). Los pares que hoy exige `visual.py` (`alerta/superficie`, `sobre-alerta/alerta`, `primario/superficie`, `ok/superficie`, `precaucion/superficie`, `sobre-huevo/huevo`) se mantienen con estos valores y entran en `paleta.test.js`. Estos acentos sobre superficies tintadas (menta, cielo, lila) no se usan como texto salvo que la prueba los valide.
 

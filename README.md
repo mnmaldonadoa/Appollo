@@ -42,7 +42,7 @@ src/
   alertas.js     Reglas de las alertas (puro)
   db.js          IndexedDB (con respaldo en memoria): listar, obtener, guardar, borrar, exportar e importar
   app.js         Rutas (#/inicio, #/lotes, #/lote/ID, #/alertas, #/mas, #/inventario, #/reportes, #/ajustes, #/plan/...), hojas, toasts
-  ui/            Componentes, gráficos y animaciones propios; kit.js/kit.css es el muestrario visual
+  ui/            Componentes, gráficos, animaciones e ilustraciones (ilustraciones.js); kit.js/kit.css es el muestrario visual
   vistas/        Una pantalla por archivo (inicio, lotes, nuevoLote, detalleLote, registrar, alertas, inventario, reportes, ajustes, planificar*)
   styles.css     Sistema visual: tokens de color, espacio y radios, tema claro y oscuro
   body.html      Íconos (sprite SVG) y contenedores de la app
@@ -55,6 +55,20 @@ android/         Proyecto Capacitor para el APK
 docs/superpowers/  Especificación y plan de esta versión
 ```
 
+## Estilo visual
+
+Plano y minimalista, en pastel mate, sin contornos ni sombras difusas (guía «Minimalist Flat Vector»; diseño en `docs/superpowers/specs/2026-11-24-estilo-visual-design.md`).
+
+- **Tokens** en `src/styles.css`, en claro y oscuro. Los pasteles puros (`--p-*`, `--ave-*`, `--il-fondo-*`) nunca llevan texto. Donde hay texto se usan los tintes `--t-*` con texto carbón `#2D3142`. Los acentos profundos (`--alerta`, `--ok`, `--precaucion`) van solo como texto, borde o botón de acción. `tests/paleta.test.js` calcula el contraste de cada par.
+- **Tipografías:** Nunito en títulos y cifras; Atkinson Hyperlegible en el cuerpo.
+- **Ilustraciones:**
+  - Las piezas `p-*` viven una sola vez en el sprite de `src/body.html`. Se generan con `python3 tools/piezas_ilustracion.py src/body.html`.
+  - `src/ui/ilustraciones.js` arma las 53 escenas: `Ilustracion(clave, { tamano: 'mini'|'media'|'grande' })`.
+  - Todo dato de la app (registro, alerta, labor, recomendación, genética, inventario) se convierte en escena **solo** con `ilustracionDe(contexto, id)`, que siempre devuelve una clave válida.
+  - El inventario completo está en `docs/superpowers/specs/2026-11-24-estilo-visual-inventario.md`.
+  - Ninguna ilustración muestra dosis ni cantidades.
+- **Capturas** para revisar: `python3 tests/e2e/capturas.py <etiqueta>` (en `capturas/<etiqueta>/`, claro y oscuro).
+
 ## Construir y probar
 
 Requisitos: Python 3 con Pillow y Playwright (`pip install pillow playwright && playwright install chromium`) y Node 18 o más.
@@ -63,7 +77,7 @@ Requisitos: Python 3 con Pillow y Playwright (`pip install pillow playwright && 
 python3 build.py              # genera dist/ y artifact.html
 python3 build.py --kit        # además dist/_kit.html (muestrario visual)
 node tests/run.js             # pruebas unitarias: cálculos, alertas, validación, inventario, reportes, componentes, planVacunas
-python3 tests/e2e/todo.py     # recorrido completo, sin conexión, claro y oscuro, objetivos táctiles
+python3 tests/e2e/todo.py     # recorrido completo, sin conexión, claro y oscuro, objetivos táctiles, contraste 7:1 y texto recortado
 ```
 
 Las demás pruebas de extremo a extremo (`tests/e2e/lotes.py`, `registro.py`, `alertas.py`, `reportes.py`, `planificar.py`, `planificar_golden.py`, `plan.py`, `db.py`, `migracion.py`, `visual.py`) se ejecutan igual: `python3 tests/e2e/<nombre>.py`. Cada una levanta su propio servidor `http.server` sobre `dist/` (el service worker y IndexedDB necesitan `http`, no `file://`) y usa un teléfono de 360×740. `visual.py` necesita antes `python3 build.py --kit`.
@@ -72,9 +86,9 @@ Reglas que las pruebas vigilan: ningún botón o campo de menos de 56 px de alto
 
 ## PWA y uso sin conexión
 
-- La primera vez la app debe abrirse desde una dirección `https` (o `http://localhost`). El service worker guarda `index.html`, el manifest, los íconos y las cuatro tipografías en el caché `appollo-v5`; desde entonces abre sin internet y los datos se escriben en el teléfono.
-- **Sube el número de `CACHE` en `src/sw.js` en cada versión que publiques** (`appollo-v5` → `appollo-v6`…): sin eso los teléfonos que ya instalaron la app siguen con los archivos viejos. La instalación del service worker descarga los archivos con `cache: 'reload'`, así que nunca guarda copias viejas del caché HTTP.
-- La barra de estado y la pantalla de arranque usan el color crema de la app (`#F6F1E7`; `#121A14` en modo oscuro).
+- La primera vez la app debe abrirse desde una dirección `https` (o `http://localhost`). El service worker guarda `index.html`, el manifest, los íconos y las cuatro tipografías en el caché `appollo-v6`; desde entonces abre sin internet y los datos se escriben en el teléfono.
+- **Sube el número de `CACHE` en `src/sw.js` en cada versión que publiques** (`appollo-v6` → `appollo-v7`…): sin eso los teléfonos que ya instalaron la app siguen con los archivos viejos. La instalación del service worker descarga los archivos con `cache: 'reload'`, así que nunca guarda copias viejas del caché HTTP.
+- La barra de estado y la pantalla de arranque usan el color crema de la app (`#F7F3E8`; `#121A14` en modo oscuro).
 - Si el navegador no deja guardar datos (modo privado), aparece un aviso y conviene exportar un respaldo desde **Ajustes**.
 
 ## Instalar en el teléfono
@@ -121,7 +135,6 @@ Para Play Store se necesita un APK/AAB firmado (*release*) con tu propia llave. 
 - **Programa de luz:** el texto de `src/model.js` (`programaLuz`) dice subir 15–30 min por semana; la guía Hy-Line Max da pasos de 30–60 min (la HL 2018 no da minutos). Pendiente de armonizar.
 - **Huecos del catálogo:** criolla, campero, doble propósito (Rhode Island, Plymouth Rock) solo tienen la labor general de acceso al alimento, sin cambios de fase de alimento; Hisex Brown solo tiene las dos labores de peso de postura; para Ross 308 solo hay dos cambios (día 11 a Crecimiento, día 25 a Engorde) y no hay un segundo Finalizador.
 - Las pestañas del detalle del lote no se recorren con las flechas del teclado.
-- El estilo visual nuevo está pendiente (subproyecto aparte).
 
 ## Sobre los datos
 

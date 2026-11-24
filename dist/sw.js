@@ -1,8 +1,8 @@
 /* Appollo · Service worker: guarda la app en el teléfono para usarla sin internet */
-const CACHE = 'appollo-v5';
+const CACHE = 'appollo-v6';
 const ARCHIVOS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png',
   './fonts/atkinson-hyperlegible-latin-400-normal.woff2', './fonts/atkinson-hyperlegible-latin-700-normal.woff2',
-  './fonts/zilla-slab-latin-600-normal.woff2', './fonts/zilla-slab-latin-700-normal.woff2'];
+  './fonts/nunito-latin-700-normal.woff2', './fonts/nunito-latin-800-normal.woff2'];
 
 self.addEventListener('install', e => {
   // cache:'reload' salta la caché HTTP del navegador: una versión nueva nunca guarda archivos viejos.

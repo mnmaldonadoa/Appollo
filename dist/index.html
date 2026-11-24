@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Appollo</title>
 <meta name="description" content="Manejo de gallinas por genética y proyección de huevos o carne. Funciona sin internet.">
-<meta name="theme-color" content="#F6F1E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#F7F3E8" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121A14" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
@@ -16,8 +16,8 @@
 <style>
 @font-face { font-family: "Atkinson Hyperlegible"; font-style: normal; font-weight: 400; font-display: swap; src: url(fonts/atkinson-hyperlegible-latin-400-normal.woff2) format("woff2"); }
 @font-face { font-family: "Atkinson Hyperlegible"; font-style: normal; font-weight: 700; font-display: swap; src: url(fonts/atkinson-hyperlegible-latin-700-normal.woff2) format("woff2"); }
-@font-face { font-family: "Zilla Slab"; font-style: normal; font-weight: 600; font-display: swap; src: url(fonts/zilla-slab-latin-600-normal.woff2) format("woff2"); }
-@font-face { font-family: "Zilla Slab"; font-style: normal; font-weight: 700; font-display: swap; src: url(fonts/zilla-slab-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 700; font-display: swap; src: url(fonts/nunito-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 800; font-display: swap; src: url(fonts/nunito-latin-800-normal.woff2) format("woff2"); }
 </style>
 <style>
 /* Appollo 2 · Sistema visual
@@ -28,81 +28,101 @@
 /* ---------- Tipografía (las @font-face las inserta build.py) ---------- */
 :root {
   --f-texto: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --f-titulo: "Zilla Slab", "Roboto Slab", Rockwell, Georgia, serif;
+  --f-titulo: "Nunito", ui-rounded, "Segoe UI", system-ui, sans-serif;
   --dur: 220ms;
   --curva: cubic-bezier(.2, .7, .2, 1);
   --rebote: cubic-bezier(.34, 1.4, .5, 1);
-  --r-s: 14px;
-  --r: 20px;
-  --r-l: 24px;
-  --r-xl: 28px;                 /* hoja inferior */
+  --r-s: 16px;
+  --r: 24px;
+  --r-l: 28px;
+  --r-xl: 32px;                 /* hoja inferior */
   /* escala de espacio (4/8) */
   --e1: 4px; --e2: 8px; --e3: 12px; --e4: 16px; --e5: 24px; --e6: 32px; --e7: 48px;
   --presion: .97;               /* escala al tocar; 1 con movimiento reducido */
   --t-toque: 120ms;
 }
 
-/* ---------- Tema claro (por defecto) ---------- */
+/* ---------- Tema claro (por defecto) ----------
+   Pastel mate: los pasteles puros (--p-*, --ave-*, --il-fondo-*) nunca llevan texto. Donde hay texto se usan los
+   tintes --t-* con texto carbón, y los acentos profundos (--alerta, --ok, --precaucion) solo como texto, borde o
+   botón de acción. tests/paleta.test.js valida cada par. */
 :root, [data-tema="claro"] {
-  --fondo: #F6F1E7;
+  --fondo: #F7F3E8;
   --superficie: #FFFDF8;
-  --superficie-2: #EFE6D6;
-  --linea: #E2D6C2;
-  --linea-fuerte: #CDBDA4;
-  --texto: #2B2118;
-  --secundario: #5D4E3F;      /* spec #6B5A48 -> 7:1 sobre fondo */
-  --primario: #285A31;        /* spec #2F6B3A -> 7:1 con texto crema encima */
-  --primario-suave: #E3ECDC;
+  --superficie-2: #EFE9DA;
+  --linea: #E4DCCB;
+  --linea-fuerte: #CFC4AE;
+  --texto: #2D3142;           /* carbón suave */
+  --secundario: #424A5C;      /* solo sobre crema o blanco */
+  --primario: #2D3142;        /* botón principal: carbón con texto crema */
+  --primario-suave: #E4EAE5;
   --sobre-primario: #FFFDF8;
-  --huevo: #E8A317;
-  --huevo-suave: #FBEBC4;
-  --sobre-huevo: #2B2118;
-  --cielo: #4A90B8;
-  --alerta: #902F23;          /* spec #B23A2B -> 7:1 */
+  --huevo: #F6BD60;
+  --huevo-suave: #FBE6C2;
+  --sobre-huevo: #2D3142;
+  --cielo: #7E9CC4;
+  --alerta: #7A2F2A;          /* coral profundo */
   --sobre-alerta: #FFFDF8;
-  --precaucion: #724708;      /* spec #C77C0E -> 7:1 como texto */
-  --ok: #285A31;
-  --alerta-viva: #B23A2B;
-  --precaucion-viva: #C77C0E;
-  --ok-viva: #3D8A4A;
-  --velo: rgba(43, 33, 24, .52);
-  /* Elevación (sombras con tinte tierra, nunca gris): 1 filas, 2 tarjetas, 3 barra/toast, 4 hoja */
-  --sombra-1: 0 1px 2px rgba(112, 72, 30, .10), 0 3px 8px -4px rgba(112, 72, 30, .18);
-  --sombra: 0 1px 2px rgba(112, 72, 30, .08), 0 8px 18px -8px rgba(112, 72, 30, .26), 0 20px 30px -22px rgba(112, 72, 30, .30);
-  --sombra-nav: 0 -8px 24px -12px rgba(112, 72, 30, .38);
-  --sombra-alta: 0 -14px 44px -12px rgba(74, 44, 16, .42);
-  --foco: #2B2118;
-  --tinta: rgba(74, 44, 16, .10);
+  --precaucion: #5E4210;      /* durazno profundo */
+  --ok: #344E47;              /* salvia profunda: selección, enlaces, "Bien" */
+  --alerta-viva: #F28482;
+  --precaucion-viva: #F6BD60;
+  --ok-viva: #84A59D;
+  /* tintes con texto */
+  --t-menta: #D8E2DC; --t-cielo: #D0E1F9; --t-lila: #E8DFF5; --t-coral: #F5C7BF; --t-salvia: #C9D4CA; --t-durazno: #F6BD60; --t-marron: #E9D3B9;
+  /* pasteles puros (decoración) */
+  --p-coral: #F28482; --p-salvia: #84A59D; --p-durazno: #F6BD60; --p-menta: #D8E2DC; --p-cielo: #D0E1F9; --p-lila: #E8DFF5; --p-crema: #F7F3E8;
+  /* ilustración */
+  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE; --ave-hueso-2: #E6DFD0; --ave-marron-2: #B98A5E; --ave-caoba: #B4764E;
+  --il-trazo: #2D3142; --il-ojo: #2D3142;
+  --il-fondo-crema: #EFE6D2; --il-fondo-menta: #D8E2DC; --il-fondo-cielo: #D0E1F9; --il-fondo-lila: #E8DFF5; --il-fondo-coral: #F5C7BF; --il-fondo-salvia: #C9D4CA; --il-fondo-durazno: #FBE3B8;
+  --foco: #2D3142;
+  --velo: rgba(45, 49, 66, .52);
+  --sombra-plana: 0 3px 0 0 #D9CFBC;
+  --sombra-boton: 0 3px 0 0 #151821;
+  --sombra-peligro: 0 3px 0 0 #521E1A;
+  --tinta: rgba(45, 49, 66, .10);
   --brillo-esq: rgba(255, 253, 248, .75);
+  --il-sombra: rgba(45, 49, 66, .12);
   color-scheme: light;
 }
 
-/* ---------- Tema oscuro: noche en el galpón (verde muy oscuro, tierra, texto crema) ---------- */
+/* ---------- Tema oscuro: noche en el galpón (base verde muy oscura, pasteles apagados, texto crema) ---------- */
 @media (prefers-color-scheme: dark) {
   :root:not([data-tema="claro"]) {
-    --fondo: #121A14; --superficie: #1B241D; --superficie-2: #26322A; --linea: #2F3B31; --linea-fuerte: #46553F;
-    --texto: #F3EBDD; --secundario: #BFB09E; --primario: #7CC88A; --primario-suave: #203327; --sobre-primario: #0F1A11;
-    --huevo: #E8A317; --huevo-suave: #3A2E14; --sobre-huevo: #1A140D; --cielo: #6FAAD0;
-    --alerta: #EBA197; --sobre-alerta: #1F0E0B; --precaucion: #F0A53A; --ok: #7CC88A;
-    --alerta-viva: #E0705F; --precaucion-viva: #E8A33A; --ok-viva: #5FAE6E;
-    --velo: rgba(5, 9, 6, .66);
-    --sombra-1: inset 0 1px 0 rgba(243, 235, 221, .05), 0 2px 6px -2px rgba(0, 0, 0, .6);
-    --sombra: inset 0 1px 0 rgba(243, 235, 221, .06), 0 10px 24px -12px rgba(0, 0, 0, .85), 0 2px 4px rgba(0, 0, 0, .35);
-    --sombra-nav: 0 -8px 24px -10px rgba(0, 0, 0, .8); --sombra-alta: 0 -14px 44px -10px rgba(0, 0, 0, .8);
-    --foco: #F3EBDD; --tinta: rgba(243, 235, 221, .10); --brillo-esq: rgba(243, 235, 221, .07);
-    color-scheme: dark;
+    --fondo: #121A14; --superficie: #1B241D; --superficie-2: #26322A; --linea: #34413A; --linea-fuerte: #4E5C54;
+  --texto: #F3EBDD; --secundario: #DDD6CA;
+  --primario: #F3EBDD; --primario-suave: #29362F; --sobre-primario: #2D3142;
+  --huevo: #F6BD60; --huevo-suave: #36321F; --sobre-huevo: #2D3142; --cielo: #9DB8DC;
+  --alerta: #F5C7BF; --sobre-alerta: #2D3142; --precaucion: #F6BD60; --ok: #C9D4CA;
+  --alerta-viva: #F28482; --precaucion-viva: #F6BD60; --ok-viva: #84A59D;
+  --t-menta: #3A423C; --t-cielo: #384242; --t-lila: #3D4141; --t-coral: #3F2F2A; --t-salvia: #29362F; --t-durazno: #403B23; --t-marron: #393527;
+  --p-coral: #F28482; --p-salvia: #84A59D; --p-durazno: #F6BD60; --p-menta: #D8E2DC; --p-cielo: #D0E1F9; --p-lila: #E8DFF5; --p-crema: #F7F3E8;
+  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE; --ave-hueso-2: #E6DFD0; --ave-marron-2: #B98A5E; --ave-caoba: #B4764E;
+  --il-trazo: #F3EBDD; --il-ojo: #2D3142;
+  --il-fondo-crema: #54574D; --il-fondo-menta: #4D5650; --il-fondo-cielo: #4B5659; --il-fondo-lila: #525558; --il-fondo-coral: #553A35; --il-fondo-salvia: #34443D; --il-fondo-durazno: #564B2B;
+  --il-sombra: rgba(0, 0, 0, .28);
+  --velo: rgba(5, 9, 6, .66);
+  --sombra-plana: 0 3px 0 0 #0A100B; --sombra-boton: 0 3px 0 0 #A79E8E; --sombra-peligro: 0 3px 0 0 #C98F86;
+  --foco: #F3EBDD; --tinta: rgba(243, 235, 221, .10); --brillo-esq: rgba(243, 235, 221, .07);
+  color-scheme: dark;
   }
 }
 [data-tema="oscuro"] {
-  --fondo: #121A14; --superficie: #1B241D; --superficie-2: #26322A; --linea: #2F3B31; --linea-fuerte: #46553F;
-  --texto: #F3EBDD; --secundario: #BFB09E; --primario: #7CC88A; --primario-suave: #203327; --sobre-primario: #0F1A11;
-  --huevo: #E8A317; --huevo-suave: #3A2E14; --sobre-huevo: #1A140D; --cielo: #6FAAD0;
-  --alerta: #EBA197; --sobre-alerta: #1F0E0B; --precaucion: #F0A53A; --ok: #7CC88A;
-  --alerta-viva: #E0705F; --precaucion-viva: #E8A33A; --ok-viva: #5FAE6E;
+  --fondo: #121A14; --superficie: #1B241D; --superficie-2: #26322A; --linea: #34413A; --linea-fuerte: #4E5C54;
+  --texto: #F3EBDD; --secundario: #DDD6CA;
+  --primario: #F3EBDD; --primario-suave: #29362F; --sobre-primario: #2D3142;
+  --huevo: #F6BD60; --huevo-suave: #36321F; --sobre-huevo: #2D3142; --cielo: #9DB8DC;
+  --alerta: #F5C7BF; --sobre-alerta: #2D3142; --precaucion: #F6BD60; --ok: #C9D4CA;
+  --alerta-viva: #F28482; --precaucion-viva: #F6BD60; --ok-viva: #84A59D;
+  --t-menta: #3A423C; --t-cielo: #384242; --t-lila: #3D4141; --t-coral: #3F2F2A; --t-salvia: #29362F; --t-durazno: #403B23; --t-marron: #393527;
+  --p-coral: #F28482; --p-salvia: #84A59D; --p-durazno: #F6BD60; --p-menta: #D8E2DC; --p-cielo: #D0E1F9; --p-lila: #E8DFF5; --p-crema: #F7F3E8;
+  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE; --ave-hueso-2: #E6DFD0; --ave-marron-2: #B98A5E; --ave-caoba: #B4764E;
+  --il-trazo: #F3EBDD; --il-ojo: #2D3142;
+  --il-fondo-crema: #54574D; --il-fondo-menta: #4D5650; --il-fondo-cielo: #4B5659; --il-fondo-lila: #525558; --il-fondo-coral: #553A35; --il-fondo-salvia: #34443D; --il-fondo-durazno: #564B2B;
+  --il-sombra: rgba(0, 0, 0, .28);
   --velo: rgba(5, 9, 6, .66);
-  --sombra-1: inset 0 1px 0 rgba(243, 235, 221, .05), 0 2px 6px -2px rgba(0, 0, 0, .6);
-  --sombra: inset 0 1px 0 rgba(243, 235, 221, .06), 0 10px 24px -12px rgba(0, 0, 0, .85), 0 2px 4px rgba(0, 0, 0, .35);
-  --sombra-nav: 0 -8px 24px -10px rgba(0, 0, 0, .8); --sombra-alta: 0 -14px 44px -10px rgba(0, 0, 0, .8);
+  --sombra-plana: 0 3px 0 0 #0A100B; --sombra-boton: 0 3px 0 0 #A79E8E; --sombra-peligro: 0 3px 0 0 #C98F86;
   --foco: #F3EBDD; --tinta: rgba(243, 235, 221, .10); --brillo-esq: rgba(243, 235, 221, .07);
   color-scheme: dark;
 }
@@ -118,9 +138,9 @@ body {
   overflow-x: hidden;
 }
 [data-tema] { background: var(--fondo); color: var(--texto); }
-h1, h2, .titulo { font-family: var(--f-titulo); font-weight: 700; line-height: 1.15; letter-spacing: -.01em; margin: 0; }
+h1, h2, .titulo { font-family: var(--f-titulo); font-weight: 800; line-height: 1.15; letter-spacing: -.01em; margin: 0; }
 h1 { font-size: 2rem; }
-h2 { font-size: 1.5rem; font-weight: 600; }
+h2 { font-size: 1.5rem; font-weight: 700; }
 h3 { font-family: var(--f-texto); font-size: 1rem; font-weight: 700; margin: 0; }
 p { margin: 0; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -134,7 +154,7 @@ button { cursor: pointer; }
 /* ---------- Botón ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-  min-height: 56px; padding: 12px 22px; border-radius: var(--r);
+  min-height: 56px; padding: 12px 24px; border-radius: 999px;
   font-family: var(--f-texto); font-size: 1rem; font-weight: 700; line-height: 1.2; text-align: center;
   border: 2px solid transparent; text-decoration: none; user-select: none; touch-action: manipulation;
   transition: transform var(--dur) var(--curva), box-shadow var(--dur) var(--curva), background-color var(--dur) var(--curva);
@@ -142,38 +162,48 @@ button { cursor: pointer; }
 .btn:active { transform: translateY(2px); }
 .btn-primario {
   background: var(--primario); color: var(--sobre-primario);
-  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .14), var(--sombra);
+  box-shadow: var(--sombra-boton);
 }
-.btn-primario:active { box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .22), var(--sombra); }
-.btn-secundario { background: var(--superficie); color: var(--primario); border-color: var(--primario); }
+.btn-primario:active, .btn-peligro:active { box-shadow: none; transform: translateY(3px); }
+.btn-secundario { background: var(--superficie); color: var(--ok); border-color: var(--ok); }
 .btn-secundario:active { background: var(--primario-suave); }
 .btn-peligro {
   background: var(--alerta); color: var(--sobre-alerta);
-  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .22), var(--sombra);
+  box-shadow: var(--sombra-peligro);
 }
 .btn-ancho { display: flex; width: 100%; }
 
 /* ---------- Tarjeta ---------- */
 .tarjeta {
   position: relative; overflow: hidden;
-  background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--r-l);
-  padding: 16px 18px 18px 22px; box-shadow: var(--sombra);
+  background: var(--superficie); border: 2px solid var(--linea); border-radius: var(--r-l);
+  padding: 16px 18px 18px 22px;
 }
 .tarjeta::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 6px; background: var(--linea-fuerte); }
 .tarjeta-verde::before { background: var(--ok-viva); }
 .tarjeta-ambar::before { background: var(--precaucion-viva); }
 .tarjeta-rojo::before { background: var(--alerta-viva); }
 .tarjeta-cab { display: flex; align-items: center; gap: 10px; min-height: 40px; }
+.tarjeta-il { flex: none; }
+/* Tarjetas con estado: superficie tintada; dentro, el texto secundario y los chips pasan a carbón (>= 7:1). */
+.tarjeta-verde { background: var(--t-salvia); --secundario: var(--texto); }
+.tarjeta-ambar { background: var(--t-durazno); --secundario: var(--texto); }
+.tarjeta-rojo { background: var(--t-coral); --secundario: var(--texto); }
+.tarjeta-verde .chip, .tarjeta-ambar .chip, .tarjeta-rojo .chip { color: var(--texto); }
+.lote-item.lote-item-il { display: flex; align-items: center; gap: 12px; }
+.lote-item-texto { display: grid; gap: 4px; min-width: 0; flex: 1; }
+.dl-cab-il { margin-bottom: var(--e2); }
+.cab-il-texto { display: grid; gap: 2px; min-width: 0; }
 .tarjeta-icono {
   display: grid; place-items: center; width: 40px; height: 40px; flex: none;
   border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%; /* forma de huevo */
-  background: var(--primario-suave); color: var(--primario);
+  background: var(--primario-suave); color: var(--ok);
 }
 .tarjeta-ambar .tarjeta-icono { background: var(--huevo-suave); color: var(--precaucion); }
 .tarjeta-rojo .tarjeta-icono { background: color-mix(in srgb, var(--alerta-viva) 16%, var(--superficie)); color: var(--alerta); }
 .tarjeta-titulo { flex: 1; min-width: 0; color: var(--secundario); font-size: 1rem; font-weight: 700; }
 .tarjeta-valor { display: flex; align-items: baseline; flex-wrap: wrap; column-gap: 8px; margin-top: 6px; }
-.tarjeta-cifra { font-family: var(--f-titulo); font-weight: 700; font-size: 2.5rem; line-height: 1.05; letter-spacing: -.02em; color: var(--texto); }
+.tarjeta-cifra { font-family: var(--f-titulo); font-weight: 800; font-size: 2.5rem; line-height: 1.05; letter-spacing: -.02em; color: var(--texto); }
 .tarjeta-unidad { color: var(--secundario); font-size: 1rem; font-weight: 700; }
 .tarjeta-pie { margin-top: 8px; padding-top: 10px; border-top: 1px dashed var(--linea-fuerte); color: var(--secundario); font-size: 1rem; }
 .tarjeta.pop { animation: pop 420ms var(--rebote); }
@@ -195,21 +225,21 @@ button { cursor: pointer; }
 .contador { display: flex; align-items: stretch; gap: 8px; }
 .contador-btn {
   flex: none; width: 64px; height: 64px; border-radius: 20px; display: grid; place-items: center;
-  font-family: var(--f-titulo); font-size: 2.25rem; font-weight: 700; line-height: 1;
-  border: 2px solid var(--primario); touch-action: manipulation;
+  font-family: var(--f-titulo); font-size: 2.25rem; font-weight: 800; line-height: 1;
+  border: 2px solid var(--ok); touch-action: manipulation;
   transition: transform var(--dur) var(--curva), background-color var(--dur) var(--curva);
 }
 .contador-btn:active { transform: scale(.94); }
-.contador-menos { background: var(--superficie); color: var(--primario); }
-.contador-mas { background: var(--primario); color: var(--sobre-primario); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .22); }
+.contador-menos { background: var(--superficie); color: var(--ok); }
+.contador-mas { background: var(--primario); color: var(--sobre-primario); box-shadow: var(--sombra-boton); }
 .contador-valor {
   flex: 1 1 0; width: 0; min-width: 0; height: 64px; padding: 0 8px; text-align: center;
-  font-family: var(--f-titulo); font-size: 2.5rem; font-weight: 700; color: var(--texto);
+  font-family: var(--f-titulo); font-size: 2.5rem; font-weight: 800; color: var(--texto);
   background: var(--superficie); border: 2px solid var(--linea-fuerte); border-radius: 20px;
   -moz-appearance: textfield; appearance: textfield;
 }
 .contador-valor::-webkit-outer-spin-button, .contador-valor::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.contador-valor:focus { border-color: var(--primario); outline: 3px solid var(--foco); outline-offset: 2px; }
+.contador-valor:focus { border-color: var(--ok); outline: 3px solid var(--foco); outline-offset: 2px; }
 
 /* ---------- Hoja inferior ---------- */
 .hoja-capa { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: flex-end; }
@@ -218,7 +248,7 @@ button { cursor: pointer; }
   position: relative; max-height: 88%; overflow: auto; overscroll-behavior: contain;
   width: 100%; max-width: 560px; margin: 0 auto;
   background: var(--superficie); color: var(--texto);
-  border-radius: var(--r-xl) var(--r-xl) 0 0; box-shadow: var(--sombra-alta);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
   padding: 8px 20px calc(24px + env(safe-area-inset-bottom, 0px));
   animation: subir 420ms var(--rebote) both;
 }
@@ -227,17 +257,23 @@ button { cursor: pointer; }
 .hoja-titulo { font-size: 1.6rem; }
 .hoja-cuerpo { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .hoja-rejilla { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.hoja-rejilla .btn { flex-direction: column; gap: 6px; min-height: 92px; padding: 12px 8px; border-radius: 22px; }
+.hoja-rejilla .reg-tipo-btn { min-height: 112px; }
+.hoja-rejilla .btn { flex-direction: column; gap: 6px; min-height: 92px; padding: 12px 8px; border-radius: var(--r); }
 .hoja-rejilla .btn .ic { width: 30px; height: 30px; }
 .hoja-capa.cerrando .hoja { animation: bajar var(--dur) var(--curva) both; }
 .hoja-capa.cerrando .hoja-fondo { animation: aparecer var(--dur) var(--curva) reverse both; }
+
+/* ---------- Ilustraciones (ui/ilustraciones.js) ---------- */
+.il { display: block; flex: none; overflow: visible; }
+.il-media, .il-grande { animation: il-entra 260ms var(--rebote) both; }
+@keyframes il-entra { from { transform: scale(.92); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .il-media, .il-grande { animation: none; } }
 
 /* ---------- Esqueleto ---------- */
 .esqueleto { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .esqueleto-bloque {
   height: 96px; border-radius: var(--r-l);
-  background: linear-gradient(100deg, transparent 30%, var(--brillo-esq) 50%, transparent 70%) var(--superficie-2);
-  background-size: 220% 100%; animation: brillo 1.4s linear infinite;
+  background: var(--superficie-2); animation: latido 1.4s ease-in-out infinite;
 }
 .esqueleto-bloque:nth-child(3n) { height: 64px; width: 72%; }
 
@@ -246,22 +282,22 @@ button { cursor: pointer; }
 .grafico-svg { display: block; width: 100%; height: auto; overflow: visible; }
 .grafico-rejilla { stroke: var(--linea); stroke-width: 1; }
 .grafico-base { stroke: var(--linea-fuerte); stroke-width: 2; }
-.grafico-real { stroke: var(--ok-viva); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round;
+.grafico-real { stroke: var(--ok); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round;
   stroke-dasharray: 1; stroke-dashoffset: 0; animation: trazar 900ms var(--curva) both; }
-.grafico-real-punto, .grafico-ultimo { fill: var(--ok-viva); stroke: var(--superficie); stroke-width: 2.5; }
-.grafico-estandar { stroke: var(--cielo); stroke-width: 2.5; stroke-linecap: round; }
-.grafico-estandar-punto { fill: var(--cielo); }
+.grafico-real-punto, .grafico-ultimo { fill: var(--ok); stroke: var(--superficie); stroke-width: 2.5; }
+.grafico-estandar { stroke: var(--secundario); stroke-width: 2.5; stroke-linecap: round; }
+.grafico-estandar-punto { fill: var(--secundario); }
 .grafico-ejes { display: flex; justify-content: space-between; color: var(--secundario); font-size: 1rem; }
 .grafico-aviso { position: absolute; inset: 22% 0 auto; color: var(--secundario); font-size: 1rem; text-align: center; }
 .grafico-leyenda { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 1rem; font-weight: 700; }
 .ley { display: inline-flex; align-items: center; gap: 8px; }
-.ley::before { content: ""; width: 26px; height: 0; border-top: 4px solid var(--ok-viva); border-radius: 2px; }
-.ley-estandar::before { border-top: 3px dashed var(--cielo); }
+.ley::before { content: ""; width: 26px; height: 0; border-top: 4px solid var(--ok); border-radius: 2px; }
+.ley-estandar::before { border-top: 3px dashed var(--secundario); }
 
 /* ---------- Palomita ---------- */
 .palomita { width: 72px; height: 72px; display: block; }
 .palomita-circulo { fill: var(--primario-suave); stroke: var(--ok-viva); stroke-width: 3; transform-origin: 26px 26px; transform-box: view-box; }
-.palomita-trazo { fill: none; stroke: var(--primario); stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
+.palomita-trazo { fill: none; stroke: var(--ok); stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
 
 /* ---------- Pantalla (transición de vista) ---------- */
 .pantalla-entra { animation: entrar var(--dur) var(--curva) both; }
@@ -275,30 +311,14 @@ button { cursor: pointer; }
   display: flex; align-items: flex-start; gap: 12px; padding: 16px 18px; border-radius: var(--r-l);
   background: var(--superficie); border: 2px dashed var(--linea-fuerte); color: var(--secundario);
 }
-.proximamente .ic { color: var(--primario); margin-top: 2px; }
+.proximamente .ic { color: var(--ok); margin-top: 2px; }
 .pantalla-vacia { justify-items: center; text-align: center; padding-top: 48px; gap: 18px; }
-.vacia-ilustracion { display: grid; place-items: center; width: 176px; margin-bottom: var(--e1); color: var(--primario); }
-.ilustracion { display: block; width: 100%; height: auto; overflow: visible; }
-.il-sol { fill: var(--huevo); opacity: .9; }
-.il-colina { fill: var(--ok-viva); opacity: .28; }
-.il-colina-2 { fill: var(--primario); opacity: .22; }
-.il-huevo, .il-ala, .il-cresta, .il-pico { stroke: var(--secundario); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-.il-huevo { fill: var(--superficie); }
-.il-cola, .il-ala { fill: var(--huevo-suave); }
-.il-ala { fill: var(--huevo-suave); }
-.il-cresta { fill: var(--alerta-viva); }
-.il-pico { fill: var(--huevo); }
-.il-ojo { fill: var(--texto); }
-.il-pata { fill: none; stroke: var(--secundario); stroke-width: 3; stroke-linecap: round; }
-.il-brillo { fill: none; stroke: var(--huevo); stroke-width: 3; stroke-linecap: round; opacity: .8; }
-.il-ok { fill: none; stroke: var(--primario); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
-.il-brote { fill: var(--ok-viva); stroke: var(--secundario); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-.il-brote path:first-child { fill: none; }
+.vacia-ilustracion { display: grid; place-items: center; width: 160px; margin-bottom: var(--e1); color: var(--ok); }
 .pantalla-vacia .pantalla-texto { max-width: 30ch; }
-.btn-grande { min-height: 64px; font-size: 1.125rem; border-radius: 22px; }
+.btn-grande { min-height: 64px; font-size: 1.125rem; border-radius: 999px; }
 .mas-lista { display: grid; gap: 12px; }
 .btn-lista { justify-content: flex-start; min-height: 64px; padding-inline: 18px; color: var(--texto); border-color: var(--linea-fuerte); }
-.btn-lista .ic { color: var(--primario); }
+.btn-lista .ic { color: var(--ok); }
 
 .vista-error { justify-items: center; text-align: center; padding-top: 48px; }
 .vista-error-icono { display: grid; place-items: center; width: 88px; height: 88px; border-radius: 50%;
@@ -316,7 +336,7 @@ button { cursor: pointer; }
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) 84px repeat(2, minmax(0, 1fr)); align-items: end; gap: 8px;
   padding: 6px max(2px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom, 0px)) max(2px, env(safe-area-inset-left));
-  background: var(--superficie); border-top: 1px solid var(--linea); box-shadow: var(--sombra-nav);
+  background: var(--superficie); border-top: 2px solid var(--linea);
 }
 .nav-item {
   position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px;
@@ -327,7 +347,7 @@ button { cursor: pointer; }
 .nav-texto { max-width: 100%; white-space: nowrap; }
 .nav-icono { position: relative; display: grid; place-items: center; width: 52px; height: 32px; border-radius: 16px;
   transition: background-color var(--dur) var(--curva); }
-.nav-item[aria-current="page"] { color: var(--primario); }
+.nav-item[aria-current="page"] { color: var(--ok); }
 .nav-item[aria-current="page"] .nav-icono { background: var(--primario-suave); }
 .nav-item[aria-current="page"] .ic { stroke-width: 2.4; }
 .nav-item:active .nav-icono { transform: scale(.94); }
@@ -335,7 +355,7 @@ button { cursor: pointer; }
 .nav-circulo {
   display: grid; place-items: center; width: 64px; height: 64px; margin-top: -30px; border-radius: 50%;
   background: var(--primario); color: var(--sobre-primario); border: 4px solid var(--superficie);
-  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .22), 0 8px 16px -6px rgba(74, 44, 16, .55);
+  box-shadow: var(--sombra-boton);
   transition: transform var(--dur) var(--rebote);
 }
 .nav-circulo .ic { width: 32px; height: 32px; stroke-width: 2.6; }
@@ -351,7 +371,7 @@ button { cursor: pointer; }
   position: fixed; z-index: 40; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   max-width: 536px; margin: 0 auto; overflow: hidden;
   display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 18px; border-radius: var(--r);
-  background: var(--texto); color: var(--fondo); box-shadow: var(--sombra-alta);
+  background: var(--texto); color: var(--fondo);
   animation: subir-toast 320ms var(--rebote) both;
 }
 .toast[hidden] { display: none; }
@@ -367,11 +387,11 @@ button { cursor: pointer; }
   display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 8px 14px; margin: 0;
   border-radius: var(--r); background: var(--primario-suave); color: var(--texto); border: 2px solid transparent; text-align: left;
 }
-.reg-lote > .ic { color: var(--primario); }
+.reg-lote > .ic { color: var(--ok); }
 .reg-lote-texto { display: grid; flex: 1; min-width: 0; line-height: 1.25; }
 .reg-lote-texto b, .reg-lote-texto span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .reg-lote-texto span { font-size: 1rem; }
-.reg-lote-btn { border-color: var(--primario); touch-action: manipulation; }
+.reg-lote-btn { border-color: var(--ok); touch-action: manipulation; }
 .reg-lote-cambiar { flex: none; font-weight: 700; color: var(--texto); text-decoration: underline; text-underline-offset: 3px; }
 .reg-campo { display: grid; gap: 6px; }
 .reg-etiqueta { font-weight: 700; }
@@ -380,14 +400,14 @@ button { cursor: pointer; }
   width: 100%; min-height: 56px; padding: 10px 14px; border-radius: var(--r-s);
   background: var(--superficie); color: var(--texto); border: 2px solid var(--linea-fuerte); font-size: 1.125rem;
 }
-.reg-select:focus, .reg-texto:focus { border-color: var(--primario); outline: 3px solid var(--foco); outline-offset: 2px; }
+.reg-select:focus, .reg-texto:focus { border-color: var(--ok); outline: 3px solid var(--foco); outline-offset: 2px; }
 .reg-opciones { display: grid; gap: 8px; }
 .reg-opcion {
   display: grid; gap: 2px; min-height: 64px; padding: 10px 16px; border-radius: var(--r); text-align: left;
   background: var(--superficie); color: var(--texto); border: 2px solid var(--linea-fuerte); touch-action: manipulation;
 }
 .reg-opcion span { color: var(--secundario); font-size: 1rem; }
-.reg-opcion[aria-pressed="true"] { border-color: var(--primario); box-shadow: inset 0 0 0 2px var(--primario); background: var(--primario-suave); }
+.reg-opcion[aria-pressed="true"] { border-color: var(--ok);  background: var(--primario-suave); }
 .reg-error {
   padding: 12px 14px; border-radius: var(--r-s); font-weight: 700;
   background: color-mix(in srgb, var(--alerta-viva) 12%, var(--superficie)); color: var(--alerta); border: 2px solid var(--alerta-viva);
@@ -397,17 +417,17 @@ button { cursor: pointer; }
 .reg-pregunta-botones { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
 .reg-acciones { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; margin-top: 4px; position: sticky; bottom: 0; }
 .reg-guardar { min-height: 64px; font-size: 1.125rem; }
-.reg-guardar.guardado { background: var(--primario-suave); color: var(--primario); }
+.reg-guardar.guardado { background: var(--primario-suave); color: var(--ok); }
 .reg-guardar .palomita { width: 44px; height: 44px; }
 .reg-vacio { display: grid; justify-items: center; gap: 12px; text-align: center; padding-bottom: 8px; }
-.reg-vacio-titulo { font-family: var(--f-titulo); font-size: 1.5rem; font-weight: 700; }
+.reg-vacio-titulo { font-family: var(--f-titulo); font-size: 1.5rem; font-weight: 800; }
 .reg-vacio .btn { margin-top: 4px; }
 
 @keyframes aparecer { from { opacity: 0; } to { opacity: 1; } }
 @keyframes subir { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes bajar { from { transform: translateY(0); } to { transform: translateY(100%); } }
 @keyframes entrar { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
-@keyframes brillo { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+@keyframes latido { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
 @keyframes trazar { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 @keyframes subir-toast { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
 @keyframes vaciar { from { transform: scaleX(1); } to { transform: scaleX(0); } }
@@ -420,13 +440,14 @@ button { cursor: pointer; }
 /* ---------- Pantallas de gestión (Task 6) ---------- */
 [hidden].btn, .dl-confirmar[hidden] { display: none !important; }
 .eyebrow { color: var(--secundario); font-size: 1rem; font-weight: 700; letter-spacing: .02em; }
+.seccion-titulo .il { display: inline-block; vertical-align: middle; }
 .seccion-titulo { margin-top: 8px; display: flex; align-items: baseline; gap: 8px; }
 .seccion-titulo .num { color: var(--secundario); font-family: var(--f-texto); font-size: 1rem; }
 
 .bienvenida { padding-top: 32px; }
 .bv-ilustracion { display: grid; place-items: center; width: 168px; margin-bottom: var(--e1); }
 .bv-opcion { grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 14px; min-height: 72px; }
-.bv-opcion > .ic { width: 32px; height: 32px; color: var(--primario); }
+.bv-opcion > .ic { width: 32px; height: 32px; color: var(--ok); }
 .bv-opcion-texto { display: grid; gap: 2px; }
 
 .pasos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -441,7 +462,7 @@ button { cursor: pointer; }
 .nl-cat { display: grid; gap: 10px; min-width: 0; }
 .nl-cat-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 56px; padding: 8px 16px; border-radius: var(--r); text-align: left;
   background: var(--superficie); color: var(--texto); border: 2px solid var(--linea-fuerte); touch-action: manipulation; }
-.nl-cat-cab[aria-expanded="true"] { border-color: var(--primario); }
+.nl-cat-cab[aria-expanded="true"] { border-color: var(--ok); }
 .nl-cat-cuenta { flex: none; color: var(--secundario); font-weight: 700; }
 .nl-cat-cuerpo { display: grid; gap: 10px; min-width: 0; }
 .nl-cat-botones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -451,9 +472,17 @@ button { cursor: pointer; }
 
 .gen-lista { display: grid; gap: 10px; }
 .gen-opcion { display: grid; gap: 4px; min-height: 72px; padding: 12px 16px; border-radius: var(--r); text-align: left;
-  background: var(--superficie); color: var(--texto); border: 2px solid var(--linea-fuerte); box-shadow: var(--sombra); touch-action: manipulation; }
+  background: var(--superficie); color: var(--texto); border: 2px solid var(--linea-fuerte); touch-action: manipulation; }
 .gen-opcion:active { background: var(--primario-suave); }
-.gen-opcion[aria-pressed="true"] { border-color: var(--primario); box-shadow: inset 0 0 0 2px var(--primario); }
+.gen-opcion[aria-pressed="true"] { border-color: var(--ok);  }
+.tg { grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 12px; padding: 10px 14px 10px 10px; }
+.tg-ave .il { width: 80px; height: 80px; }
+.tg-texto { display: grid; gap: 4px; min-width: 0; }
+.gen-opcion.tg-elegida { background: var(--t-salvia); border-color: var(--texto); }
+.plan-gen.tg { align-items: start; }
+.cab-il { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.cab-il h1 { min-width: 0; overflow-wrap: anywhere; }
+.nl-cat-nombre { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .gen-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .gen-nombre { font-family: var(--f-titulo); font-size: 1.25rem; line-height: 1.2; }
 .gen-tipo { flex: none; padding: 2px 10px; border-radius: 999px; font-size: 1rem; font-weight: 700; color: var(--texto); background: var(--superficie-2); }
@@ -481,6 +510,7 @@ button { cursor: pointer; }
 .ini-celda:not(.ini-ancha) .tarjeta { padding: 14px 14px 16px 20px; }
 .ini-celda:not(.ini-ancha) .tarjeta-cifra { font-size: 2.25rem; }
 .ini-celda:not(.ini-ancha) .tarjeta-icono { display: none; }
+.ini-celda:not(.ini-ancha) .tarjeta-cab { flex-direction: column; align-items: flex-start; gap: 6px; }
 .ini-aviso-plan { display: grid; gap: 12px; }
 .ini-aviso-texto { margin: 0; overflow-wrap: anywhere; }
 .ini-aviso-botones { display: grid; gap: 8px; }
@@ -490,7 +520,7 @@ button { cursor: pointer; }
 
 .lotes-lista { display: grid; gap: 12px; }
 .lote-item { position: relative; display: grid; gap: 4px; width: 100%; min-height: 96px; padding: 14px 16px 14px 20px; text-align: left;
-  background: var(--superficie); color: var(--texto); border: 1px solid var(--linea); border-radius: var(--r-l); box-shadow: var(--sombra); touch-action: manipulation; }
+  background: var(--superficie); color: var(--texto); border: 2px solid var(--linea); border-radius: var(--r-l); touch-action: manipulation; }
 .lote-item:active { background: var(--primario-suave); }
 .lote-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .lote-nombre { font-family: var(--f-titulo); font-size: 1.3rem; line-height: 1.2; min-width: 0; overflow-wrap: anywhere; }
@@ -502,20 +532,20 @@ button { cursor: pointer; }
 .dl-cab { display: grid; gap: 6px; justify-items: start; }
 .dl-cab h1 { overflow-wrap: anywhere; }
 .dl-datos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.dl-dato { display: grid; gap: 2px; padding: 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); min-width: 0; box-shadow: var(--sombra-1); }
+.dl-dato { display: grid; gap: 2px; padding: 12px 14px; border-radius: var(--r); background: var(--superficie); border: 2px solid var(--linea); min-width: 0; }
 .dl-dato span { color: var(--secundario); font-size: 1rem; }
 .dl-dato b { font-family: var(--f-titulo); font-size: 1.3rem; overflow-wrap: anywhere; }
 .dl-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .dl-reg, .dl-vac { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 10px 10px 10px 14px; border-radius: var(--r);
-  background: var(--superficie); border: 1px solid var(--linea); box-shadow: var(--sombra-1); }
-.dl-icono { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--primario-suave); color: var(--primario); flex: none; }
+  background: var(--superficie); border: 2px solid var(--linea); }
+.dl-icono { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--primario-suave); color: var(--ok); flex: none; }
 .dl-fila-texto { display: grid; gap: 2px; flex: 1 1 140px; min-width: 0; }
 .dl-fila-texto b { overflow-wrap: anywhere; }
 .dl-fila-texto span { color: var(--secundario); font-size: 1rem; }
 .dl-borrar { flex: none; padding-inline: 16px; color: var(--alerta); border-color: var(--alerta); }
 .dl-vac .btn { margin-top: 2px; }
 .dl-vac-hecha { background: var(--superficie-2); }
-.dl-hechas summary { display: flex; align-items: center; min-height: 56px; padding: 0 4px; font-weight: 700; color: var(--primario); cursor: pointer; }
+.dl-hechas summary { display: flex; align-items: center; min-height: 56px; padding: 0 4px; font-weight: 700; color: var(--ok); cursor: pointer; }
 .dl-cierre { display: grid; gap: 12px; margin-top: 12px; padding-top: 16px; border-top: 1px dashed var(--linea-fuerte); }
 .dl-plan, .dl-borrar-lote { display: grid; gap: 12px; margin-top: 12px; }
 .dl-borrar-lote-btn { color: var(--alerta); border-color: var(--alerta); }
@@ -525,23 +555,26 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 
 /* ---- Alertas e inventario (tarea 7) ---- */
 .al-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-.al-card { position: relative; display: grid; gap: 12px; padding: 14px 14px 14px 20px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); overflow: hidden; box-shadow: var(--sombra-1); }
+.al-card { position: relative; display: grid; gap: 12px; padding: 14px 14px 14px 20px; border-radius: var(--r); background: var(--superficie); border: 2px solid var(--linea); overflow: hidden; }
 .al-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 6px; background: var(--linea-fuerte); }
 .al-rojo::before { background: var(--alerta-viva); }
 .al-ambar::before { background: var(--precaucion-viva); }
 .al-cab { display: flex; align-items: center; gap: 10px; }
-.al-icono { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--primario-suave); color: var(--primario); flex: none; }
+.al-rojo { background: var(--t-coral); --secundario: var(--texto); }
+.al-ambar { background: var(--t-durazno); --secundario: var(--texto); }
+.al-rojo .chip, .al-ambar .chip { color: var(--texto); }
+.al-icono { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--primario-suave); color: var(--ok); flex: none; }
 .al-rojo .al-icono { background: color-mix(in srgb, var(--alerta-viva) 16%, var(--superficie)); color: var(--alerta); }
 .al-ambar .al-icono { background: var(--huevo-suave); color: var(--precaucion); }
 .al-texto { font-weight: 700; overflow-wrap: anywhere; }
 .al-botones { display: grid; gap: 8px; }
 .inv-grupo { display: grid; gap: 8px; }
 .inv-grupo .seccion-titulo { align-items: center; }
-.inv-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 12px 12px 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); box-shadow: var(--sombra-1); }
+.inv-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 12px 12px 12px 14px; border-radius: var(--r); background: var(--superficie); border: 2px solid var(--linea); }
 .inv-bajo { border-color: var(--precaucion-viva); background: var(--huevo-suave); }
 .inv-info { display: grid; gap: 2px; flex: 1 1 140px; min-width: 0; }
 .inv-nombre { overflow-wrap: anywhere; }
-.inv-cant { font-family: var(--f-titulo); font-size: 1.4rem; font-weight: 700; }
+.inv-cant { font-family: var(--f-titulo); font-size: 1.4rem; font-weight: 800; }
 .inv-min { color: var(--secundario); }
 .inv-botones { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 100%; }
 .inv-botones .btn { flex: 1 1 120px; }
@@ -555,7 +588,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .rep-copia[hidden] { display: none; }
 .rep-texto { min-height: 160px; resize: vertical; font-size: 1rem; }
 .rep-grafica { min-width: 0; }
-.aj-seccion { display: grid; gap: 14px; padding: 16px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); box-shadow: var(--sombra-1); }
+.aj-seccion { display: grid; gap: 14px; padding: 16px; border-radius: var(--r); background: var(--superficie); border: 2px solid var(--linea); }
 .aj-seccion > h2 { font-size: 1.25rem; }
 .aj-nota { color: var(--secundario); font-size: 1rem; }
 .aj-campo-error { border-color: var(--alerta-viva); }
@@ -595,14 +628,14 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 
 .plan-resumen, .plan-mejoras { display: grid; gap: 12px; }
 .plan-indice-fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.plan-indice-num { font-family: var(--f-titulo); font-size: 2.5rem; font-weight: 700; line-height: 1.05; }
+.plan-indice-num { font-family: var(--f-titulo); font-size: 2.5rem; font-weight: 800; line-height: 1.05; }
 .plan-medidor { height: 12px; border-radius: 6px; background: var(--superficie-2); overflow: hidden; }
 .plan-medidor span { display: block; height: 100%; border-radius: 6px; background: var(--precaucion-viva); transition: width var(--dur) var(--curva); }
 .plan-medidor-bueno span { background: var(--ok-viva); }
 .plan-medidor-malo span { background: var(--alerta-viva); }
 .plan-saltos { display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 6px; scrollbar-width: none; }
 .plan-cat { display: grid; gap: 12px; scroll-margin-top: 12px; }
-.plan-cat-titulo { color: var(--texto); font-family: var(--f-titulo); font-size: 1.3rem; font-weight: 700; }
+.plan-cat-titulo { color: var(--texto); font-family: var(--f-titulo); font-size: 1.3rem; font-weight: 800; }
 .plan-cuenta { flex: none; color: var(--secundario); font-weight: 700; }
 .plan-cat-cuerpo { display: grid; gap: 12px; min-width: 0; }
 .plan-tabla { display: grid; gap: 0; margin: 0; }
@@ -613,9 +646,9 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .plan-item { position: relative; display: flex; align-items: flex-start; gap: 12px; min-height: 56px; padding: 12px 14px; border-radius: var(--r);
   background: var(--superficie); border: 2px solid var(--linea-fuerte); cursor: pointer; touch-action: manipulation; }
 .plan-item input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
-.plan-caja { flex: none; width: 30px; height: 30px; margin-top: 1px; border-radius: 8px; border: 2px solid var(--primario); background: var(--superficie);
+.plan-caja { flex: none; width: 30px; height: 30px; margin-top: 1px; border-radius: 8px; border: 2px solid var(--ok); background: var(--superficie);
   display: grid; place-items: center; }
-.plan-item:has(input:checked) { border-color: var(--primario); background: var(--primario-suave); }
+.plan-item:has(input:checked) { border-color: var(--ok); background: var(--primario-suave); }
 .plan-item:has(input:checked) .plan-caja { background: var(--primario); }
 .plan-item:has(input:checked) .plan-caja::after { content: ""; width: 9px; height: 16px; margin-top: -4px; border: solid var(--sobre-primario); border-width: 0 3px 3px 0; transform: rotate(45deg); }
 .plan-item:has(input:focus-visible) { outline: 3px solid var(--foco); outline-offset: 2px; }
@@ -624,7 +657,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .plan-item-texto { display: grid; gap: 4px; min-width: 0; }
 .plan-item-t { font-weight: 700; overflow-wrap: anywhere; }
 .plan-item-d { color: var(--secundario); font-size: 1rem; overflow-wrap: anywhere; }
-.plan-vac-edad { color: var(--primario); }
+.plan-vac-edad { color: var(--ok); }
 .plan-item:has(input:checked) .plan-item-d, .plan-item:has(input:checked) .plan-vac-edad { color: var(--texto); }
 .plan-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .plan-tag { padding: 1px 10px; border-radius: 10px; font-size: 1rem; font-weight: 700; line-height: 1.4; background: var(--superficie-2); color: var(--texto); overflow-wrap: anywhere; }
@@ -638,35 +671,35 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
   background: color-mix(in srgb, var(--alerta-viva) 12%, var(--superficie)); color: var(--texto); border: 2px solid var(--alerta-viva); }
 .plan-aviso > .ic { color: var(--alerta); margin-top: 2px; }
 .plan-aviso-suave { background: var(--superficie-2); border-color: var(--linea-fuerte); }
-.plan-aviso-suave > .ic { color: var(--primario); }
+.plan-aviso-suave > .ic { color: var(--ok); }
 
 .plan-heroe { display: grid; gap: 6px; }
-.plan-heroe-num { font-family: var(--f-titulo); font-size: 3rem; font-weight: 700; line-height: 1; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.plan-heroe-num { font-family: var(--f-titulo); font-size: 3rem; font-weight: 800; line-height: 1; letter-spacing: -.02em; overflow-wrap: anywhere; }
 .plan-heroe-num small { margin-left: 8px; font-family: var(--f-texto); font-size: 1.125rem; color: var(--secundario); letter-spacing: 0; }
 .plan-heroe-sub { font-size: 1.125rem; }
 .plan-vs { justify-self: start; margin-top: 4px; padding: 4px 12px; border-radius: var(--r-s); background: var(--primario-suave); color: var(--texto); font-weight: 700; }
 .plan-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.plan-kpi { display: grid; align-content: start; gap: 2px; min-width: 0; padding: 12px 14px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); box-shadow: var(--sombra-1); }
-.plan-kpi-v { font-family: var(--f-titulo); font-size: 1.6rem; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
+.plan-kpi { display: grid; align-content: start; gap: 2px; min-width: 0; padding: 12px 14px; border-radius: var(--r); background: var(--superficie); border: 2px solid var(--linea); }
+.plan-kpi-v { font-family: var(--f-titulo); font-size: 1.6rem; font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
 .plan-kpi-v small { margin-left: 4px; font-family: var(--f-texto); font-size: 1rem; color: var(--secundario); }
 .plan-kpi-l { color: var(--secundario); font-size: 1rem; line-height: 1.3; }
 .plan-grafico { display: grid; gap: 8px; }
 .plan-sub { font-family: var(--f-texto); font-size: 1.125rem; font-weight: 700; }
 .plan-brechas { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
-.plan-brechas li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--linea); }
+.plan-brechas li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 2px solid var(--linea); }
 .plan-brecha-texto { display: grid; gap: 2px; min-width: 0; }
 .plan-brecha-n { font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
 .plan-brecha-c { color: var(--secundario); font-size: 1rem; }
 .plan-brecha-g { flex: none; color: var(--ok); font-weight: 700; white-space: nowrap; }
 .plan-precios { display: grid; gap: 12px; }
 .plan-eco { display: grid; gap: 0; }
-.plan-eco > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--linea); }
+.plan-eco > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 2px solid var(--linea); }
 .plan-eco > div > span:last-child { font-weight: 700; white-space: nowrap; }
 .plan-eco-total { font-weight: 700; }
 .plan-pos { color: var(--ok); }
 .plan-neg { color: var(--alerta); }
-.plan-metodo { padding: 0 16px; border-radius: var(--r); background: var(--superficie); border: 1px solid var(--linea); }
-.plan-metodo summary { display: flex; align-items: center; min-height: 56px; font-weight: 700; color: var(--primario); cursor: pointer; }
+.plan-metodo { padding: 0 16px; border-radius: var(--r); background: var(--superficie); border: 2px solid var(--linea); }
+.plan-metodo summary { display: flex; align-items: center; min-height: 56px; font-weight: 700; color: var(--ok); cursor: pointer; }
 .plan-metodo ul { margin: 0 0 16px; padding-left: 20px; display: grid; gap: 8px; color: var(--secundario); }
 .plan-final { margin-top: 8px; }
 
@@ -674,26 +707,26 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 /* Presión táctil uniforme: escala suave + tinta (capa translúcida) en 120 ms; no cambia el layout. */
 .btn, .contador-btn, .nav-item, .gen-opcion, .reg-opcion, .segmento-btn, .selector-btn, .lote-item, .reg-lote, .ini-enlace,
 .plan-item, .plan-paso button, .dl-hechas summary, .plan-metodo summary {
-  transition: transform var(--t-toque) var(--curva), background-color var(--t-toque) var(--curva), box-shadow var(--t-toque) var(--curva), background-image var(--t-toque) var(--curva);
+  transition: transform var(--t-toque) var(--curva), background-color var(--t-toque) var(--curva), box-shadow var(--t-toque) var(--curva);
 }
 .btn:active, .contador-btn:active, .gen-opcion:active, .reg-opcion:active, .segmento-btn:active, .selector-btn:active, .lote-item:active, .reg-lote:active,
 .plan-item:active, .plan-paso button:active {
-  transform: scale(var(--presion)); background-image: linear-gradient(var(--tinta), var(--tinta));
+  transform: scale(var(--presion)); background-color: var(--superficie-2);
 }
-.btn-primario:active, .contador-mas:active, .btn-peligro:active { background-image: linear-gradient(rgba(0, 0, 0, .16), rgba(0, 0, 0, .16)); }
+.btn-primario:active, .contador-mas:active, .btn-peligro:active { background-color: var(--texto); }
+.btn-peligro:active { background-color: var(--alerta); opacity: .9; }
 .ini-enlace:active .tarjeta { transform: scale(var(--presion)); }
 .ini-enlace .tarjeta { transition: transform var(--t-toque) var(--curva); }
-.nav-item:active .nav-icono { transform: scale(var(--presion)); background-image: linear-gradient(var(--tinta), var(--tinta)); }
+.nav-item:active .nav-icono { transform: scale(var(--presion)); background-color: var(--superficie-2); }
 .nav-registrar:active .nav-circulo { transform: scale(.92); }
-.dl-hechas summary:active, .plan-metodo summary:active { background-image: linear-gradient(var(--tinta), var(--tinta)); border-radius: var(--r-s); }
+.dl-hechas summary:active, .plan-metodo summary:active { background-color: var(--superficie-2); border-radius: var(--r-s); }
 @media (prefers-reduced-motion: reduce) { :root { --presion: 1; } .nav-registrar:active .nav-circulo { transform: none; } }
 
 /* Jerarquía de elevación: 0 fondo, 1 filas, 2 tarjetas/ítems elegibles, 3 barra/toast, 4 hoja */
-.gen-opcion, .lote-item, .reg-opcion { box-shadow: var(--sombra-1); }
-.tarjeta, .lote-item { box-shadow: var(--sombra); }
+
 .lotes-cerrados .lote-item { box-shadow: none; }
-.hoja { border-radius: var(--r-xl) var(--r-xl) 0 0; border-top: 1px solid var(--linea); }
-.reg-pregunta, .dl-confirmar, .rep-aviso { box-shadow: var(--sombra-1); }
+.hoja { border-radius: var(--r-xl) var(--r-xl) 0 0; border-top: 2px solid var(--linea); }
+.reg-pregunta, .dl-confirmar, .rep-aviso { }
 /* Con franja visible ella ya reserva la zona segura superior: no se duplica. */
 .franjas:has(.franja:not([hidden])) ~ .vista { padding-top: 0; }
 @media (min-width: 600px) { .pantalla { padding-top: var(--e6); } }
@@ -704,8 +737,8 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .segmento-btn[aria-selected="true"] { background: var(--primario); color: var(--sobre-primario); border-color: var(--primario); }
 .dl-panel { display: grid; gap: var(--e4); min-width: 0; }
 .pc-plan { display: grid; gap: var(--e4); min-width: 0; }
-.pc-retiro { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r); background: var(--superficie);
-  border: 2px solid var(--alerta-viva); color: var(--texto); box-shadow: var(--sombra-1); }
+.pc-retiro { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r); background: var(--t-coral); --secundario: var(--texto);
+  border: 2px solid var(--alerta-viva); color: var(--texto); }
 .pc-retiro > .ic { flex: none; width: 28px; height: 28px; color: var(--alerta); }
 .pc-retiro div { display: grid; gap: 2px; min-width: 0; }
 .pc-retiro p { margin: 0; overflow-wrap: anywhere; }
@@ -715,7 +748,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .pc-sec-titulo { margin: 4px 0 0; }
 .pc-sec-atrasadas .pc-sec-titulo { color: var(--alerta); }
 .pc-item { display: grid; gap: 10px; padding: 12px 12px 12px 14px; border-radius: var(--r); background: var(--superficie);
-  border: 1px solid var(--linea); box-shadow: var(--sombra-1); min-width: 0; }
+  border: 2px solid var(--linea); min-width: 0; }
 .pc-item:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
 .pc-atrasada { border-left: 6px solid var(--alerta-viva); }
 .pc-hoy { border-left: 6px solid var(--precaucion-viva); }
@@ -740,7 +773,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .pc-acciones .btn, .pc-menu .btn { width: 100%; padding-inline: 12px; }
 .pc-menu { display: grid; gap: 8px; padding-top: 2px; }
 .pc-menu[hidden] { display: none; }
-.pc-menu-btn[aria-expanded="true"] { border-color: var(--primario); background: var(--primario-suave); }
+.pc-menu-btn[aria-expanded="true"] { border-color: var(--ok); background: var(--primario-suave); }
 .pc-quitar { color: var(--alerta); border-color: var(--alerta); }
 .pc-det { display: grid; gap: 10px; }
 .pc-det > .pc-lista { margin-top: 4px; }
@@ -753,11 +786,11 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .pc-panel[hidden] { display: none; }
 .pc-cat-resultados { display: grid; gap: 10px; min-width: 0; }
 .pc-cat { border-radius: var(--r); background: var(--superficie); border: 2px solid var(--linea-fuerte); min-width: 0; }
-.pc-cat[open] { border-color: var(--primario); }
+.pc-cat[open] { border-color: var(--ok); }
 .pc-cat summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 56px; padding: 8px 16px; font-weight: 700; cursor: pointer; }
 .pc-cat > .pc-cat-lista { padding: 0 10px 10px; }
 .pc-cat-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; min-width: 0; }
-.pc-cat-item { display: grid; gap: 10px; padding: 12px 14px; border-radius: var(--r); background: var(--fondo); border: 1px solid var(--linea); min-width: 0; }
+.pc-cat-item { display: grid; gap: 10px; padding: 12px 14px; border-radius: var(--r); background: var(--fondo); border: 2px solid var(--linea); min-width: 0; }
 .pc-cat-item:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
 .pc-cat-item > .chip { justify-self: start; }
 .pc-cat-texto { display: grid; gap: 4px; min-width: 0; }
@@ -765,8 +798,8 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .pc-cat-dia { color: var(--secundario); font-size: 1rem; }
 
 /* Plan del ciclo: aviso «revisa en la etiqueta» (ámbar) y días de retiro de la etiqueta en la hoja Hecho */
-.pc-etiqueta { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r); background: var(--huevo-suave);
-  border: 2px solid var(--precaucion-viva); color: var(--texto); box-shadow: var(--sombra-1); }
+.pc-etiqueta { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r); background: var(--t-durazno); --secundario: var(--texto);
+  border: 2px solid var(--precaucion-viva); color: var(--texto); }
 .pc-etiqueta > .ic { flex: none; width: 28px; height: 28px; color: var(--precaucion); }
 .pc-etiqueta div { display: grid; gap: 4px; min-width: 0; }
 .pc-etiqueta p { margin: 0; overflow-wrap: anywhere; }
@@ -810,6 +843,52 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
     <symbol id="i-grafico" viewBox="0 0 24 24"><path d="M4 4v15.5A.5.5 0 0 0 4.5 20H20"/><path d="M7.5 15.5l4-4.5 3 2.5 5-6"/></symbol>
     <symbol id="i-ajustes" viewBox="0 0 24 24"><path d="M4 7h9"/><path d="M17 7h3"/><circle cx="15" cy="7" r="2"/><path d="M4 17h3"/><path d="M11 17h9"/><circle cx="9" cy="17" r="2"/></symbol>
     <symbol id="i-copiar" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M15.5 8.5V5.5a1.5 1.5 0 0 0-1.5-1.5H5.5A1.5 1.5 0 0 0 4 5.5V14a1.5 1.5 0 0 0 1.5 1.5h3"/></symbol>
+    <!-- piezas de ilustración -->
+    <symbol id="p-cuerpo" viewBox="0 0 200 200"><path style="fill:var(--il-c1)" d="M100 40C131 40 146 66 146 102C146 139 127 160 100 160S54 139 54 102C54 66 69 40 100 40Z"/></symbol>
+    <symbol id="p-cuerpo-robusto" viewBox="0 0 200 200"><path style="fill:var(--il-c1)" d="M100 50C139 50 160 77 160 110C160 143 135 163 100 163S40 143 40 110C40 77 61 50 100 50Z"/></symbol>
+    <symbol id="p-cuerpo-esbelto" viewBox="0 0 200 200"><path style="fill:var(--il-c1)" d="M100 32C124 32 138 58 138 97C138 137 123 160 100 160S62 137 62 97C62 58 76 32 100 32Z"/></symbol>
+    <symbol id="p-ala" viewBox="0 0 200 200"><g style="fill:var(--il-c2)"><path d="M140 100C157 104 160 126 146 140C134 133 131 114 140 100Z"/><path d="M60 100C43 104 40 126 54 140C66 133 69 114 60 100Z"/></g></symbol>
+    <symbol id="p-cola" viewBox="0 0 200 200"><path style="fill:var(--il-c3)" d="M136 86C152 70 170 74 169 90C168 103 152 108 140 106Z"/></symbol>
+    <symbol id="p-cola-alta" viewBox="0 0 200 200"><path style="fill:var(--il-c3)" d="M134 84C144 52 170 46 174 66C178 88 158 106 140 106Z"/></symbol>
+    <symbol id="p-cresta" viewBox="0 0 200 200"><path style="fill:var(--il-cresta)" d="M84 50C80 36 92 30 98 40C100 28 114 28 114 40C121 33 130 40 123 52Z"/></symbol>
+    <symbol id="p-cresta-grande" viewBox="0 0 200 200"><path style="fill:var(--il-cresta)" d="M80 52C72 34 86 24 94 36C96 20 114 20 114 36C122 24 138 32 128 48C136 46 136 56 128 58Z"/></symbol>
+    <symbol id="p-pico" viewBox="0 0 200 200"><path style="fill:var(--p-durazno)" d="M91 87Q100 82 109 87Q106 99 100 102Q94 99 91 87Z"/></symbol>
+    <symbol id="p-barba" viewBox="0 0 200 200"><path style="fill:var(--il-cresta)" d="M100 101C107 102 108 112 100 118C92 112 93 102 100 101Z"/></symbol>
+    <symbol id="p-ojos" viewBox="0 0 200 200"><g style="fill:var(--il-ojo)"><circle cx="84" cy="78" r="3.6"/><circle cx="116" cy="78" r="3.6"/></g></symbol>
+    <symbol id="p-ojos-cerrados" viewBox="0 0 200 200"><path style="fill:none;stroke:var(--il-ojo);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke" d="M78 79Q84 84 90 79M110 79Q116 84 122 79"/></symbol>
+    <symbol id="p-patas" viewBox="0 0 200 200"><path style="fill:none;stroke:var(--il-trazo);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke" d="M88 158V178M80 183L88 178L96 183M112 158V178M104 183L112 178L120 183"/></symbol>
+    <symbol id="p-barrado" viewBox="0 0 200 200"><g style="fill:var(--il-c2)"><rect x="64" y="104" width="72" height="7" rx="3.5"/><rect x="62" y="120" width="76" height="7" rx="3.5"/><rect x="66" y="136" width="68" height="7" rx="3.5"/></g></symbol>
+    <symbol id="p-sombra" viewBox="0 0 200 200"><ellipse style="fill:var(--il-sombra)" cx="100" cy="182" rx="50" ry="7"/></symbol>
+    <symbol id="p-pollito" viewBox="0 0 200 200"><ellipse style="fill:var(--ave-pollito)" cx="100" cy="112" rx="40" ry="38"/><path style="fill:var(--p-durazno)" d="M120 112C134 112 136 128 126 136C118 130 116 120 120 112Z"/><g style="fill:var(--il-ojo)"><circle cx="88" cy="104" r="3"/><circle cx="112" cy="104" r="3"/></g><path style="fill:var(--p-durazno)" d="M94 112Q100 108 106 112Q103 120 100 121Q97 120 94 112Z"/><path style="fill:none;stroke:var(--il-trazo);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke" d="M90 148V160M84 163L90 160L96 163M110 148V160M104 163L110 160L116 163"/></symbol>
+    <symbol id="p-bebedero" viewBox="0 0 200 200"><rect style="fill:var(--p-salvia)" x="88" y="44" width="24" height="16" rx="6"/><path style="fill:var(--p-salvia)" d="M78 60H122L132 128H68Z"/><rect style="fill:var(--ave-hueso)" x="54" y="126" width="92" height="16" rx="8"/><rect style="fill:var(--cielo)" x="62" y="128" width="76" height="6" rx="3"/><rect style="fill:var(--p-salvia)" x="50" y="140" width="100" height="14" rx="7"/></symbol>
+    <symbol id="p-comedero" viewBox="0 0 200 200"><rect style="fill:var(--p-durazno)" x="78" y="40" width="44" height="86" rx="14"/><rect style="fill:var(--ave-hueso)" x="86" y="56" width="28" height="10" rx="5"/><path style="fill:var(--ave-marron)" d="M52 124H148L140 152Q100 160 60 152Z"/><g style="fill:var(--p-durazno)"><circle cx="82" cy="128" r="5"/><circle cx="98" cy="126" r="5"/><circle cx="114" cy="128" r="5"/></g></symbol>
+    <symbol id="p-saco" viewBox="0 0 200 200"><path style="fill:var(--ave-marron)" d="M70 58Q100 46 130 58L140 148Q100 160 60 148Z"/><path style="fill:var(--ave-marron)" d="M82 46Q100 34 118 46L112 62H88Z"/><rect style="fill:var(--ave-hueso)" x="74" y="90" width="52" height="30" rx="8"/></symbol>
+    <symbol id="p-termometro" viewBox="0 0 200 200"><rect style="fill:var(--ave-hueso)" x="86" y="34" width="28" height="104" rx="14"/><circle style="fill:var(--p-coral)" cx="100" cy="146" r="22"/><rect style="fill:var(--p-coral)" x="94" y="78" width="12" height="70" rx="6"/><path style="fill:none;stroke:var(--il-ojo);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke" d="M116 56H124M116 76H124M116 96H124M116 116H124"/></symbol>
+    <symbol id="p-gota" viewBox="0 0 200 200"><path style="fill:var(--cielo)" d="M100 36C114 60 140 88 140 116C140 140 122 158 100 158S60 140 60 116C60 88 86 60 100 36Z"/><path style="fill:var(--ave-hueso)" d="M80 118C80 104 86 94 92 88C90 100 88 110 90 124Z"/></symbol>
+    <symbol id="p-ventilador" viewBox="0 0 200 200"><circle style="fill:var(--ave-hueso)" cx="100" cy="96" r="56"/><g style="fill:var(--p-salvia)"><path d="M100 96C92 70 100 52 114 54C124 66 116 84 100 96Z"/><path d="M100 96C126 90 140 102 136 116C122 122 108 110 100 96Z"/><path d="M100 96C82 116 64 116 58 104C64 88 84 88 100 96Z"/></g><circle style="fill:var(--il-ojo)" cx="100" cy="96" r="6"/><rect style="fill:var(--ave-gris)" x="90" y="150" width="20" height="10" rx="5"/><rect style="fill:var(--ave-gris)" x="70" y="158" width="60" height="10" rx="5"/></symbol>
+    <symbol id="p-foco" viewBox="0 0 200 200"><rect style="fill:var(--ave-gris)" x="96" y="20" width="8" height="36" rx="4"/><rect style="fill:var(--ave-gris)" x="86" y="54" width="28" height="20" rx="6"/><circle style="fill:var(--ave-pollito)" cx="100" cy="104" r="34"/><path style="fill:var(--ave-hueso)" d="M84 98C86 88 92 82 100 80C94 88 92 94 92 104Z"/></symbol>
+    <symbol id="p-galpon" viewBox="0 0 200 200"><path style="fill:var(--p-coral)" d="M100 40L162 86Q166 92 158 92H42Q34 92 38 86Z"/><rect style="fill:var(--ave-hueso)" x="50" y="90" width="100" height="70" rx="6"/><rect style="fill:var(--ave-marron)" x="86" y="112" width="28" height="48" rx="6"/><rect style="fill:var(--p-cielo)" x="60" y="104" width="18" height="16" rx="4"/><rect style="fill:var(--p-cielo)" x="122" y="104" width="18" height="16" rx="4"/></symbol>
+    <symbol id="p-botas" viewBox="0 0 200 200"><path style="fill:var(--p-salvia)" d="M60 60H86V128Q86 132 92 134L100 138Q106 142 102 150H56Q52 150 52 144V68Q52 60 60 60Z"/><path style="fill:var(--p-salvia)" d="M112 60H138V128Q138 132 144 134L152 138Q158 142 154 150H108Q104 150 104 144V68Q104 60 112 60Z"/><rect style="fill:var(--ave-gris)" x="50" y="146" width="108" height="10" rx="5"/></symbol>
+    <symbol id="p-vacuna" viewBox="0 0 200 200"><rect style="fill:var(--ave-gris)" x="84" y="40" width="32" height="18" rx="6"/><rect style="fill:var(--ave-hueso)" x="76" y="56" width="48" height="100" rx="16"/><rect style="fill:var(--cielo)" x="82" y="104" width="36" height="46" rx="12"/><rect style="fill:var(--p-lila)" x="82" y="70" width="36" height="22" rx="6"/></symbol>
+    <symbol id="p-balanza" viewBox="0 0 200 200"><rect style="fill:var(--ave-gris)" x="48" y="132" width="104" height="26" rx="12"/><rect style="fill:var(--ave-hueso)" x="70" y="66" width="60" height="62" rx="14"/><path style="fill:none;stroke:var(--il-ojo);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke" d="M100 102L114 84M84 82Q100 72 116 82"/><rect style="fill:var(--ave-gris)" x="94" y="126" width="12" height="10" rx="3"/></symbol>
+    <symbol id="p-huevo" viewBox="0 0 200 200"><path style="fill:var(--ave-hueso)" d="M100 44C122 44 140 80 140 110C140 136 122 154 100 154S60 136 60 110C60 80 78 44 100 44Z"/></symbol>
+    <symbol id="p-nido" viewBox="0 0 200 200"><path style="fill:var(--ave-marron)" d="M36 104H164Q160 156 100 158Q40 156 36 104Z"/><g style="fill:var(--il-c3)"><rect x="44" y="104" width="112" height="8" rx="4"/><rect x="54" y="124" width="92" height="6" rx="3"/></g></symbol>
+    <symbol id="p-hoja" viewBox="0 0 200 200"><path style="fill:var(--p-salvia)" d="M52 150C52 96 88 56 150 50C152 112 116 150 52 150Z"/><path style="fill:none;stroke:var(--il-ojo);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke" d="M60 142C86 116 110 92 136 66"/></symbol>
+    <symbol id="p-taza" viewBox="0 0 200 200"><path style="fill:var(--ave-hueso)" d="M54 80H136V118Q136 154 96 154Q54 154 54 118Z"/><path style="fill:var(--ave-hueso)" d="M134 90Q160 90 158 110Q156 128 134 128V118Q146 118 146 110Q146 100 134 100Z"/><rect style="fill:var(--ave-marron)" x="62" y="84" width="66" height="10" rx="5"/><rect style="fill:var(--ave-gris)" x="44" y="152" width="104" height="8" rx="4"/></symbol>
+    <symbol id="p-frasco" viewBox="0 0 200 200"><rect style="fill:var(--ave-gris)" x="84" y="36" width="32" height="18" rx="6"/><path style="fill:var(--p-salvia)" d="M86 54H114V66Q140 76 140 100V146Q140 158 128 158H72Q60 158 60 146V100Q60 76 86 66Z"/><rect style="fill:var(--ave-hueso)" x="72" y="102" width="56" height="34" rx="8"/></symbol>
+    <symbol id="p-calendario" viewBox="0 0 200 200"><rect style="fill:var(--ave-hueso)" x="48" y="54" width="104" height="100" rx="16"/><path style="fill:var(--p-coral)" d="M48 78V68Q48 54 62 54H138Q152 54 152 68V78Z"/><g style="fill:var(--il-ojo)"><circle cx="74" cy="104" r="4"/><circle cx="100" cy="104" r="4"/><circle cx="126" cy="104" r="4"/><circle cx="74" cy="128" r="4"/><circle cx="100" cy="128" r="4"/></g><path style="fill:none;stroke:var(--il-ojo);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke" d="M74 44V62M126 44V62"/></symbol>
+    <symbol id="p-libreta" viewBox="0 0 200 200"><rect style="fill:var(--ave-hueso)" x="54" y="38" width="92" height="124" rx="14"/><rect style="fill:var(--p-lila)" x="54" y="38" width="16" height="124" rx="8"/><path style="fill:none;stroke:var(--il-ojo);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke" d="M84 72H130M84 100H130M84 128H116"/></symbol>
+    <symbol id="p-reloj" viewBox="0 0 200 200"><circle style="fill:var(--ave-gris)" cx="100" cy="100" r="58"/><circle style="fill:var(--ave-hueso)" cx="100" cy="100" r="48"/><path style="fill:none;stroke:var(--il-ojo);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke" d="M100 100V70M100 100L118 110"/></symbol>
+    <symbol id="p-escudo" viewBox="0 0 200 200"><path style="fill:var(--p-salvia)" d="M100 36L150 54Q152 120 100 160Q48 120 50 54Z"/></symbol>
+    <symbol id="p-flecha" viewBox="0 0 200 200"><path style="fill:var(--p-salvia)" d="M46 92H114V68Q114 62 120 66L156 96Q160 100 156 104L120 134Q114 138 114 132V108H46Q40 108 40 100Q40 92 46 92Z"/></symbol>
+    <symbol id="p-palomita" viewBox="0 0 200 200"><circle style="fill:var(--p-salvia)" cx="100" cy="100" r="58"/><path style="fill:none;stroke:var(--il-ojo);stroke-width:12;stroke-linecap:round;stroke-linejoin:round" d="M72 102L92 122L130 82"/></symbol>
+    <symbol id="p-lupa" viewBox="0 0 200 200"><rect style="fill:var(--ave-gris)" x="112" y="112" width="16" height="50" rx="8" transform="rotate(-45 120 137)"/><circle style="fill:var(--ave-gris)" cx="88" cy="88" r="44"/><circle style="fill:var(--ave-hueso)" cx="88" cy="88" r="34"/></symbol>
+    <symbol id="p-raton" viewBox="0 0 200 200"><path style="fill:none;stroke:var(--il-trazo);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke" d="M146 128Q170 132 166 112"/><ellipse style="fill:var(--ave-gris)" cx="108" cy="124" rx="40" ry="26"/><circle style="fill:var(--ave-gris)" cx="76" cy="100" r="14"/><circle style="fill:var(--il-ojo)" cx="78" cy="118" r="3"/><circle style="fill:var(--p-coral)" cx="68" cy="126" r="4"/></symbol>
+    <symbol id="p-malla" viewBox="0 0 200 200"><rect style="fill:var(--ave-hueso)" x="44" y="44" width="112" height="112" rx="14"/><rect style="fill:var(--p-cielo)" x="56" y="56" width="88" height="88" rx="8"/><path style="fill:none;stroke:var(--il-ojo);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke" d="M78 56V144M100 56V144M122 56V144M56 78H144M56 100H144M56 122H144"/></symbol>
+    <symbol id="p-estante" viewBox="0 0 200 200"><g style="fill:var(--ave-marron)"><rect x="40" y="72" width="120" height="10" rx="5"/><rect x="40" y="130" width="120" height="10" rx="5"/><rect x="46" y="72" width="10" height="92" rx="5"/><rect x="144" y="72" width="10" height="92" rx="5"/></g></symbol>
+    <symbol id="p-criadora" viewBox="0 0 200 200"><rect style="fill:var(--ave-gris)" x="96" y="14" width="8" height="34" rx="4"/><path style="fill:var(--p-coral)" d="M100 44Q132 44 146 82H54Q68 44 100 44Z"/><path style="fill:var(--ave-pollito)" style="opacity:.55" d="M58 84H142L170 160H30Z"/></symbol>
+    <symbol id="p-cama" viewBox="0 0 200 200"><rect style="fill:var(--ave-marron)" x="30" y="146" width="140" height="14" rx="7"/><g style="fill:var(--ave-pollito)"><rect x="44" y="134" width="22" height="8" rx="4"/><rect x="80" y="130" width="26" height="8" rx="4" transform="rotate(-12 93 134)"/><rect x="124" y="134" width="24" height="8" rx="4" transform="rotate(10 136 138)"/></g></symbol>
+    <!-- /piezas -->
   </defs>
 </svg>
 <div class="franjas" id="franjas">
@@ -4055,24 +4134,6 @@ function icono(nombre, clase) {
   return `<svg class="ic${clase ? ' ' + esc(clase) : ''}" aria-hidden="true" focusable="false"><use href="#i-${esc(nombre)}"></use></svg>`;
 }
 
-/* Ilustraciones de pantalla vacía (diseño propio, trazo 3 px redondeado como los íconos; colores por tokens).
-   nombre: 'gallina' (gallina junto a su huevo), 'huevo' (huevo con palomita), 'campo' (huevos que crecen). */
-let _ilN = 0; // id único por ilustración: dos en la misma página no deben compartir el recorte
-function ilustracion(nombre) {
-  const rid = 'il-recorte-' + (++_ilN);
-  const fondo = `<clipPath id="${rid}"><rect width="160" height="132" rx="30"/></clipPath><circle class="il-sol" cx="124" cy="30" r="14"/><g clip-path="url(#${rid})"><path class="il-colina" d="M0 112C34 90 70 98 92 108s46 0 68-10v34H0z"/><path class="il-colina il-colina-2" d="M0 124c40-14 76-6 104 2s40 0 56-6v12H0z"/></g>`;
-  const brote = (x, y, s) => `<g class="il-brote" transform="translate(${x} ${y}) scale(${s})"><path d="M0 0V-16"/><path d="M0-12c-8 0-12-5-12-11 8 0 12 5 12 11z"/><path d="M0-16c7 0 11-4 11-10-7 0-11 4-11 10z"/></g>`;
-  let motivo;
-  if (nombre === 'huevo') {
-    motivo = `<path class="il-huevo" d="M80 22c-22 0-38 34-38 62 0 24 17 40 38 40s38-16 38-40c0-28-16-62-38-62z"/><path class="il-brillo" d="M62 70c2-12 8-22 15-28"/><path class="il-ok" d="M63 86l12 12 22-25"/>${brote(30, 118, 1)}${brote(136, 118, .8)}`;
-  } else if (nombre === 'campo') {
-    motivo = `<path class="il-huevo" d="M44 112c-8 0-13-9-13-17 0-9 5-19 13-19s13 10 13 19c0 8-5 17-13 17z"/><path class="il-huevo" d="M80 112c-10 0-17-11-17-23 0-13 7-27 17-27s17 14 17 27c0 12-7 23-17 23z"/><path class="il-huevo" d="M118 112c-12 0-21-13-21-29 0-16 9-33 21-33s21 17 21 33c0 16-9 29-21 29z"/><path class="il-brillo" d="M108 76c1-8 5-14 9-18"/>`;
-  } else {
-    motivo = `<path class="il-huevo il-cola" d="M108 84c12-4 18-14 14-26-6 8-12 12-20 14z"/><path class="il-huevo" d="M48 98c-3-22 10-36 32-36 21 0 32 12 30 29-1 12-12 19-30 19-18 0-30-4-32-12z"/><path class="il-ala" d="M72 86c10-9 24-8 32 2-8 10-22 12-32 6z"/><circle class="il-huevo" cx="58" cy="62" r="12"/><path class="il-cresta" d="M52 52c1-9 6-5 7-2 3-7 8-2 8 1-3 1-5 3-6 5z"/><path class="il-pico" d="M46 62l-10 4 10 4z"/><circle class="il-ojo" cx="56" cy="60" r="2"/><path class="il-pata" d="M76 111v7M88 111v7"/><path class="il-huevo" d="M129 118c-6 0-10-6-10-13s4-14 10-14 10 7 10 14-4 13-10 13z"/>`;
-  }
-  return `<svg class="ilustracion" viewBox="0 0 160 132" width="160" height="132" aria-hidden="true" focusable="false">${fondo}${motivo}</svg>`;
-}
-
 /* `datos` opcional: {ruta:'#/x', id:'L1'} -> data-ruta="#/x" data-id="L1" (claves en minúsculas y guiones).
    `clase` opcional: clases extra (p. ej. 'btn-ancho'). */
 function Boton({ texto, icono: ic, variante, accion, datos, clase } = {}) {
@@ -4087,12 +4148,12 @@ function Boton({ texto, icono: ic, variante, accion, datos, clase } = {}) {
 
 const _ESTADOS = { verde: 'Bien', ambar: 'Revisar', rojo: 'Atención' };
 
-function Tarjeta({ titulo, cifra, unidad, estado, icono: ic, pie } = {}) {
+function Tarjeta({ titulo, cifra, unidad, estado, icono: ic, ilustracion: il, pie } = {}) {
   const est = Object.prototype.hasOwnProperty.call(_ESTADOS, estado) ? estado : '';
   const num = typeof cifra === 'number' && Number.isFinite(cifra);
   const valor = num ? formatoNumero(cifra) : esc(cifra === undefined || cifra === null ? '—' : cifra);
   return `<article class="tarjeta${est ? ' tarjeta-' + est : ''}">
-  <header class="tarjeta-cab">${ic ? `<span class="tarjeta-icono">${icono(ic)}</span>` : ''}<h3 class="tarjeta-titulo">${esc(titulo)}</h3>${est ? `<span class="chip chip-${est}"><span class="chip-punto" aria-hidden="true"></span>${_ESTADOS[est]}</span>` : ''}</header>
+  <header class="tarjeta-cab">${il && typeof Ilustracion === 'function' ? `<span class="tarjeta-il">${Ilustracion(il, { tamano: 'mini' })}</span>` : ic ? `<span class="tarjeta-icono">${icono(ic)}</span>` : ''}<h3 class="tarjeta-titulo">${esc(titulo)}</h3>${est ? `<span class="chip chip-${est}"><span class="chip-punto" aria-hidden="true"></span>${_ESTADOS[est]}</span>` : ''}</header>
   <p class="tarjeta-valor"><span class="tarjeta-cifra num"${num ? ` data-cifra="${cifra}"` : ''}>${valor}</span>${unidad ? ` <span class="tarjeta-unidad">${esc(unidad)}</span>` : ''}</p>${pie ? `
   <p class="tarjeta-pie">${esc(pie)}</p>` : ''}
 </article>`;
@@ -4143,6 +4204,199 @@ function Esqueleto(n) {
   let b = '';
   for (let i = 0; i < k; i++) b += `<div class="esqueleto-bloque" aria-hidden="true"></div>`;
   return `<div class="esqueleto" role="status"><span class="solo-lector">Cargando…</span>${b}</div>`;
+}
+
+</script>
+<script>
+/* Appollo · Biblioteca de ilustraciones (estilo plano minimalista, pastel, sin contornos).
+   Las piezas p-* viven una sola vez en el sprite de body.html (lienzo 200x200, centradas en 100,100); aquí se
+   componen las escenas con <use> y se les da color por variables CSS (--il-c1 cuerpo, --il-c2 ala, --il-c3 cola,
+   --il-cresta), así cambian con el tema sin duplicar dibujos. Sin ids: dos ilustraciones en la misma pantalla
+   no se pisan. Sin dosis, sin texto, sin humor: cada escena muestra el concepto de forma literal y serena.
+   ilustracionDe() es el ÚNICO mapeo de datos de la app (registros, alertas, labores, recomendaciones…) a escenas. */
+
+const _TAMANOS = { mini: 48, media: 96, grande: 160 };
+const _r = n => Math.round(n * 100) / 100;
+
+/* Estilo de cada genética: forma del cuerpo, colores (tokens --ave-*), cresta, cola y proporción [ancho, alto].
+   Se distinguen por color y proporción, nunca por anatomía realista ni logos. */
+const ESTILO_GENETICA = {
+  'hyline-brown': { forma: 'frijol', cuerpo: '--ave-marron', ala: '--ave-marron-2', cola: '--ave-marron-2' },
+  'lohmann-brown': { forma: 'frijol', cuerpo: '--ave-marron', ala: '--ave-marron-2', cola: '--ave-marron-2', colaAlta: true },
+  'isa-brown': { forma: 'frijol', cuerpo: '--ave-marron', ala: '--ave-hueso', cola: '--ave-marron-2' },
+  'hisex-brown': { forma: 'frijol', cuerpo: '--ave-marron', ala: '--ave-marron-2', cola: '--ave-hueso', escala: [0.92, 0.92] },
+  'lohmann-lsl': { forma: 'frijol', cuerpo: '--ave-hueso', ala: '--ave-hueso-2', cola: '--ave-hueso-2', cresta: 'grande' },
+  'cobb500': { forma: 'robusta', cuerpo: '--ave-hueso', ala: '--ave-hueso-2', cola: '--ave-hueso-2', cresta: 'chica' },
+  'ross308': { forma: 'robusta', cuerpo: '--ave-hueso', ala: '--ave-hueso-2', cola: '--ave-hueso-2', cresta: 'chica', escala: [1.08, 0.98] },
+  'campero': { forma: 'esbelta', cuerpo: '--ave-marron', ala: '--ave-marron-2', cola: '--ave-marron-2' },
+  'rhode-island': { forma: 'frijol', cuerpo: '--ave-caoba', ala: '--ave-marron-2', cola: '--il-ojo' },
+  'plymouth-rock': { forma: 'frijol', cuerpo: '--ave-gris', ala: '--ave-hueso', cola: '--ave-gris', barrado: true },
+  'criolla': { forma: 'esbelta', cuerpo: '--ave-pollito', ala: '--ave-marron', cola: '--ave-marron', colaAlta: true },
+};
+const _AVE_GENERICA = { forma: 'frijol', cuerpo: '--ave-hueso', ala: '--ave-hueso-2', cola: '--ave-hueso-2' };
+const _AVE_REPOSO = { forma: 'frijol', cuerpo: '--ave-gris', ala: '--ave-hueso', cola: '--ave-gris' };
+const _AVE_MANEJO = ESTILO_GENETICA['hyline-brown'];
+/* Por forma: pieza del cuerpo, desplazamiento vertical de la cabeza y ancho de las alas. */
+const _FORMAS = {
+  frijol: { pieza: 'p-cuerpo', cabeza: 0, alas: 1 },
+  robusta: { pieza: 'p-cuerpo-robusto', cabeza: 10, alas: 1.12 },
+  esbelta: { pieza: 'p-cuerpo-esbelto', cabeza: -8, alas: 0.84 },
+};
+
+/* <use> de una pieza centrada en (x, y) con escala s. o: { sy (escala vertical relativa), giro (espejo), vars } */
+function _pieza(id, x, y, s = 1, o = {}) {
+  const sy = s * (o.sy || 1), sx = o.giro ? -s : s;
+  const tx = _r(x - 100 * sx), ty = _r(y - 100 * sy);
+  const vars = o.vars ? ` style="${Object.entries(o.vars).map(([k, v]) => `--il-${k}:var(${v})`).join(';')}"` : '';
+  return `<use href="#${id}" width="200" height="200" transform="translate(${tx} ${ty}) scale(${_r(sx)} ${_r(sy)})"${vars}/>`;
+}
+
+/* Ave completa centrada en (x, y) con escala s. pose: 'adulta' (de pie) o 'reposo' (sentada, ojos cerrados). */
+function _ave(est, x, y, s, pose = 'adulta') {
+  const f = _FORMAS[est.forma] || _FORMAS.frijol;
+  const [ex, ey] = est.escala || [1, 1];
+  const vars = `--il-c1:var(${est.cuerpo});--il-c2:var(${est.ala});--il-c3:var(${est.cola});--il-cresta:var(--p-coral)`;
+  const u = (id, t = '') => `<use href="#${id}" width="200" height="200"${t ? ` transform="${t}"` : ''}/>`;
+  const cab = f.cabeza ? `translate(0 ${f.cabeza})` : '';
+  const cresta = est.cresta === 'grande' ? u('p-cresta-grande', cab)
+    : est.cresta === 'chica' ? u('p-cresta', `${cab} translate(100 52) scale(.72) translate(-100 -52)`.trim()) : u('p-cresta', cab);
+  const partes = [
+    pose === 'adulta' ? u('p-sombra') : '',
+    u(est.colaAlta ? 'p-cola-alta' : 'p-cola', cab),
+    cresta,
+    pose === 'adulta' ? u('p-patas') : '',
+    u(f.pieza),
+    est.barrado ? u('p-barrado') : '',
+    u('p-ala', f.alas !== 1 ? `translate(100 0) scale(${f.alas} 1) translate(-100 0)` : ''),
+    u(pose === 'reposo' ? 'p-ojos-cerrados' : 'p-ojos', cab),
+    u('p-pico', cab),
+    u('p-barba', cab),
+  ].join('');
+  const prop = ex !== 1 || ey !== 1 ? ` translate(100 160) scale(${ex} ${ey}) translate(-100 -160)` : '';
+  return `<g style="${vars}" transform="translate(${_r(x - 100 * s)} ${_r(y - 100 * s)}) scale(${s})${prop}">${partes}</g>`;
+}
+
+/* Escenas: fondo sólido, a lo más un ave y uno o dos elementos del concepto en tamaño normal.
+   ave: [x, y, s, pose?] (usa el ave de manejo, o la genética pedida); piezas: [id, x, y, s, opciones?]. */
+const _IZQ = [66, 104, 0.64], _DER = [142, 112, 0.56];
+const _E = (fondo, titulo, ave, piezas = [], extra = {}) => ({ fondo, titulo, ave, piezas, ...extra });
+const ESCENAS = {
+  /* Manejo */
+  'man-agua': _E('cielo', 'Gallina junto al bebedero', _IZQ, [['p-bebedero', ..._DER]]),
+  'man-alimento': _E('menta', 'Gallina junto al comedero', _IZQ, [['p-comedero', ..._DER]]),
+  'man-cambio-fase': _E('menta', 'Cambio de alimento según la fase', null, [['p-saco', 58, 120, 0.46], ['p-flecha', 102, 116, 0.3], ['p-saco', 148, 106, 0.66]]),
+  'man-temperatura': _E('durazno', 'Gallina junto al termómetro', _IZQ, [['p-termometro', ..._DER]]),
+  'man-humedad': _E('cielo', 'Gota de agua sobre la cama de viruta', null, [['p-cama', 100, 104, 1], ['p-gota', 100, 86, 0.62]]),
+  'man-ventilacion': _E('cielo', 'Gallina junto al ventilador', _IZQ, [['p-ventilador', ..._DER]]),
+  'man-luz': _E('lila', 'Gallina bajo un foco encendido', [100, 128, 0.58], [['p-foco', 100, 52, 0.62]]),
+  'man-densidad': _E('menta', 'Aves con espacio dentro del galpón', null, [['p-galpon', 100, 96, 0.96]], { grupo: [[64, 150, 0.3], [100, 150, 0.3], [136, 150, 0.3]] }),
+  'man-bioseguridad': _E('salvia', 'Botas que solo se usan en el galpón', null, [['p-botas', 100, 104, 0.84]]),
+  'man-llegada': _E('durazno', 'Pollitos bajo la criadora', null, [['p-criadora', 100, 84, 0.86], ['p-pollito', 74, 144, 0.4], ['p-pollito', 126, 144, 0.4]]),
+  'man-seleccion': _E('cielo', 'Gallina sobre la balanza', [100, 88, 0.5], [['p-balanza', 100, 138, 0.6]]),
+  'man-registros': _E('crema', 'Libreta de registros', null, [['p-libreta', 100, 100, 0.84]]),
+  'man-vitaminas': _E('menta', 'Vitaminas en el agua de bebida', null, [['p-bebedero', 96, 110, 0.8], ['p-gota', 150, 58, 0.32]]),
+  /* Sanidad (sin dosis ni cantidades) */
+  'san-vacuna': _E('cielo', 'Frasco de vacuna', null, [['p-vacuna', 100, 100, 0.84]]),
+  'san-desparasitacion': _E('salvia', 'Gallina junto a un frasco cerrado', _IZQ, [['p-frasco', ..._DER]]),
+  'san-remedio-casero': _E('salvia', 'Hierbas en una taza', null, [['p-taza', 94, 112, 0.78], ['p-hoja', 150, 66, 0.36]]),
+  'san-quimico': _E('lila', 'Frasco con su etiqueta', null, [['p-frasco', 100, 102, 0.84]]),
+  'san-retiro': _E('coral', 'Huevos en espera junto a un reloj', null, [['p-nido', 76, 132, 0.52, { vars: { c3: '--ave-marron-2' } }], ['p-huevo', 66, 112, 0.2], ['p-huevo', 86, 110, 0.2], ['p-reloj', 146, 78, 0.42]]),
+  'san-plagas': _E('crema', 'Malla en la ventana', null, [['p-malla', 96, 90, 0.74], ['p-raton', 146, 152, 0.4]]),
+  /* Registrar */
+  'reg-mortalidad': _E('crema', 'Gallina en reposo', [100, 108, 0.8, 'reposo'], [], { reposo: true }),
+  'reg-alimento': _E('menta', 'Saco de alimento', null, [['p-saco', 100, 104, 0.82]]),
+  'reg-huevos': _E('durazno', 'Huevos en el nido', null, [['p-nido', 100, 132, 0.76, { vars: { c3: '--ave-marron-2' } }], ['p-huevo', 76, 108, 0.28], ['p-huevo', 100, 100, 0.3], ['p-huevo', 124, 108, 0.28]]),
+  'reg-peso': _E('cielo', 'Gallina en la balanza', [100, 88, 0.5], [['p-balanza', 100, 138, 0.6]]),
+  'reg-vacuna': _E('cielo', 'Vacuna aplicada', null, [['p-vacuna', 94, 104, 0.8], ['p-gota', 150, 60, 0.3]]),
+  'reg-sanidad': _E('salvia', 'Gallina protegida', _IZQ, [['p-escudo', 142, 108, 0.5]]),
+  /* Estados */
+  'est-bienvenida': _E('menta', 'Gallina y pollito frente al galpón', [62, 128, 0.56], [['p-galpon', 118, 82, 0.66], ['p-pollito', 132, 152, 0.32]]),
+  'est-sin-lotes': _E('cielo', 'Galpón esperando a sus aves', null, [['p-galpon', 96, 94, 0.88], ['p-pollito', 156, 152, 0.3]]),
+  'est-sin-alertas': _E('salvia', 'Gallina tranquila, todo en orden', _IZQ, [['p-escudo', 142, 108, 0.5], ['p-palomita', 142, 104, 0.24]]),
+  'est-sin-inventario': _E('crema', 'Estante con un saco', null, [['p-estante', 100, 100, 0.9], ['p-saco', 100, 109, 0.35]]),
+  'est-sin-registros': _E('crema', 'Libreta abierta', null, [['p-libreta', 100, 100, 0.8]]),
+  'est-exito': _E('crema', 'Listo', null, [['p-palomita', 100, 100, 0.9]]),
+  'est-deshacer': _E('crema', 'Se deshizo el cambio', null, [['p-flecha', 100, 100, 0.84, { giro: true }]]),
+  /* Alertas */
+  'al-mortalidad': _E('coral', 'Gallina en reposo', [100, 108, 0.8, 'reposo'], [], { reposo: true }),
+  'al-sin-registro': _E('durazno', 'Gallina junto a la libreta de registros', _IZQ, [['p-libreta', 142, 108, 0.5]]),
+  'al-postura': _E('durazno', 'Gallina junto a un nido con un huevo', _IZQ, [['p-nido', 142, 140, 0.46, { vars: { c3: '--ave-marron-2' } }], ['p-huevo', 142, 122, 0.2]]),
+  'al-vacuna': _E('cielo', 'Vacuna y calendario', null, [['p-vacuna', 74, 110, 0.62], ['p-calendario', 142, 94, 0.48]]),
+  'al-retiro': _E('coral', 'Huevos en espera junto a un reloj', null, [['p-nido', 76, 132, 0.52, { vars: { c3: '--ave-marron-2' } }], ['p-huevo', 66, 112, 0.2], ['p-huevo', 86, 110, 0.2], ['p-reloj', 146, 78, 0.42]]),
+  'al-etiqueta': _E('durazno', 'Frasco y lupa para leer la etiqueta', null, [['p-frasco', 84, 106, 0.72], ['p-lupa', 142, 132, 0.44]]),
+  'al-fase': _E('menta', 'Cambio de alimento según la fase', null, [['p-saco', 58, 120, 0.46], ['p-flecha', 102, 116, 0.3], ['p-saco', 148, 106, 0.66]]),
+  'al-inventario': _E('durazno', 'Saco de alimento casi vacío', null, [['p-saco', 100, 124, 0.76, { sy: 0.7 }]]),
+  'al-plan': _E('lila', 'Gallina junto a su lista de labores', _IZQ, [['p-libreta', 142, 108, 0.5]]),
+};
+/* Genéticas: el ave grande y, en las que ponen, un huevo a sus pies. Fondo según el tipo. */
+const _FONDO_TIPO = { postura: 'menta', carne: 'cielo', doble: 'lila', criolla: 'durazno' };
+for (const g of (typeof GENETICAS !== 'undefined' ? GENETICAS : [])) {
+  ESCENAS['gen-' + g.id] = _E(_FONDO_TIPO[g.tipo] || 'crema', 'Ave ' + g.nombre, [96, 98, 0.9], g.tipo === 'carne' ? [] : [['p-huevo', 160, 160, 0.2]], { genetica: g.id });
+}
+ESCENAS['gen-generica'] = _E('crema', 'Ave', [100, 98, 0.9], [], { genetica: null, generica: true });
+
+function _estiloAve(sc, genetica) {
+  if (genetica && ESTILO_GENETICA[genetica]) return ESTILO_GENETICA[genetica];
+  if (sc.generica) return _AVE_GENERICA;
+  if (sc.genetica && ESTILO_GENETICA[sc.genetica]) return ESTILO_GENETICA[sc.genetica];
+  if (sc.reposo) return _AVE_REPOSO;
+  return _AVE_MANEJO;
+}
+
+/* Ilustracion(clave, { tamano: 'mini'|'media'|'grande', genetica, decorativa = true, titulo }) -> '<svg …>'.
+   Decorativa (junto a un texto que ya dice lo mismo): aria-hidden. Si no: role="img" con <title>. */
+function Ilustracion(clave, { tamano = 'media', genetica = null, decorativa = true, titulo = null } = {}) {
+  const k = Object.prototype.hasOwnProperty.call(ESCENAS, clave) ? clave : 'est-exito';
+  const sc = ESCENAS[k];
+  const t = _TAMANOS[tamano] ? tamano : 'media', px = _TAMANOS[t];
+  const est = _estiloAve(sc, genetica);
+  // Orden: fondo, objetos y al final las aves (así el ave queda sobre la balanza o el galpón).
+  const objetos = sc.piezas.map(p => _pieza(p[0], p[1], p[2], p[3], p[4])).join('');
+  const aves = (sc.grupo || (sc.ave ? [sc.ave] : [])).map(([x, y, s, pose]) => _ave(est, x, y, s, pose || 'adulta')).join('');
+  const a11y = decorativa ? 'aria-hidden="true" focusable="false"' : 'role="img" focusable="false"';
+  const tit = decorativa ? '' : `<title>${esc(titulo || sc.titulo)}</title>`;
+  return `<svg class="il il-${t}" viewBox="0 0 200 200" width="${px}" height="${px}" ${a11y}>${tit}`
+    + `<rect width="200" height="200" rx="40" style="fill:var(--il-fondo-${sc.fondo})"/>${objetos}${aves}</svg>`;
+}
+
+/* Mapeo de datos de la app a escenas. Devuelve siempre una clave de ESCENAS (con respaldo por contexto). */
+const _MAPEO = {
+  categoriaPlan: { alimento: 'man-alimento', ambiente: 'man-temperatura', seleccion: 'man-seleccion', limpieza: 'man-bioseguridad', agua: 'man-agua',
+    registros: 'man-registros', plagas: 'san-plagas', mortalidad: 'reg-mortalidad', llegada: 'man-llegada', quimico: 'san-quimico', vacuna: 'san-vacuna' },
+  recomendacion: { alim: 'man-alimento', temp: 'man-temperatura', hum: 'man-humedad', agua: 'man-agua', vit: 'man-vitaminas', vac: 'san-vacuna',
+    san: 'man-bioseguridad', casero: 'san-remedio-casero', quim: 'san-quimico' },
+  itemRecomendacion: { t_vent: 'man-ventilacion', t_luz: 'man-luz', a_fase: 'man-cambio-fase', s_desp: 'san-desparasitacion', s_peso: 'man-seleccion', s_bio: 'man-bioseguridad' },
+  inventario: { alimento: 'man-alimento', vacuna: 'san-vacuna', medicamento: 'san-quimico', otro: 'man-registros' },
+  bienvenida: { postura: 'gen-hyline-brown', carne: 'gen-ross308', ambas: 'gen-rhode-island' },
+};
+const _PREFIJO = { registro: 'reg-', alerta: 'al-', estado: 'est-', genetica: 'gen-' };
+const _RESPALDO = { registro: 'man-registros', alerta: 'al-plan', estado: 'est-exito', genetica: 'gen-generica', categoriaPlan: 'man-registros',
+  recomendacion: 'man-registros', itemRecomendacion: 'man-registros', inventario: 'man-registros', bienvenida: 'gen-generica' };
+
+function ilustracionDe(contexto, id, respaldo) {
+  const existe = k => typeof k === 'string' && Object.prototype.hasOwnProperty.call(ESCENAS, k);
+  let k = null;
+  if (_PREFIJO[contexto] && id !== undefined && id !== null) k = _PREFIJO[contexto] + id;
+  else if (_MAPEO[contexto]) k = _MAPEO[contexto][id];
+  if (existe(k)) return k;
+  if (existe(respaldo)) return respaldo;
+  return _RESPALDO[contexto] || 'est-exito';
+}
+
+/* Tarjeta para elegir una genética (Nuevo lote y Planificar): el ave a la izquierda, nombre, tipo y rasgo.
+   `extra`: HTML ya armado que se agrega al final (p. ej. los datos del Planificador). */
+function TarjetaGenetica({ g, elegida = false, accion, clase = '', extra = '' } = {}) {
+  const k = ilustracionDe('genetica', g.id);
+  const tipo = typeof TIPOS !== 'undefined' && TIPOS[g.tipo] ? TIPOS[g.tipo].corto : g.tipo;
+  return `<button type="button" class="gen-opcion tg${elegida ? ' tg-elegida' : ''}${clase ? ' ' + esc(clase) : ''}" data-accion="${esc(accion)}" data-id="${esc(g.id)}" aria-pressed="${elegida ? 'true' : 'false'}">
+  <span class="tg-ave" data-il="${k}">${Ilustracion(k, { tamano: 'media' })}</span>
+  <span class="tg-texto"><span class="gen-cab"><b class="gen-nombre">${esc(g.nombre)}</b><span class="gen-tipo gen-tipo-${esc(g.tipo)}">${esc(tipo)}</span></span>
+  <span class="gen-desc">${esc(g.rasgo)}${g.origen ? ' · ' + esc(g.origen) : ''}</span>${extra}</span></button>`;
+}
+
+/* true si el dato tiene una escena propia en el mapeo (no un respaldo). Sirve para poner la mini solo donde aporta. */
+function tieneIlustracion(contexto, id) {
+  return !!(_MAPEO[contexto] && Object.prototype.hasOwnProperty.call(_MAPEO[contexto], id));
 }
 
 </script>
@@ -4510,7 +4764,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     const hecha = a.tipo === 'vacuna' && String(a.id).startsWith('vacuna-');
     const labor = a.tipo === 'plan' && a.tareaId; // la alerta agrupada de atrasadas no lleva Hecho
     return `<li class="al-card al-${esc(a.gravedad)}" data-alerta="${esc(a.id)}">
-  <div class="al-cab"><span class="al-icono">${icono(g.ic)}</span><span class="${g.clase}">${a.gravedad === 'info' ? '' : '<span class="chip-punto" aria-hidden="true"></span>'}${g.chip}</span></div>
+  <div class="al-cab"><span class="al-il">${Ilustracion(ilustracionDe('alerta', a.tipo), { tamano: 'mini' })}</span><span class="${g.clase}">${a.gravedad === 'info' ? '' : '<span class="chip-punto" aria-hidden="true"></span>'}${g.chip}</span></div>
   <p class="al-texto">${esc(a.texto)}</p>
   <div class="al-botones">
     ${Boton({ texto: a.accion && a.accion.etiqueta || 'Ver', variante: 'primario', accion: 'ir', datos: { ruta: a.accion && a.accion.ruta }, clase: 'btn-ancho' })}
@@ -4523,7 +4777,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   VISTAS.alertas = async function () {
     const lista = await calcular();
     if (!lista.length) {
-      return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${ilustracion('huevo')}</div>
+      return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${Ilustracion(ilustracionDe('estado', 'sin-alertas'), { tamano: 'grande' })}</div>
   <h1>Todo en orden</h1><p class="pantalla-texto">No hay nada pendiente. Tus aves y tu inventario van bien.</p></section>`;
     }
     return `<section class="pantalla"><h1>Alertas</h1>
@@ -4612,7 +4866,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   const $v = s => document.querySelector('#view ' + s);
 
   function paso1() {
-    return `<div class="bv-ilustracion" aria-hidden="true">${ilustracion('gallina')}</div>
+    return `<div class="bv-ilustracion" aria-hidden="true">${Ilustracion(ilustracionDe('estado', 'bienvenida'), { tamano: 'grande' })}</div>
   <p class="eyebrow">Paso 1 de 2</p>
   <h1>Bienvenido a Appollo</h1>
   <p class="pantalla-texto">Lleva el control diario de tus aves, aunque no tengas internet.</p>
@@ -4628,7 +4882,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   <p class="pantalla-texto">Así te mostramos primero las genéticas que te sirven. Puedes tener lotes de cualquier tipo.</p>
   <div class="reg-opciones" role="group" aria-label="Tipo de granja">${TIPOS.map(t =>
     `<button type="button" class="reg-opcion bv-opcion" data-accion="bv-tipo" data-tipo="${t.id}" aria-pressed="${st.tipo === t.id}">
-    ${icono(t.icono)}<span class="bv-opcion-texto"><b>${t.texto}</b><span>${t.ayuda}</span></span></button>`).join('')}</div>
+    ${Ilustracion(ilustracionDe('bienvenida', t.id), { tamano: 'mini' })}<span class="bv-opcion-texto"><b>${t.texto}</b><span>${t.ayuda}</span></span></button>`).join('')}</div>
   <p class="reg-error bv-error" role="alert" hidden></p>
   ${Boton({ texto: 'Crear mi primer lote', icono: 'mas', variante: 'primario', accion: 'bv-crear', clase: 'btn-ancho btn-grande' })}
   ${Boton({ texto: 'Atrás', icono: 'atras', variante: 'secundario', accion: 'bv-atras', clase: 'btn-ancho' })}`;
@@ -4745,7 +4999,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   VISTAS.detalleLote = async function (params) {
     const l = await DB.obtener('lotes', params.id);
     if (!l) {
-      return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${ilustracion('campo')}</div>
+      return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${Ilustracion(ilustracionDe('estado', 'sin-registros'), { tamano: 'grande' })}</div>
   <h1>Este lote no existe</h1><p class="pantalla-texto">Quizá fue borrado o el enlace está mal.</p>
   ${Boton({ texto: 'Ver mis lotes', icono: 'lotes', variante: 'primario', accion: 'ir', datos: { ruta: '#/lotes' }, clase: 'btn-ancho' })}</section>`;
     }
@@ -4763,6 +5017,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     return `<section class="pantalla detalle-lote">
   ${Boton({ texto: 'Lotes', icono: 'atras', variante: 'secundario', accion: 'ir', datos: { ruta: '#/lotes' }, clase: 'dl-volver' })}
   <header class="dl-cab">
+    <div class="dl-cab-il">${Ilustracion(ilustracionDe('genetica', l.genetica), { tamano: 'media' })}</div>
     <p class="eyebrow">${activo ? 'Lote activo' : 'Lote cerrado' + (l.fechaCierre ? ' el ' + esc(fechaTxt(l.fechaCierre)) : '')}</p>
     <h1>${esc(l.nombre || 'Lote')}</h1>
     <p class="pantalla-texto">${esc(res.g ? res.g.nombre : l.genetica || 'Genética desconocida')}${l.galpon ? ' · ' + esc(l.galpon) : ''} · llegó el ${esc(fechaTxt(l.fechaLlegada))}</p>
@@ -4783,7 +5038,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   <h2 class="seccion-titulo">Historial</h2>
   ${orden.length ? `<ul class="dl-lista">${orden.slice(0, lim).map(r => {
     const t = TIPO[r.tipo] || [r.tipo, 'hoja'];
-    return `<li class="dl-reg"><span class="dl-icono">${icono(t[1])}</span><div class="dl-fila-texto"><b>${r.tipo === 'plan' ? esc(t[0] + ': ' + valorReg(r)) : esc(t[0] + ' · ' + valorReg(r))}</b><span>${esc(fechaTxt(r.fecha))}</span></div>
+    return `<li class="dl-reg">${Ilustracion(ilustracionDe('registro', r.tipo), { tamano: 'mini' })}<div class="dl-fila-texto"><b>${r.tipo === 'plan' ? esc(t[0] + ': ' + valorReg(r)) : esc(t[0] + ' · ' + valorReg(r))}</b><span>${esc(fechaTxt(r.fecha))}</span></div>
   ${r.tipo === 'plan' && !activo ? '' : Boton({ texto: 'Borrar', variante: 'secundario', accion: 'dl-borrar', datos: { id: r.id }, clase: 'dl-borrar' })}</li>`;
   }).join('')}</ul>${orden.length > lim ? Boton({ texto: `Ver más (${formatoNumero(orden.length - lim)})`, variante: 'secundario', accion: 'dl-mas', datos: { id: l.id }, clase: 'btn-ancho' }) : ''}`
     : '<p class="pantalla-texto">Aún no hay registros. Usa ＋ Registrar en la barra de abajo.</p>'}
@@ -5046,18 +5301,18 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     const sub = uno ? `${esc(uno.l.nombre || 'Lote')} · ${esc(textoEdad(uno.res.edad))}` : `${activos.length} lotes activos`;
     const rojas = alertas.filter(x => x.gravedad === 'rojo').length;
     let prod;
-    if (a.postura) prod = Tarjeta({ titulo: 'Huevos de hoy', icono: 'huevo', cifra: a.huevos, unidad: a.huevos === null ? '' : 'huevos',
+    if (a.postura) prod = Tarjeta({ titulo: 'Huevos de hoy', ilustracion: 'reg-huevos', cifra: a.huevos, unidad: a.huevos === null ? '' : 'huevos',
       pie: `Postura ${a.pct === null ? '—' : formatoNumero(r1(a.pct)) + ' %'} · estándar ${a.pctStd === null ? '—' : formatoNumero(r1(a.pctStd)) + ' %'}` });
     else {
       const m = a.carneUnico;
-      prod = Tarjeta({ titulo: 'Peso promedio', icono: 'balanza', cifra: m ? m.peso : null, unidad: m && m.peso !== null ? 'g' : '',
+      prod = Tarjeta({ titulo: 'Peso promedio', ilustracion: 'reg-peso', cifra: m ? m.peso : null, unidad: m && m.peso !== null ? 'g' : '',
         pie: m ? `Estándar ${m.std && fin(m.std.pesoG) !== null ? formatoNumero(Math.round(m.std.pesoG)) + ' g' : '—'}` : 'Elige un lote para ver su peso' });
     }
     const motivo = alertas.find(x => x.gravedad !== 'info');
     const s14 = a.postura || a.carneUnico ? serie14(ms, a, hoy, alt) : null;
     const graf = Grafico(s14 && s14.serieReal.some(v => v !== null) ? s14 : {});
     return `<section class="pantalla inicio">
-  <header class="ini-cab"><h1>${esc(g.nombre || 'Inicio')}</h1><p class="pantalla-texto">${sub}</p></header>
+  <header class="ini-cab cab-il">${Ilustracion(ilustracionDe('genetica', uno ? uno.l.genetica : null), { tamano: 'media' })}<div class="cab-il-texto"><h1>${esc(g.nombre || 'Inicio')}</h1><p class="pantalla-texto">${sub}</p></div></header>
   ${selector}
   <div class="ini-rejilla">
   ${sinPlan ? `<div class="ini-celda ini-ancha" data-t="plan-aviso"><article class="tarjeta ini-aviso-plan">
@@ -5065,15 +5320,15 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     <p class="ini-aviso-texto">${esc(sinPlan.nombre || 'Lote')}: elige las vacunas y labores que quieres que Appollo te recuerde.</p>
     <div class="ini-aviso-botones">${Boton({ texto: 'Elegir tareas', icono: 'sig', variante: 'primario', accion: 'ini-elegir-plan', datos: { id: sinPlan.id }, clase: 'btn-ancho' })}
     ${Boton({ texto: 'Ahora no', variante: 'secundario', accion: 'ini-plan-despues', datos: { id: sinPlan.id }, clase: 'btn-ancho' })}</div></article></div>` : ''}
-  ${celda('aves', Tarjeta({ titulo: 'Aves vivas', icono: 'gallina', cifra: a.vivas, pie: `de ${formatoNumero(a.inicio)} al llegar` }))}
-  ${celda('mortalidad', Tarjeta({ titulo: 'Mortalidad', icono: 'cruz', cifra: r1(a.mortPct), unidad: a.mortPct === null ? '' : '%', pie: `Hoy: ${formatoNumero(a.muertesHoy)} ${a.muertesHoy === 1 ? 'ave' : 'aves'}` }))}
-  ${celda('alimento', Tarjeta({ titulo: 'Alimento de hoy', icono: 'saco', cifra: r1(a.kg), unidad: a.kg === null ? '' : 'kg', pie: 'Estándar ' + kg(a.kgStd) }), true)}
+  ${celda('aves', Tarjeta({ titulo: 'Aves vivas', ilustracion: ilustracionDe('genetica', uno ? uno.l.genetica : null), cifra: a.vivas, pie: `de ${formatoNumero(a.inicio)} al llegar` }))}
+  ${celda('mortalidad', Tarjeta({ titulo: 'Mortalidad', ilustracion: 'reg-mortalidad', cifra: r1(a.mortPct), unidad: a.mortPct === null ? '' : '%', pie: `Hoy: ${formatoNumero(a.muertesHoy)} ${a.muertesHoy === 1 ? 'ave' : 'aves'}` }))}
+  ${celda('alimento', Tarjeta({ titulo: 'Alimento de hoy', ilustracion: 'reg-alimento', cifra: r1(a.kg), unidad: a.kg === null ? '' : 'kg', pie: 'Estándar ' + kg(a.kgStd) }), true)}
   ${celda('produccion', prod, true)}
-  <div class="ini-celda ini-ancha" data-t="sanitario" data-estado="${a.estado || ''}">${Tarjeta({ titulo: 'Estado sanitario', icono: 'escudo', estado: a.estado || undefined,
+  <div class="ini-celda ini-ancha" data-t="sanitario" data-estado="${a.estado || ''}">${Tarjeta({ titulo: 'Estado sanitario', ilustracion: 'reg-sanidad', estado: a.estado || undefined,
     cifra: a.estado ? ESTADO[a.estado] : null, pie: motivo ? motivo.texto : a.estado === 'ambar' ? 'Sin registros en los últimos 3 días' : 'Todo en orden' })}</div>
   <a class="ini-celda ini-ancha ini-enlace" data-t="alertas" href="#/alertas">${Tarjeta({ titulo: 'Alertas pendientes', icono: 'campana', cifra: alertas.length,
     estado: rojas ? 'rojo' : alertas.length ? 'ambar' : undefined, pie: alertas.length ? 'Toca para verlas' : 'Nada pendiente' })}</a>
-  ${celda('rendimiento', Tarjeta({ titulo: 'Rendimiento vs estándar', icono: 'grafico', cifra: r1(a.rend), unidad: a.rend === null ? '' : '%',
+  ${celda('rendimiento', Tarjeta({ titulo: 'Rendimiento vs estándar', ilustracion: 'man-registros', cifra: r1(a.rend), unidad: a.rend === null ? '' : '%',
     pie: a.postura ? 'Postura real ÷ estándar' : 'Peso real ÷ estándar' }), true)}
   ${celda('grafica', `<article class="tarjeta"><header class="tarjeta-cab"><h3 class="tarjeta-titulo">Últimos 14 días · ${a.postura ? '% postura' : 'peso (g)'}</h3></header>${graf}</article>`, true)}
   </div>
@@ -5081,7 +5336,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   }
 
   const vacio = () => `<section class="pantalla pantalla-vacia">
-  <div class="vacia-ilustracion" aria-hidden="true">${ilustracion('gallina')}</div>
+  <div class="vacia-ilustracion" aria-hidden="true">${Ilustracion(ilustracionDe('estado', 'sin-lotes'), { tamano: 'grande' })}</div>
   <h1>${esc((App.estado.granja && App.estado.granja.nombre) || 'Bienvenido a Appollo')}</h1>
   <p class="pantalla-texto">Aún no tienes lotes. Crea el primero para registrar mortalidad, alimento y huevos cada día.</p>
   ${Boton({ texto: 'Nuevo lote', icono: 'mas', variante: 'primario', accion: 'nuevo-lote', clase: 'btn-ancho btn-grande' })}
@@ -5177,12 +5432,13 @@ var Inventario = {
     const items = (await DB.listar('inventario')).sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
     const grupos = CATS.map(([id, tit, ic]) => {
       const l = items.filter(i => (CATS.some(c => c[0] === i.categoria) ? i.categoria : 'otro') === id);
-      return l.length ? `<section class="inv-grupo"><h2 class="seccion-titulo">${icono(ic)} ${tit} <span class="num">${formatoNumero(l.length)}</span></h2>
+      return l.length ? `<section class="inv-grupo"><h2 class="seccion-titulo">${Ilustracion(ilustracionDe('inventario', id), { tamano: 'mini' })} ${tit} <span class="num">${formatoNumero(l.length)}</span></h2>
   <ul class="dl-lista">${l.map(fila).join('')}</ul></section>` : '';
     }).join('');
     return `<section class="pantalla"><h1>Inventario</h1>
   ${Boton({ texto: 'Nuevo ítem', icono: 'mas', variante: 'primario', accion: 'inv-nuevo', clase: 'btn-ancho' })}
-  ${grupos || '<p class="pantalla-texto">Aún no tienes nada guardado. Agrega tu alimento, vacunas y medicinas para que Appollo te avise cuando se acaben.</p>'}</section>`;
+  ${grupos || `<div class="vacia-ilustracion" aria-hidden="true">${Ilustracion(ilustracionDe('estado', 'sin-inventario'), { tamano: 'grande' })}</div>
+  <p class="pantalla-texto">Aún no tienes nada guardado. Agrega tu alimento, vacunas y medicinas para que Appollo te avise cuando se acaben.</p>`}</section>`;
   };
 
   /* ------------------------------ Entrada de stock ------------------------------ */
@@ -5332,17 +5588,17 @@ VISTAS.lotes = async function () {
   const hoy = hoyLocal();
   const tarjeta = l => {
     const r = resumenLote(l, registros, vacunas, l.estado === 'activo' ? hoy : (l.fechaCierre || hoy));
-    return `<button type="button" class="lote-item" data-accion="ir" data-ruta="#/lote/${esc(encodeURIComponent(l.id))}">
-  <span class="lote-cab"><b class="lote-nombre">${esc(l.nombre || 'Lote')}</b>${chipEstado(l.estado === 'activo' ? r.estado : null)}</span>
+    return `<button type="button" class="lote-item lote-item-il" data-accion="ir" data-ruta="#/lote/${esc(encodeURIComponent(l.id))}">
+  ${Ilustracion(ilustracionDe('genetica', l.genetica), { tamano: 'mini' })}<span class="lote-item-texto"><span class="lote-cab"><b class="lote-nombre">${esc(l.nombre || 'Lote')}</b>${chipEstado(l.estado === 'activo' ? r.estado : null)}</span>
   <span class="lote-gen">${esc(r.g ? r.g.nombre : l.genetica || 'Genética desconocida')}</span>
-  <span class="lote-datos"><span><b class="num">${r.vivas === null ? '—' : formatoNumero(r.vivas)}</b> aves vivas</span><span>${textoEdad(r.edad)}</span></span>
+  <span class="lote-datos"><span><b class="num">${r.vivas === null ? '—' : formatoNumero(r.vivas)}</b> aves vivas</span><span>${textoEdad(r.edad)}</span></span></span>
 </button>`;
   };
   const orden = (a, b) => String(b.fechaLlegada || '').localeCompare(String(a.fechaLlegada || ''));
   const activos = lotes.filter(l => l.estado === 'activo').sort(orden), cerrados = lotes.filter(l => l.estado !== 'activo').sort(orden);
   const nuevo = Boton({ texto: 'Nuevo lote', icono: 'mas', variante: 'primario', accion: 'nuevo-lote', clase: 'btn-ancho btn-grande' });
   if (!lotes.length) {
-    return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${ilustracion('gallina')}</div>
+    return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${Ilustracion(ilustracionDe('estado', 'sin-lotes'), { tamano: 'grande' })}</div>
   <h1>Lotes</h1><p class="pantalla-texto">Aún no tienes lotes. Un lote es un grupo de aves que llegó junto.</p>${nuevo}</section>`;
   }
   return `<section class="pantalla">
@@ -5532,9 +5788,7 @@ const NuevoLote = (function () {
     const t = (App.estado.granja && App.estado.granja.tipo) || '', orden = ORDEN[t] || ORDEN.postura;
     const lista = GENETICAS.slice().sort((a, b) => orden.indexOf(a.tipo) - orden.indexOf(b.tipo));
     return `<h1>¿Qué aves llegan?</h1>
-  <div class="gen-lista">${lista.map(g => `<button type="button" class="gen-opcion" data-accion="nl-genetica" data-id="${esc(g.id)}" aria-pressed="${st.gid === g.id}">
-    <span class="gen-cab"><b class="gen-nombre">${esc(g.nombre)}</b><span class="gen-tipo gen-tipo-${esc(g.tipo)}">${esc(TIPOS[g.tipo].corto)}</span></span>
-    <span class="gen-desc">${esc(g.rasgo)} · ${esc(g.origen)}</span></button>`).join('')}</div>
+  <div class="gen-lista">${lista.map(g => TarjetaGenetica({ g, elegida: st.gid === g.id, accion: 'nl-genetica' })).join('')}</div>
   ${Boton({ texto: 'Cancelar', variante: 'secundario', accion: 'ir', datos: { ruta: '#/lotes' }, clase: 'btn-ancho' })}`;
   }
 
@@ -5547,7 +5801,7 @@ const NuevoLote = (function () {
         `Máximo para ${esc(g.nombre)}: ${formatoNumero(max)} días (${semanas(max)})`)
       : campo('nl-fecha', 'Fecha de llegada', texto('nl-fecha', st.fecha, `type="date" max="${hoyLocal()}"`)) +
         campo('nl-edad-llegada', 'Edad al llegar (días)', Contador({ id: 'nl-edad-llegada', valor: st.edadLlegada, min: 0, paso: 1, etiqueta: 'Edad al llegar en días' }), 'Pon 0 o 1 si llegaron pollitos recién nacidos');
-    return `<h1>${esc(g.nombre)}</h1>
+    return `<div class="cab-il">${Ilustracion('man-densidad', { tamano: 'mini' })}<h1>${esc(g.nombre)}</h1></div>
   ${campo('nl-aves', '¿Cuántas aves llegaron?', Contador({ id: 'nl-aves', valor: st.aves, min: 1, paso: 10, etiqueta: 'Cantidad de aves' }))}
   <div class="reg-campo"><p class="reg-etiqueta">¿Qué sabes de su edad?</p>${seg('nl-modo', 'modo', [['edad', 'Su edad hoy'], ['fecha', 'Fecha de llegada']])}</div>
   ${edad}
@@ -5583,7 +5837,7 @@ const NuevoLote = (function () {
       if (!ts.length) return '';
       const k = ts.filter(t => st.plan.has(t.id) && !noSirve(t, g)).length, abierta = st.abiertas.has(c.id);
       return `<section class="nl-cat" data-cat="${esc(c.id)}">
-    <button type="button" class="nl-cat-cab" data-accion="nl-plan-abrir" data-id="${esc(c.id)}" aria-expanded="${abierta}"><b>${esc(c.nombre)}</b><span class="nl-cat-cuenta">${k}/${ts.length}</span></button>
+    <button type="button" class="nl-cat-cab" data-accion="nl-plan-abrir" data-id="${esc(c.id)}" aria-expanded="${abierta}"><span class="nl-cat-nombre">${Ilustracion(ilustracionDe('categoriaPlan', c.id), { tamano: 'mini' })}<b>${esc(c.nombre)}</b></span><span class="nl-cat-cuenta">${k}/${ts.length}</span></button>
     ${abierta ? `<div class="nl-cat-cuerpo"><div class="nl-cat-botones">${Boton({ texto: 'Todo', variante: 'secundario', accion: 'nl-plan-todo', datos: { id: c.id } })}${Boton({ texto: 'Ninguno', variante: 'secundario', accion: 'nl-plan-ninguno', datos: { id: c.id } })}</div>
       <div class="plan-items">${ts.map(t => tareaHTML(t, g)).join('')}</div></div>` : ''}</section>`;
     }).join('');
@@ -5596,7 +5850,7 @@ const NuevoLote = (function () {
 
   function paso4() {
     const g = genDe(st.gid), v = validar(datos()), def = v.lote ? `${corta(g)} · ${String(st.galpon || '').trim() || 'Lote'}` : '';
-    return `<h1>¿Dónde están?</h1>
+    return `<div class="cab-il">${Ilustracion('man-temperatura', { tamano: 'mini' })}<h1>¿Dónde están?</h1></div>
   <div class="reg-campo"><label class="reg-etiqueta" for="nl-altitud">Altitud de la granja (metros)</label>
     <div class="nl-alturas">${ALTITUDES.map(([m, t]) => `<button type="button" class="segmento-btn nl-altura" data-accion="nl-altitud" data-valor="${m}" aria-pressed="${String(st.altitud) === String(m)}"><b>${formatoNumero(m)} m</b><span>${t}</span></button>`).join('')}</div>
     ${texto('nl-altitud', st.altitud, 'type="number" inputmode="numeric" min="0" max="6000" step="1" placeholder="Otra altitud en metros"')}
@@ -5805,7 +6059,7 @@ const PlanCiclo = (function () {
       }
     }
     return `<li class="pc-item pc-${esc(it.estado)}${t.quimico ? ' pc-quimico' : ''}" data-item="${esc(id)}" tabindex="-1">
-  <div class="pc-item-cab"><span class="dl-icono">${icono(c.icono)}</span>
+  <div class="pc-item-cab">${Ilustracion(ilustracionDe('categoriaPlan', t.categoria), { tamano: 'mini' })}
     <div class="dl-fila-texto"><b>${esc(t.titulo)}</b><span>${t.origen === 'propia' ? 'Propia · ' : ''}${esc(c.nombre)} · ${esc(cuandoTarea(it))}</span>${chip(it.estado)}</div></div>
   ${t.detalle ? `<p class="pc-detalle">${esc(t.detalle)}</p>` : ''}
   ${t.quimico ? quimicoHtml(t.quimico) : ''}
@@ -5821,7 +6075,7 @@ const PlanCiclo = (function () {
     const cuando = v.fechaAplicada ? 'aplicada el ' + ddmm(v.fechaAplicada) : est === 'atrasada' ? 'prevista el ' + ddmm(v.fechaPrevista) : est === 'hoy' ? 'hoy' : diaTxt(v.fechaPrevista);
     const ch = v.fechaAplicada ? chip('hecha').replace('Hecha', 'Aplicada') : est === 'atrasada' ? chip('atrasada').replace('Atrasada', 'Vencida') : chip(est);
     return `<li class="pc-item pc-vacuna pc-${esc(est)}" data-item="${esc(v.id)}" tabindex="-1">
-  <div class="pc-item-cab"><span class="dl-icono">${icono('jeringa')}</span>
+  <div class="pc-item-cab">${Ilustracion(ilustracionDe('categoriaPlan', 'vacuna'), { tamano: 'mini' })}
     <div class="dl-fila-texto"><b>Vacuna: ${esc(v.nombre)}</b><span>${v.via ? esc(v.via) + ' · ' : ''}${esc(cuando)}</span>${ch}</div></div>
   ${!v.fechaAplicada && activo ? `<div class="pc-acciones pc-acciones-una">${Boton({ texto: 'Marcar aplicada', icono: 'jeringa', variante: 'secundario', accion: 'dl-aplicar', datos: { id: v.id } })}</div>` : ''}
 </li>`;
@@ -5845,8 +6099,8 @@ const PlanCiclo = (function () {
     const ret = textoRetiro(retiroVigente(tareas, [], hoy)), etq = avisosEtiqueta(tareas, hoy, modo);
     const vacio = !s.atrasadas.length && !s.semana.length && !s.proximas.length && !s.hechas.length;
     return `<div class="pc-plan">
-  ${ret.length ? `<div class="pc-retiro" role="note">${icono('aviso')}<div>${ret.map(x => `<p><b>${esc(x)}</b></p>`).join('')}<p>Por productos aplicados en este lote, contado desde el último día de tratamiento registrado (el día indicado incluido).</p></div></div>` : ''}
-  ${etq.length ? `<div class="pc-etiqueta" role="note">${icono('aviso')}<div>${etq.map(a => `<p><b>${esc(a.texto)}</b></p>`).join('')}<p>Este producto no trae retiro en la lista. Si la etiqueta trae días de retiro, anótalos con «Hecho» en esa labor.</p></div></div>` : ''}
+  ${ret.length ? `<div class="pc-retiro" role="note">${Ilustracion('san-retiro', { tamano: 'mini' })}<div>${ret.map(x => `<p><b>${esc(x)}</b></p>`).join('')}<p>Por productos aplicados en este lote, contado desde el último día de tratamiento registrado (el día indicado incluido).</p></div></div>` : ''}
+  ${etq.length ? `<div class="pc-etiqueta" role="note">${Ilustracion('al-etiqueta', { tamano: 'mini' })}<div>${etq.map(a => `<p><b>${esc(a.texto)}</b></p>`).join('')}<p>Este producto no trae retiro en la lista. Si la etiqueta trae días de retiro, anótalos con «Hecho» en esa labor.</p></div></div>` : ''}
   ${activo ? Boton({ texto: 'Agregar labor', icono: 'mas', variante: 'primario', accion: 'pc-agregar', datos: { id: lid }, clase: 'btn-ancho' })
     : '<p class="pc-solo-lectura">Lote cerrado: el plan es de solo lectura.</p>'}
   ${vacio ? `<p class="pantalla-texto">Aún no hay labores en el plan${activo ? '. Usa «Agregar labor» para elegir del catálogo o escribir una propia.' : '.'}</p>` : ''}
@@ -6345,7 +6599,7 @@ const PlanManejo = (function () {
   function itemHTML(it, sel, extra = '', bloqueado = false, titulo = null) {
     const [c, l] = it.prod !== undefined ? nivel(it) : ['', ''];
     return `<label class="plan-item${bloqueado ? ' plan-item-bloqueado' : ''}"><input type="checkbox" data-sel="${esc(it.id)}" ${sel.has(it.id) && !bloqueado ? 'checked' : ''} ${bloqueado ? 'disabled' : ''}>
-      <span class="plan-caja" aria-hidden="true"></span>
+      <span class="plan-caja" aria-hidden="true"></span>${tieneIlustracion('itemRecomendacion', it.id) ? Ilustracion(ilustracionDe('itemRecomendacion', it.id), { tamano: 'mini' }) : ''}
       <span class="plan-item-texto"><span class="plan-item-t">${titulo || esc(it.n)}</span>${it.det ? `<span class="plan-item-d">${esc(it.det)}</span>` : ''}
       <span class="plan-tags">${it.clave ? tag('clave', 'Esencial') : ''}${c ? tag(c, l) : ''}${extra}</span></span></label>`;
   }
@@ -6406,7 +6660,7 @@ const PlanManejo = (function () {
     if (c.notas) body += c.notas.map(nota).join('');
     const n = cuenta(c, sel, st);
     return `<section class="tarjeta plan-cat" id="cat-${esc(c.id)}">
-      <header class="tarjeta-cab"><span class="tarjeta-icono">${icono(c.icono)}</span><h2 class="tarjeta-titulo plan-cat-titulo">${esc(c.n)}</h2><span class="plan-cuenta num" data-cuenta="${esc(c.id)}">${n}</span></header>
+      <header class="tarjeta-cab"><span class="tarjeta-il">${Ilustracion(ilustracionDe('recomendacion', c.id), { tamano: 'media' })}</span><h2 class="tarjeta-titulo plan-cat-titulo">${esc(c.n)}</h2><span class="plan-cuenta num" data-cuenta="${esc(c.id)}">${n}</span></header>
       <div class="plan-cat-cuerpo">${body}</div></section>`;
   }
 
@@ -6663,13 +6917,10 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   /* ============================ 1 · GENÉTICA ============================ */
   const FILTROS = [['todas', 'Todas'], ['postura', 'Postura'], ['carne', 'Carne'], ['doble', 'Doble propósito'], ['criolla', 'Criolla']];
   function listaGen() {
-    return GENETICAS.filter(g => S.filtro === 'todas' || g.tipo === S.filtro).map(g => `
-    <button type="button" class="gen-opcion plan-gen" data-accion="plan-genetica" data-id="${esc(g.id)}" aria-pressed="${S.gid === g.id}">
-      <span class="gen-cab"><b class="gen-nombre">${esc(g.nombre)}</b><span class="gen-tipo gen-tipo-${esc(g.tipo)}">${esc(TIPOS[g.tipo].corto)}</span></span>
-      <span class="gen-desc">${esc(g.desc)}</span>
-      <span class="plan-datos">${g.datos.map(d => `<span><span class="plan-dt">${esc(d[0])}</span><b class="num">${esc(d[1])}</b></span>`).join('')}</span>
-      <span class="gen-desc">${esc(g.rasgo)} · ${esc(g.origen)}</span>
-    </button>`).join('');
+    return GENETICAS.filter(g => S.filtro === 'todas' || g.tipo === S.filtro).map(g => TarjetaGenetica({
+      g, elegida: S.gid === g.id, accion: 'plan-genetica', clase: 'plan-gen',
+      extra: `<span class="gen-desc">${esc(g.desc)}</span>
+      <span class="plan-datos">${g.datos.map(d => `<span><span class="plan-dt">${esc(d[0])}</span><b class="num">${esc(d[1])}</b></span>`).join('')}</span>` })).join('');
   }
   function pasoGenetica() {
     return `<h1>¿Qué gallinas vas a manejar?</h1>
@@ -6696,7 +6947,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     const alts = [[100, 'Costa'], [400, 'Amazonía'], [1800, 'Valle'], [2800, 'Sierra']];
     const seg = (accion, actual, ops, etiqueta) => `<div class="segmento" role="group" aria-label="${etiqueta}">${ops.map(([v, t]) =>
       `<button type="button" class="segmento-btn" data-accion="${accion}" data-v="${v}" aria-pressed="${actual === v}">${t}</button>`).join('')}</div>`;
-    return `<h1>Datos del lote</h1>
+    return `<div class="cab-il">${Ilustracion('man-densidad', { tamano: 'mini' })}<h1>Datos del lote</h1></div>
   <p class="pantalla-texto">Con la edad, el número de aves y la altitud se ajustan las recomendaciones y la proyección.</p>
   <div class="plan-elegida"><div><b class="gen-nombre">${esc(g.nombre)}</b><p class="gen-desc">${esc(g.rasgo)} · ${esc(TIPOS[g.tipo].nombre)}</p></div>
     ${Boton({ texto: 'Cambiar', variante: 'secundario', accion: 'plan-ir', datos: { paso: 'genetica' } })}</div>
@@ -6824,10 +7075,10 @@ const Registrar = (function () {
   }
 
   const htmlTipos = () => `<div class="hoja-rejilla">${TIPOS.map(t =>
-    Boton({ texto: t.texto, icono: t.icono, variante: 'secundario', accion: 'reg-tipo', datos: { tipo: t.id } })).join('')}</div>`;
+    `<button type="button" class="btn btn-secundario reg-tipo-btn" data-accion="reg-tipo" data-tipo="${t.id}">${Ilustracion(ilustracionDe('registro', t.id), { tamano: 'mini' })}<span class="btn-texto">${esc(t.texto)}</span></button>`).join('')}</div>`;
 
   const htmlSinLotes = () => `<div class="reg-vacio">
-  <div class="vacia-ilustracion" aria-hidden="true">${ilustracion('gallina')}</div>
+  <div class="vacia-ilustracion" aria-hidden="true">${Ilustracion(ilustracionDe('estado', 'sin-lotes'), { tamano: 'grande' })}</div>
   <p class="reg-vacio-titulo">Primero crea un lote</p>
   <p>Para registrar necesitas al menos un lote de aves activo.</p>
   ${Boton({ texto: 'Crear lote', icono: 'mas', variante: 'primario', accion: 'ir', datos: { ruta: '#/nuevo-lote' }, clase: 'btn-ancho' })}
@@ -7173,7 +7424,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     if (!lotes.length) {
       actual = null;
       return `<section class="pantalla pantalla-vacia">
-  <div class="vacia-ilustracion" aria-hidden="true">${ilustracion('campo')}</div>
+  <div class="vacia-ilustracion" aria-hidden="true">${Ilustracion(ilustracionDe('estado', 'sin-registros'), { tamano: 'grande' })}</div>
   <h1>Reportes</h1>
   <p class="pantalla-texto">Aún no tienes lotes. Crea uno y registra tus datos para ver cómo va.</p>
   ${Boton({ texto: 'Nuevo lote', icono: 'mas', variante: 'primario', accion: 'nuevo-lote', clase: 'btn-ancho btn-grande' })}
@@ -7423,7 +7674,8 @@ const App = (function () {
     const t = $('#toast'), deshacer = opciones && typeof opciones.deshacer === 'function' ? opciones.deshacer : null;
     const ms = deshacer ? 5000 : 2600;
     clearTimeout(toastT);
-    t.innerHTML = `<span class="toast-texto">${esc(msg)}</span>` +
+    const il = opciones && opciones.ilustracion || (deshacer ? 'est-exito' : null);
+    t.innerHTML = (il ? Ilustracion(il, { tamano: 'mini' }) : '') + `<span class="toast-texto">${esc(msg)}</span>` +
       (deshacer ? Boton({ texto: 'Deshacer', variante: 'secundario', accion: 'deshacer' }) : '') +
       (deshacer && !reducirMovimiento() ? `<span class="toast-tiempo" aria-hidden="true" style="animation-duration:${ms}ms"></span>` : '');
     t.hidden = false;
@@ -7436,7 +7688,7 @@ const App = (function () {
     const fn = $('#toast')._deshacer;
     ocultarToast();
     if (!fn) return;
-    try { await fn(); toast('Se deshizo el cambio'); } catch (e) { toast('No se pudo deshacer'); }
+    try { await fn(); toast('Se deshizo el cambio', { ilustracion: 'est-deshacer' }); } catch (e) { toast('No se pudo deshacer'); }
     refrescar();
   };
   ACCIONES.ir = el => ir(el.dataset.ruta || '#/inicio');
