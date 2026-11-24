@@ -36,7 +36,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   VISTAS.alertas = async function () {
     const lista = await calcular();
     if (!lista.length) {
-      return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${ilustracion('huevo')}</div>
+      return `<section class="pantalla pantalla-vacia"><div class="vacia-ilustracion" aria-hidden="true">${Ilustracion(ilustracionDe('estado', 'sin-alertas'), { tamano: 'grande' })}</div>
   <h1>Todo en orden</h1><p class="pantalla-texto">No hay nada pendiente. Tus aves y tu inventario van bien.</p></section>`;
     }
     return `<section class="pantalla"><h1>Alertas</h1>

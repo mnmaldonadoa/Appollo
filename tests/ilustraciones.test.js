@@ -127,3 +127,11 @@ assert.ok(Ilustracion('man-agua', { tamano: 'raro' }).includes('width="96"'));
 
 // Dos ilustraciones seguidas no comparten ids
 assert.ok(!/\sid="/.test(Ilustracion('gen-ross308') + Ilustracion('gen-criolla')), 'sin atributos id');
+
+// Estados vacíos: las vistas usan la biblioteca (la ilustracion() vieja ya no existe)
+const vistas = fs.readdirSync(path.join(__dirname, '..', 'src', 'vistas')).filter(f => f.endsWith('.js'));
+for (const f of vistas) assert.ok(!/\bilustracion\(/.test(src('vistas/' + f)), f + ': usa Ilustracion(), no la ilustracion() vieja');
+assert.ok(!/function ilustracion\(/.test(src('ui/componentes.js')), 'componentes.js ya no define ilustracion()');
+const VACIOS = { 'alertas.js': 'sin-alertas', 'bienvenida.js': 'bienvenida', 'registrar.js': 'sin-lotes', 'lotes.js': 'sin-lotes',
+  'inicio.js': 'sin-lotes', 'detalleLote.js': 'sin-registros', 'reportes.js': 'sin-registros', 'inventario.js': 'sin-inventario' };
+for (const [f, e] of Object.entries(VACIOS)) assert.ok(src('vistas/' + f).includes(`ilustracionDe('estado', '${e}')`), `${f}: vacío con est-${e}`);

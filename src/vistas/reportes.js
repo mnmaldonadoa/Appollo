@@ -63,7 +63,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     if (!lotes.length) {
       actual = null;
       return `<section class="pantalla pantalla-vacia">
-  <div class="vacia-ilustracion" aria-hidden="true">${ilustracion('campo')}</div>
+  <div class="vacia-ilustracion" aria-hidden="true">${Ilustracion(ilustracionDe('estado', 'sin-registros'), { tamano: 'grande' })}</div>
   <h1>Reportes</h1>
   <p class="pantalla-texto">Aún no tienes lotes. Crea uno y registra tus datos para ver cómo va.</p>
   ${Boton({ texto: 'Nuevo lote', icono: 'mas', variante: 'primario', accion: 'nuevo-lote', clase: 'btn-ancho btn-grande' })}

@@ -50,7 +50,8 @@ var Inventario = {
     }).join('');
     return `<section class="pantalla"><h1>Inventario</h1>
   ${Boton({ texto: 'Nuevo ítem', icono: 'mas', variante: 'primario', accion: 'inv-nuevo', clase: 'btn-ancho' })}
-  ${grupos || '<p class="pantalla-texto">Aún no tienes nada guardado. Agrega tu alimento, vacunas y medicinas para que Appollo te avise cuando se acaben.</p>'}</section>`;
+  ${grupos || `<div class="vacia-ilustracion" aria-hidden="true">${Ilustracion(ilustracionDe('estado', 'sin-inventario'), { tamano: 'grande' })}</div>
+  <p class="pantalla-texto">Aún no tienes nada guardado. Agrega tu alimento, vacunas y medicinas para que Appollo te avise cuando se acaben.</p>`}</section>`;
   };
 
   /* ------------------------------ Entrada de stock ------------------------------ */
