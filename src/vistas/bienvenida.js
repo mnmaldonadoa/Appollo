@@ -30,7 +30,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   <p class="pantalla-texto">Así te mostramos primero las genéticas que te sirven. Puedes tener lotes de cualquier tipo.</p>
   <div class="reg-opciones" role="group" aria-label="Tipo de granja">${TIPOS.map(t =>
     `<button type="button" class="reg-opcion bv-opcion" data-accion="bv-tipo" data-tipo="${t.id}" aria-pressed="${st.tipo === t.id}">
-    ${icono(t.icono)}<span class="bv-opcion-texto"><b>${t.texto}</b><span>${t.ayuda}</span></span></button>`).join('')}</div>
+    ${Ilustracion(ilustracionDe('bienvenida', t.id), { tamano: 'mini' })}<span class="bv-opcion-texto"><b>${t.texto}</b><span>${t.ayuda}</span></span></button>`).join('')}</div>
   <p class="reg-error bv-error" role="alert" hidden></p>
   ${Boton({ texto: 'Crear mi primer lote', icono: 'mas', variante: 'primario', accion: 'bv-crear', clase: 'btn-ancho btn-grande' })}
   ${Boton({ texto: 'Atrás', icono: 'atras', variante: 'secundario', accion: 'bv-atras', clase: 'btn-ancho' })}`;

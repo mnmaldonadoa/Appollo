@@ -6,7 +6,7 @@ import json, re, sys, tempfile
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from util import RAIZ, CHICOS, DESBORDE, SIN_NAN, CONTRASTE_BAJO, servidor, esperar, cumple, nuevo_contexto
+from util import RAIZ, CHICOS, DESBORDE, SIN_NAN, CONTRASTE_BAJO, RECORTE, servidor, esperar, cumple, nuevo_contexto
 
 fallos = 0
 errores = []
@@ -51,6 +51,8 @@ def main():
                 check(f"[{donde}/{t}] sin desborde horizontal", not pg.evaluate(DESBORDE))
                 bajos = pg.evaluate(CONTRASTE_BAJO)
                 check(f"[{donde}/{t}] texto >= 7:1", not bajos, bajos[:6])
+                cortados = pg.evaluate(RECORTE)
+                check(f"[{donde}/{t}] sin texto recortado", not cortados, cortados[:6])
             check(f"[{donde}] sin NaN/Infinity/undefined", pg.evaluate(SIN_NAN))
             tema("claro")
 
@@ -169,6 +171,8 @@ def main():
                 check(f"[{donde}/{t}] sin desborde horizontal", not pg.evaluate(DESBORDE))
                 bajos = pg.evaluate(CONTRASTE_BAJO)
                 check(f"[{donde}/{t}] texto >= 7:1", not bajos, bajos[:6])
+                cortados = pg.evaluate(RECORTE)
+                check(f"[{donde}/{t}] sin texto recortado", not cortados, cortados[:6])
             check(f"[{donde}] sin NaN/Infinity/undefined", pg.evaluate(SIN_NAN))
             tema("claro")
         fila = lambda tid: pg.evaluate("id => DB.obtener('planTareas', id)", tid)

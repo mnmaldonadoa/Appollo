@@ -45,7 +45,7 @@ var Inventario = {
     const items = (await DB.listar('inventario')).sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
     const grupos = CATS.map(([id, tit, ic]) => {
       const l = items.filter(i => (CATS.some(c => c[0] === i.categoria) ? i.categoria : 'otro') === id);
-      return l.length ? `<section class="inv-grupo"><h2 class="seccion-titulo">${icono(ic)} ${tit} <span class="num">${formatoNumero(l.length)}</span></h2>
+      return l.length ? `<section class="inv-grupo"><h2 class="seccion-titulo">${Ilustracion(ilustracionDe('inventario', id), { tamano: 'mini' })} ${tit} <span class="num">${formatoNumero(l.length)}</span></h2>
   <ul class="dl-lista">${l.map(fila).join('')}</ul></section>` : '';
     }).join('');
     return `<section class="pantalla"><h1>Inventario</h1>

@@ -260,17 +260,17 @@ button { cursor: pointer; }
 .grafico-svg { display: block; width: 100%; height: auto; overflow: visible; }
 .grafico-rejilla { stroke: var(--linea); stroke-width: 1; }
 .grafico-base { stroke: var(--linea-fuerte); stroke-width: 2; }
-.grafico-real { stroke: var(--ok-viva); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round;
+.grafico-real { stroke: var(--ok); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round;
   stroke-dasharray: 1; stroke-dashoffset: 0; animation: trazar 900ms var(--curva) both; }
-.grafico-real-punto, .grafico-ultimo { fill: var(--ok-viva); stroke: var(--superficie); stroke-width: 2.5; }
-.grafico-estandar { stroke: var(--cielo); stroke-width: 2.5; stroke-linecap: round; }
-.grafico-estandar-punto { fill: var(--cielo); }
+.grafico-real-punto, .grafico-ultimo { fill: var(--ok); stroke: var(--superficie); stroke-width: 2.5; }
+.grafico-estandar { stroke: var(--secundario); stroke-width: 2.5; stroke-linecap: round; }
+.grafico-estandar-punto { fill: var(--secundario); }
 .grafico-ejes { display: flex; justify-content: space-between; color: var(--secundario); font-size: 1rem; }
 .grafico-aviso { position: absolute; inset: 22% 0 auto; color: var(--secundario); font-size: 1rem; text-align: center; }
 .grafico-leyenda { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 1rem; font-weight: 700; }
 .ley { display: inline-flex; align-items: center; gap: 8px; }
-.ley::before { content: ""; width: 26px; height: 0; border-top: 4px solid var(--ok-viva); border-radius: 2px; }
-.ley-estandar::before { border-top: 3px dashed var(--cielo); }
+.ley::before { content: ""; width: 26px; height: 0; border-top: 4px solid var(--ok); border-radius: 2px; }
+.ley-estandar::before { border-top: 3px dashed var(--secundario); }
 
 /* ---------- Palomita ---------- */
 .palomita { width: 72px; height: 72px; display: block; }
@@ -418,6 +418,7 @@ button { cursor: pointer; }
 /* ---------- Pantallas de gestión (Task 6) ---------- */
 [hidden].btn, .dl-confirmar[hidden] { display: none !important; }
 .eyebrow { color: var(--secundario); font-size: 1rem; font-weight: 700; letter-spacing: .02em; }
+.seccion-titulo .il { display: inline-block; vertical-align: middle; }
 .seccion-titulo { margin-top: 8px; display: flex; align-items: baseline; gap: 8px; }
 .seccion-titulo .num { color: var(--secundario); font-family: var(--f-texto); font-size: 1rem; }
 
@@ -487,6 +488,7 @@ button { cursor: pointer; }
 .ini-celda:not(.ini-ancha) .tarjeta { padding: 14px 14px 16px 20px; }
 .ini-celda:not(.ini-ancha) .tarjeta-cifra { font-size: 2.25rem; }
 .ini-celda:not(.ini-ancha) .tarjeta-icono { display: none; }
+.ini-celda:not(.ini-ancha) .tarjeta-cab { flex-direction: column; align-items: flex-start; gap: 6px; }
 .ini-aviso-plan { display: grid; gap: 12px; }
 .ini-aviso-texto { margin: 0; overflow-wrap: anywhere; }
 .ini-aviso-botones { display: grid; gap: 8px; }

@@ -22,7 +22,7 @@ const PlanManejo = (function () {
   function itemHTML(it, sel, extra = '', bloqueado = false, titulo = null) {
     const [c, l] = it.prod !== undefined ? nivel(it) : ['', ''];
     return `<label class="plan-item${bloqueado ? ' plan-item-bloqueado' : ''}"><input type="checkbox" data-sel="${esc(it.id)}" ${sel.has(it.id) && !bloqueado ? 'checked' : ''} ${bloqueado ? 'disabled' : ''}>
-      <span class="plan-caja" aria-hidden="true"></span>
+      <span class="plan-caja" aria-hidden="true"></span>${tieneIlustracion('itemRecomendacion', it.id) ? Ilustracion(ilustracionDe('itemRecomendacion', it.id), { tamano: 'mini' }) : ''}
       <span class="plan-item-texto"><span class="plan-item-t">${titulo || esc(it.n)}</span>${it.det ? `<span class="plan-item-d">${esc(it.det)}</span>` : ''}
       <span class="plan-tags">${it.clave ? tag('clave', 'Esencial') : ''}${c ? tag(c, l) : ''}${extra}</span></span></label>`;
   }
@@ -83,7 +83,7 @@ const PlanManejo = (function () {
     if (c.notas) body += c.notas.map(nota).join('');
     const n = cuenta(c, sel, st);
     return `<section class="tarjeta plan-cat" id="cat-${esc(c.id)}">
-      <header class="tarjeta-cab"><span class="tarjeta-icono">${icono(c.icono)}</span><h2 class="tarjeta-titulo plan-cat-titulo">${esc(c.n)}</h2><span class="plan-cuenta num" data-cuenta="${esc(c.id)}">${n}</span></header>
+      <header class="tarjeta-cab"><span class="tarjeta-il">${Ilustracion(ilustracionDe('recomendacion', c.id), { tamano: 'media' })}</span><h2 class="tarjeta-titulo plan-cat-titulo">${esc(c.n)}</h2><span class="plan-cuenta num" data-cuenta="${esc(c.id)}">${n}</span></header>
       <div class="plan-cat-cuerpo">${body}</div></section>`;
   }
 

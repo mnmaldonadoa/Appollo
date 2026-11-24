@@ -170,3 +170,12 @@ assert.ok(src('app.js').includes("'est-exito'") && src('app.js').includes("'est-
 // Alertas y Plan del ciclo
 assert.ok(src('vistas/alertas.js').includes("ilustracionDe('alerta', a.tipo)"), 'Alertas: mini por tipo');
 assert.ok(src('vistas/planCiclo.js').includes("ilustracionDe('categoriaPlan'") && src('vistas/planCiclo.js').includes("'san-retiro'") && src('vistas/planCiclo.js').includes("'al-etiqueta'"), 'Plan del ciclo ilustrado');
+
+// Resto de pantallas
+assert.strictEqual(c.tieneIlustracion('itemRecomendacion', 't_vent'), true);
+assert.strictEqual(c.tieneIlustracion('itemRecomendacion', 'w_lib'), false);
+assert.strictEqual(c.tieneIlustracion('raro', 'x'), false);
+assert.ok(src('vistas/inventario.js').includes("ilustracionDe('inventario', id)"), 'Inventario: mini por grupo');
+assert.ok(src('vistas/planManejo.js').includes("ilustracionDe('recomendacion', c.id)") && src('vistas/planManejo.js').includes("tieneIlustracion('itemRecomendacion'"), 'Planificar: recomendaciones ilustradas');
+assert.ok(src('vistas/bienvenida.js').includes("ilustracionDe('bienvenida', t.id)"), 'Bienvenida: ave por tipo de granja');
+assert.ok(/\.grafico-real \{ stroke: var\(--ok\)/.test(fs.readFileSync(path.join(__dirname, '..', 'src', 'styles.css'), 'utf8')), 'gráfica: serie real en --ok');

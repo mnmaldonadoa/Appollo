@@ -183,3 +183,8 @@ function TarjetaGenetica({ g, elegida = false, accion, clase = '', extra = '' } 
   <span class="tg-texto"><span class="gen-cab"><b class="gen-nombre">${esc(g.nombre)}</b><span class="gen-tipo gen-tipo-${esc(g.tipo)}">${esc(tipo)}</span></span>
   <span class="gen-desc">${esc(g.rasgo)}${g.origen ? ' · ' + esc(g.origen) : ''}</span>${extra}</span></button>`;
 }
+
+/* true si el dato tiene una escena propia en el mapeo (no un respaldo). Sirve para poner la mini solo donde aporta. */
+function tieneIlustracion(contexto, id) {
+  return !!(_MAPEO[contexto] && Object.prototype.hasOwnProperty.call(_MAPEO[contexto], id));
+}

@@ -13,6 +13,18 @@ CHICOS = """() => [...document.querySelectorAll('button, a, [role=button], selec
 DESBORDE = "document.documentElement.scrollWidth > document.documentElement.clientWidth"
 SIN_NAN = "!/NaN|Infinity|undefined/.test(document.body.innerText)"
 
+# Texto recortado: un elemento con texto propio más ancho que su caja dentro de un contenedor que oculta el desborde.
+RECORTE = r"""() => [...document.querySelectorAll('#view *, #capas *')].filter(e => {
+    if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) return false;
+    const r = e.getBoundingClientRect(); if (!r.width) return false;
+    const rango = document.createRange(); rango.selectNodeContents(e); const t = rango.getBoundingClientRect();
+    for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
+      const s = getComputedStyle(p);
+      if (s.overflowX === 'hidden' || s.overflow === 'hidden') { const q = p.getBoundingClientRect(); return Math.max(r.right, t.right) > q.right + 1 || Math.min(r.left, t.left) < q.left - 1; }
+    }
+    return false;
+  }).map(e => e.textContent.trim().slice(0, 24))"""
+
 # Contraste de todo texto visible de la app (vista, hoja, barra y aviso) >= 7:1, calculado sobre el fondo efectivo.
 CONTRASTE_BAJO = r"""() => {
   const parse = s => { const m = s.match(/rgba?\(([^)]+)\)/); if (!m) return null;
