@@ -39,7 +39,7 @@ const Registrar = (function () {
   }
 
   const htmlTipos = () => `<div class="hoja-rejilla">${TIPOS.map(t =>
-    Boton({ texto: t.texto, icono: t.icono, variante: 'secundario', accion: 'reg-tipo', datos: { tipo: t.id } })).join('')}</div>`;
+    `<button type="button" class="btn btn-secundario reg-tipo-btn" data-accion="reg-tipo" data-tipo="${t.id}">${Ilustracion(ilustracionDe('registro', t.id), { tamano: 'mini' })}<span class="btn-texto">${esc(t.texto)}</span></button>`).join('')}</div>`;
 
   const htmlSinLotes = () => `<div class="reg-vacio">
   <div class="vacia-ilustracion" aria-hidden="true">${Ilustracion(ilustracionDe('estado', 'sin-lotes'), { tamano: 'grande' })}</div>

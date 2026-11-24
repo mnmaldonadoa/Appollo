@@ -173,7 +173,8 @@ const App = (function () {
     const t = $('#toast'), deshacer = opciones && typeof opciones.deshacer === 'function' ? opciones.deshacer : null;
     const ms = deshacer ? 5000 : 2600;
     clearTimeout(toastT);
-    t.innerHTML = `<span class="toast-texto">${esc(msg)}</span>` +
+    const il = opciones && opciones.ilustracion || (deshacer ? 'est-exito' : null);
+    t.innerHTML = (il ? Ilustracion(il, { tamano: 'mini' }) : '') + `<span class="toast-texto">${esc(msg)}</span>` +
       (deshacer ? Boton({ texto: 'Deshacer', variante: 'secundario', accion: 'deshacer' }) : '') +
       (deshacer && !reducirMovimiento() ? `<span class="toast-tiempo" aria-hidden="true" style="animation-duration:${ms}ms"></span>` : '');
     t.hidden = false;
@@ -186,7 +187,7 @@ const App = (function () {
     const fn = $('#toast')._deshacer;
     ocultarToast();
     if (!fn) return;
-    try { await fn(); toast('Se deshizo el cambio'); } catch (e) { toast('No se pudo deshacer'); }
+    try { await fn(); toast('Se deshizo el cambio', { ilustracion: 'est-deshacer' }); } catch (e) { toast('No se pudo deshacer'); }
     refrescar();
   };
   ACCIONES.ir = el => ir(el.dataset.ruta || '#/inicio');

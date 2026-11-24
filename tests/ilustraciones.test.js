@@ -162,3 +162,7 @@ assert.ok(src('vistas/inicio.js').includes("ilustracionDe('genetica'"), 'Inicio:
 for (const k of ['reg-mortalidad', 'reg-alimento', 'reg-huevos', 'reg-peso', 'reg-sanidad', 'man-registros']) assert.ok(src('vistas/inicio.js').includes(k), 'Inicio: ' + k);
 assert.ok(src('vistas/lotes.js').includes("ilustracionDe('genetica'"), 'Lotes: ave por lote');
 assert.ok(src('vistas/detalleLote.js').includes("ilustracionDe('genetica'") && src('vistas/detalleLote.js').includes("ilustracionDe('registro'"), 'Detalle: cabecera e historial');
+
+// Hoja Registrar y avisos
+assert.ok(src('vistas/registrar.js').includes("ilustracionDe('registro', t.id)"), 'Registrar: mini por tipo');
+assert.ok(src('app.js').includes("'est-exito'") && src('app.js').includes("'est-deshacer'"), 'aviso: éxito y deshacer ilustrados');
