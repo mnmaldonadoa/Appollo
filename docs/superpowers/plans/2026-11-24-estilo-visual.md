@@ -32,7 +32,7 @@
 
 ---
 
-### Tarea 0: Auditoría (Fase 0, ALTO: requiere la aprobación de Nicolás)
+### Task 0 · Tarea 0: Auditoría (Fase 0, ALTO: requiere la aprobación de Nicolás)
 
 **Archivos:**
 - Crear: `docs/superpowers/specs/2026-11-24-estilo-visual-inventario.md`
@@ -54,7 +54,7 @@
   Al final, la lista definitiva de claves de escena y de piezas `p-*`.
 - [ ] **Paso 3:** commit (`docs: inventario de ilustraciones (fase 0)`), enviar el inventario y 4 capturas «antes» a Nicolás y **esperar su aprobación**. Si cambia claves, actualizar las tablas de las Tareas 4–5 de este plan antes de seguir.
 
-### Tarea 1: Tipografía Nunito
+### Task 1 · Tarea 1: Tipografía Nunito
 
 **Archivos:**
 - Crear: `src/fonts/nunito-latin-700-normal.woff2`, `src/fonts/nunito-latin-800-normal.woff2`
@@ -69,7 +69,7 @@
 - [ ] **Paso 3:** correr `python3 build.py --kit && python3 tests/e2e/visual.py && python3 tests/e2e/todo.py`. Esperado: `TODO OK` en ambas.
 - [ ] **Paso 4:** commit `feat: tipografía Nunito en títulos y cifras`.
 
-### Tarea 2: Paleta y tokens con prueba de contraste
+### Task 2 · Tarea 2: Paleta y tokens con prueba de contraste
 
 **Archivos:**
 - Crear: `tests/paleta.test.js`
@@ -98,7 +98,7 @@
 - [ ] **Paso 4:** `node tests/run.js && python3 build.py --kit && python3 tests/e2e/visual.py`. Esperado: `13/13 archivos de prueba OK` y `TODO OK`.
 - [ ] **Paso 5:** commit `feat: paleta pastel con acentos profundos y prueba de contraste`.
 
-### Tarea 3: Componentes planos (radios, bordes, sin sombras difusas)
+### Task 3 · Tarea 3: Componentes planos (radios, bordes, sin sombras difusas)
 
 **Archivos:**
 - Modificar: `src/styles.css` (radios `--r-s: 16px; --r: 24px; --r-l: 28px; --r-xl: 32px`; `.btn*`, `.tarjeta*`, `.chip*`, `.hoja*`, navegación, campos, segmentos, toasts), `src/ui/kit.css`
@@ -112,7 +112,7 @@
 - [ ] **Paso 3:** `node tests/run.js && python3 build.py --kit && python3 tests/e2e/visual.py && python3 tests/e2e/todo.py`. Esperado: todo OK (≥ 56 px se mantiene).
 - [ ] **Paso 4:** `python3 tests/e2e/capturas.py fase1`; commit `feat: componentes planos con bordes de 2 px y botones píldora`; enviar a Nicolás las capturas de Inicio, Nuevo lote, Registrar, Alertas y Plan del ciclo (claro y oscuro) como cierre de la Fase 1.
 
-### Tarea 4: Piezas del sprite
+### Task 4 · Tarea 4: Piezas del sprite
 
 **Archivos:**
 - Modificar: `src/body.html` (después de los `i-*`)
@@ -135,7 +135,7 @@
 - [ ] **Paso 3:** `node tests/run.js`. Esperado: OK. Comprobar `wc -c src/body.html` (las piezas deberían sumar ≤ 25 KB).
 - [ ] **Paso 4:** commit `feat: piezas base de ilustración en el sprite`.
 
-### Tarea 5: Módulo `ui/ilustraciones.js`
+### Task 5 · Tarea 5: Módulo `ui/ilustraciones.js`
 
 **Archivos:**
 - Crear: `src/ui/ilustraciones.js`
@@ -197,7 +197,7 @@
 - [ ] **Paso 5:** `node tests/run.js && python3 build.py --kit && python3 tests/e2e/visual.py`. Esperado: todo OK. Medir `du -sb dist` (sin `_kit.html`) y anotarlo.
 - [ ] **Paso 6:** commit `feat: biblioteca de ilustraciones y mapeo probado`.
 
-### Tarea 6: Reemplazar `ilustracion()` por la biblioteca
+### Task 6 · Tarea 6: Reemplazar `ilustracion()` por la biblioteca
 
 **Archivos:**
 - Modificar: `src/ui/componentes.js` (borrar `ilustracion` y `_ilN`), `src/styles.css` (borrar `.il-sol`, `.il-colina*`, `.il-huevo`, `.il-brillo`, `.il-ok`, `.il-brote`, `.il-cola`, `.il-ala`, `.il-cresta`, `.il-pico`, `.il-ojo`, `.il-pata` y `.ilustracion`), `src/vistas/alertas.js:39`, `bienvenida.js:17`, `registrar.js:45`, `lotes.js:31`, `detalleLote.js:64`, `reportes.js:66`, `inicio.js:130`, `src/vistas/inventario.js` (vacío nuevo)
@@ -216,7 +216,7 @@
 - [ ] **Paso 3:** `node tests/run.js && python3 build.py --kit && python3 tests/e2e/todo.py && python3 tests/e2e/alertas.py && python3 tests/e2e/lotes.py`. Esperado: todo OK (en `alertas.py`, «sin alertas: 'Todo en orden'» sigue encontrando `.vacia-ilustracion`).
 - [ ] **Paso 4:** `python3 tests/e2e/capturas.py fase2`; commit `refactor: estados vacíos con la biblioteca de ilustraciones`; enviar a Nicolás la sección del kit (captura de `dist/_kit.html`, claro y oscuro) y los vacíos como cierre de la Fase 2.
 
-### Tarea 7: Nuevo lote y selector de genética de Planificar
+### Task 7 · Tarea 7: Nuevo lote y selector de genética de Planificar
 
 **Archivos:**
 - Modificar: `src/vistas/nuevoLote.js` (paso 1: tarjetas de genética; pasos 2–3: encabezados con mini; categorías del plan `.nl-cat-cab` con mini), `src/vistas/planificar.js` (selector de genética), `src/ui/componentes.js` (nuevo componente), `src/styles.css`
@@ -230,7 +230,7 @@
 - [ ] **Paso 3:** `node tests/run.js && python3 build.py && python3 tests/e2e/lotes.py && python3 tests/e2e/planificar.py && python3 tests/e2e/planificar_golden.py && python3 tests/e2e/todo.py`. Esperado: todo OK.
 - [ ] **Paso 4:** commit `feat: tarjetas ilustradas de genética en Nuevo lote y Planificar`.
 
-### Tarea 8: Inicio, Lotes y Detalle del lote
+### Task 8 · Tarea 8: Inicio, Lotes y Detalle del lote
 
 **Archivos:**
 - Modificar: `src/vistas/inicio.js`, `src/vistas/lotes.js`, `src/vistas/detalleLote.js`, `src/styles.css`
@@ -245,7 +245,7 @@
 - [ ] **Paso 2:** `python3 build.py && python3 tests/e2e/lotes.py && python3 tests/e2e/registro.py && python3 tests/e2e/todo.py`. Esperado: todo OK.
 - [ ] **Paso 3:** commit `feat: Inicio, Lotes y Detalle con ilustraciones`.
 
-### Tarea 9: Hoja Registrar y avisos
+### Task 9 · Tarea 9: Hoja Registrar y avisos
 
 **Archivos:**
 - Modificar: `src/vistas/registrar.js` (`htmlTipos`), `src/app.js` (toast de éxito con **Deshacer**), `src/styles.css`
@@ -258,7 +258,7 @@
 - [ ] **Paso 2:** `python3 build.py && python3 tests/e2e/registro.py && python3 tests/e2e/todo.py`. Esperado: todo OK.
 - [ ] **Paso 3:** commit `feat: hoja Registrar ilustrada`.
 
-### Tarea 10: Alertas y Plan del ciclo
+### Task 10 · Tarea 10: Alertas y Plan del ciclo
 
 **Archivos:**
 - Modificar: `src/vistas/alertas.js`, `src/vistas/planCiclo.js`, `src/styles.css`
@@ -271,7 +271,7 @@
 - [ ] **Paso 2:** `python3 build.py && python3 tests/e2e/alertas.py && python3 tests/e2e/plan.py && python3 tests/e2e/todo.py`. Esperado: todo OK.
 - [ ] **Paso 3:** commit `feat: Alertas y Plan del ciclo ilustrados`.
 
-### Tarea 11: Inventario, Reportes, Planificar, Más, Ajustes y Bienvenida
+### Task 11 · Tarea 11: Inventario, Reportes, Planificar, Más, Ajustes y Bienvenida
 
 **Archivos:**
 - Modificar: `src/vistas/inventario.js`, `src/vistas/reportes.js`, `src/vistas/planManejo.js`, `src/vistas/planEstado.js`, `src/vistas/planProyeccion.js`, `src/vistas/mas.js`, `src/vistas/ajustes.js`, `src/vistas/bienvenida.js`, `src/ui/grafico.js` (colores de serie), `src/styles.css`
@@ -287,7 +287,7 @@
 - [ ] **Paso 2:** `python3 build.py --kit && python3 tests/e2e/reportes.py && python3 tests/e2e/planificar.py && python3 tests/e2e/planificar_golden.py && python3 tests/e2e/db.py && python3 tests/e2e/migracion.py && python3 tests/e2e/visual.py && python3 tests/e2e/todo.py`. Esperado: todo OK.
 - [ ] **Paso 3:** `python3 tests/e2e/capturas.py fase3`; commit `feat: resto de pantallas con el estilo nuevo`; enviar a Nicolás las capturas de la Fase 3.
 
-### Tarea 12: Cierre (Fase 4)
+### Task 12 · Tarea 12: Cierre (Fase 4)
 
 **Archivos:**
 - Modificar: `src/sw.js` (`CACHE = 'appollo-v6'`), `tests/e2e/todo.py` (líneas 226 y 229: `appollo-v6`), `build.py` (`theme-color` claro y manifest `background_color`/`theme_color` a `#F7F3E8`), `README.md` (fuentes, tokens y la quita de «estilo visual pendiente» en Limitaciones)
