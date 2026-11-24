@@ -34,12 +34,12 @@ function Boton({ texto, icono: ic, variante, accion, datos, clase } = {}) {
 
 const _ESTADOS = { verde: 'Bien', ambar: 'Revisar', rojo: 'Atención' };
 
-function Tarjeta({ titulo, cifra, unidad, estado, icono: ic, pie } = {}) {
+function Tarjeta({ titulo, cifra, unidad, estado, icono: ic, ilustracion: il, pie } = {}) {
   const est = Object.prototype.hasOwnProperty.call(_ESTADOS, estado) ? estado : '';
   const num = typeof cifra === 'number' && Number.isFinite(cifra);
   const valor = num ? formatoNumero(cifra) : esc(cifra === undefined || cifra === null ? '—' : cifra);
   return `<article class="tarjeta${est ? ' tarjeta-' + est : ''}">
-  <header class="tarjeta-cab">${ic ? `<span class="tarjeta-icono">${icono(ic)}</span>` : ''}<h3 class="tarjeta-titulo">${esc(titulo)}</h3>${est ? `<span class="chip chip-${est}"><span class="chip-punto" aria-hidden="true"></span>${_ESTADOS[est]}</span>` : ''}</header>
+  <header class="tarjeta-cab">${il && typeof Ilustracion === 'function' ? `<span class="tarjeta-il">${Ilustracion(il, { tamano: 'mini' })}</span>` : ic ? `<span class="tarjeta-icono">${icono(ic)}</span>` : ''}<h3 class="tarjeta-titulo">${esc(titulo)}</h3>${est ? `<span class="chip chip-${est}"><span class="chip-punto" aria-hidden="true"></span>${_ESTADOS[est]}</span>` : ''}</header>
   <p class="tarjeta-valor"><span class="tarjeta-cifra num"${num ? ` data-cifra="${cifra}"` : ''}>${valor}</span>${unidad ? ` <span class="tarjeta-unidad">${esc(unidad)}</span>` : ''}</p>${pie ? `
   <p class="tarjeta-pie">${esc(pie)}</p>` : ''}
 </article>`;

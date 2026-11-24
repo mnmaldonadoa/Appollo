@@ -150,3 +150,15 @@ for (const [f, e] of Object.entries(VACIOS)) assert.ok(src('vistas/' + f).includ
   assert.ok(t.includes('&lt;b&gt;x') && !t.includes('<b>x</b>'), 'nombre escapado');
   assert.ok(t.includes('<span class="plan-datos"></span>'), 'contenido extra');
 }
+
+// Tarjeta con ilustración mini en lugar del ícono (Inicio)
+{
+  const t = c.Tarjeta({ titulo: 'Mortalidad', ilustracion: 'reg-mortalidad', cifra: 1 });
+  assert.ok(t.includes('class="tarjeta-il"') && t.includes('il-mini') && !t.includes('tarjeta-icono'), 'Tarjeta con ilustracion');
+  assert.ok(c.Tarjeta({ titulo: 'x', icono: 'huevo' }).includes('tarjeta-icono'), 'Tarjeta sin ilustracion conserva el ícono');
+}
+// Pantallas de lote: ave de la genética y mini por tipo de registro
+assert.ok(src('vistas/inicio.js').includes("ilustracionDe('genetica'"), 'Inicio: ave de la genética en la cabecera');
+for (const k of ['reg-mortalidad', 'reg-alimento', 'reg-huevos', 'reg-peso', 'reg-sanidad', 'man-registros']) assert.ok(src('vistas/inicio.js').includes(k), 'Inicio: ' + k);
+assert.ok(src('vistas/lotes.js').includes("ilustracionDe('genetica'"), 'Lotes: ave por lote');
+assert.ok(src('vistas/detalleLote.js').includes("ilustracionDe('genetica'") && src('vistas/detalleLote.js').includes("ilustracionDe('registro'"), 'Detalle: cabecera e historial');

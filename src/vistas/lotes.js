@@ -18,10 +18,10 @@ VISTAS.lotes = async function () {
   const hoy = hoyLocal();
   const tarjeta = l => {
     const r = resumenLote(l, registros, vacunas, l.estado === 'activo' ? hoy : (l.fechaCierre || hoy));
-    return `<button type="button" class="lote-item" data-accion="ir" data-ruta="#/lote/${esc(encodeURIComponent(l.id))}">
-  <span class="lote-cab"><b class="lote-nombre">${esc(l.nombre || 'Lote')}</b>${chipEstado(l.estado === 'activo' ? r.estado : null)}</span>
+    return `<button type="button" class="lote-item lote-item-il" data-accion="ir" data-ruta="#/lote/${esc(encodeURIComponent(l.id))}">
+  ${Ilustracion(ilustracionDe('genetica', l.genetica), { tamano: 'mini' })}<span class="lote-item-texto"><span class="lote-cab"><b class="lote-nombre">${esc(l.nombre || 'Lote')}</b>${chipEstado(l.estado === 'activo' ? r.estado : null)}</span>
   <span class="lote-gen">${esc(r.g ? r.g.nombre : l.genetica || 'Genética desconocida')}</span>
-  <span class="lote-datos"><span><b class="num">${r.vivas === null ? '—' : formatoNumero(r.vivas)}</b> aves vivas</span><span>${textoEdad(r.edad)}</span></span>
+  <span class="lote-datos"><span><b class="num">${r.vivas === null ? '—' : formatoNumero(r.vivas)}</b> aves vivas</span><span>${textoEdad(r.edad)}</span></span></span>
 </button>`;
   };
   const orden = (a, b) => String(b.fechaLlegada || '').localeCompare(String(a.fechaLlegada || ''));

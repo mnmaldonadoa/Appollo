@@ -39,10 +39,10 @@
   --huevo-suave: #FBE6C2;
   --sobre-huevo: #2D3142;
   --cielo: #7E9CC4;
-  --alerta: #86352F;          /* coral profundo */
+  --alerta: #7A2F2A;          /* coral profundo */
   --sobre-alerta: #FFFDF8;
-  --precaucion: #6A4A12;      /* durazno profundo */
-  --ok: #3A564E;              /* salvia profunda: selección, enlaces, "Bien" */
+  --precaucion: #5E4210;      /* durazno profundo */
+  --ok: #344E47;              /* salvia profunda: selección, enlaces, "Bien" */
   --alerta-viva: #F28482;
   --precaucion-viva: #F6BD60;
   --ok-viva: #84A59D;
@@ -58,7 +58,7 @@
   --velo: rgba(45, 49, 66, .52);
   --sombra-plana: 0 3px 0 0 #D9CFBC;
   --sombra-boton: 0 3px 0 0 #151821;
-  --sombra-peligro: 0 3px 0 0 #5C211D;
+  --sombra-peligro: 0 3px 0 0 #521E1A;
   --tinta: rgba(45, 49, 66, .10);
   --brillo-esq: rgba(255, 253, 248, .75);
   --il-sombra: rgba(45, 49, 66, .12);
@@ -71,7 +71,7 @@
     --fondo: #121A14; --superficie: #1B241D; --superficie-2: #26322A; --linea: #34413A; --linea-fuerte: #4E5C54;
   --texto: #F3EBDD; --secundario: #DDD6CA;
   --primario: #F3EBDD; --primario-suave: #29362F; --sobre-primario: #2D3142;
-  --huevo: #F6BD60; --huevo-suave: #403B23; --sobre-huevo: #2D3142; --cielo: #9DB8DC;
+  --huevo: #F6BD60; --huevo-suave: #36321F; --sobre-huevo: #2D3142; --cielo: #9DB8DC;
   --alerta: #F5C7BF; --sobre-alerta: #2D3142; --precaucion: #F6BD60; --ok: #C9D4CA;
   --alerta-viva: #F28482; --precaucion-viva: #F6BD60; --ok-viva: #84A59D;
   --t-menta: #3A423C; --t-cielo: #384242; --t-lila: #3D4141; --t-coral: #3F2F2A; --t-salvia: #29362F; --t-durazno: #403B23; --t-marron: #393527;
@@ -90,7 +90,7 @@
   --fondo: #121A14; --superficie: #1B241D; --superficie-2: #26322A; --linea: #34413A; --linea-fuerte: #4E5C54;
   --texto: #F3EBDD; --secundario: #DDD6CA;
   --primario: #F3EBDD; --primario-suave: #29362F; --sobre-primario: #2D3142;
-  --huevo: #F6BD60; --huevo-suave: #403B23; --sobre-huevo: #2D3142; --cielo: #9DB8DC;
+  --huevo: #F6BD60; --huevo-suave: #36321F; --sobre-huevo: #2D3142; --cielo: #9DB8DC;
   --alerta: #F5C7BF; --sobre-alerta: #2D3142; --precaucion: #F6BD60; --ok: #C9D4CA;
   --alerta-viva: #F28482; --precaucion-viva: #F6BD60; --ok-viva: #84A59D;
   --t-menta: #3A423C; --t-cielo: #384242; --t-lila: #3D4141; --t-coral: #3F2F2A; --t-salvia: #29362F; --t-durazno: #403B23; --t-marron: #393527;
@@ -162,6 +162,16 @@ button { cursor: pointer; }
 .tarjeta-ambar::before { background: var(--precaucion-viva); }
 .tarjeta-rojo::before { background: var(--alerta-viva); }
 .tarjeta-cab { display: flex; align-items: center; gap: 10px; min-height: 40px; }
+.tarjeta-il { flex: none; }
+/* Tarjetas con estado: superficie tintada; dentro, el texto secundario y los chips pasan a carbón (>= 7:1). */
+.tarjeta-verde { background: var(--t-salvia); --secundario: var(--texto); }
+.tarjeta-ambar { background: var(--t-durazno); --secundario: var(--texto); }
+.tarjeta-rojo { background: var(--t-coral); --secundario: var(--texto); }
+.tarjeta-verde .chip, .tarjeta-ambar .chip, .tarjeta-rojo .chip { color: var(--texto); }
+.lote-item.lote-item-il { display: flex; align-items: center; gap: 12px; }
+.lote-item-texto { display: grid; gap: 4px; min-width: 0; flex: 1; }
+.dl-cab-il { margin-bottom: var(--e2); }
+.cab-il-texto { display: grid; gap: 2px; min-width: 0; }
 .tarjeta-icono {
   display: grid; place-items: center; width: 40px; height: 40px; flex: none;
   border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%; /* forma de huevo */
@@ -686,7 +696,6 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 
 /* Jerarquía de elevación: 0 fondo, 1 filas, 2 tarjetas/ítems elegibles, 3 barra/toast, 4 hoja */
 
-.tarjeta, .lote-item { }
 .lotes-cerrados .lote-item { box-shadow: none; }
 .hoja { border-radius: var(--r-xl) var(--r-xl) 0 0; border-top: 2px solid var(--linea); }
 .reg-pregunta, .dl-confirmar, .rep-aviso { }

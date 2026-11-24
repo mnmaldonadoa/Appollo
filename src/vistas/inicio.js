@@ -92,18 +92,18 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     const sub = uno ? `${esc(uno.l.nombre || 'Lote')} · ${esc(textoEdad(uno.res.edad))}` : `${activos.length} lotes activos`;
     const rojas = alertas.filter(x => x.gravedad === 'rojo').length;
     let prod;
-    if (a.postura) prod = Tarjeta({ titulo: 'Huevos de hoy', icono: 'huevo', cifra: a.huevos, unidad: a.huevos === null ? '' : 'huevos',
+    if (a.postura) prod = Tarjeta({ titulo: 'Huevos de hoy', ilustracion: 'reg-huevos', cifra: a.huevos, unidad: a.huevos === null ? '' : 'huevos',
       pie: `Postura ${a.pct === null ? '—' : formatoNumero(r1(a.pct)) + ' %'} · estándar ${a.pctStd === null ? '—' : formatoNumero(r1(a.pctStd)) + ' %'}` });
     else {
       const m = a.carneUnico;
-      prod = Tarjeta({ titulo: 'Peso promedio', icono: 'balanza', cifra: m ? m.peso : null, unidad: m && m.peso !== null ? 'g' : '',
+      prod = Tarjeta({ titulo: 'Peso promedio', ilustracion: 'reg-peso', cifra: m ? m.peso : null, unidad: m && m.peso !== null ? 'g' : '',
         pie: m ? `Estándar ${m.std && fin(m.std.pesoG) !== null ? formatoNumero(Math.round(m.std.pesoG)) + ' g' : '—'}` : 'Elige un lote para ver su peso' });
     }
     const motivo = alertas.find(x => x.gravedad !== 'info');
     const s14 = a.postura || a.carneUnico ? serie14(ms, a, hoy, alt) : null;
     const graf = Grafico(s14 && s14.serieReal.some(v => v !== null) ? s14 : {});
     return `<section class="pantalla inicio">
-  <header class="ini-cab"><h1>${esc(g.nombre || 'Inicio')}</h1><p class="pantalla-texto">${sub}</p></header>
+  <header class="ini-cab cab-il">${Ilustracion(ilustracionDe('genetica', uno ? uno.l.genetica : null), { tamano: 'media' })}<div class="cab-il-texto"><h1>${esc(g.nombre || 'Inicio')}</h1><p class="pantalla-texto">${sub}</p></div></header>
   ${selector}
   <div class="ini-rejilla">
   ${sinPlan ? `<div class="ini-celda ini-ancha" data-t="plan-aviso"><article class="tarjeta ini-aviso-plan">
@@ -111,15 +111,15 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     <p class="ini-aviso-texto">${esc(sinPlan.nombre || 'Lote')}: elige las vacunas y labores que quieres que Appollo te recuerde.</p>
     <div class="ini-aviso-botones">${Boton({ texto: 'Elegir tareas', icono: 'sig', variante: 'primario', accion: 'ini-elegir-plan', datos: { id: sinPlan.id }, clase: 'btn-ancho' })}
     ${Boton({ texto: 'Ahora no', variante: 'secundario', accion: 'ini-plan-despues', datos: { id: sinPlan.id }, clase: 'btn-ancho' })}</div></article></div>` : ''}
-  ${celda('aves', Tarjeta({ titulo: 'Aves vivas', icono: 'gallina', cifra: a.vivas, pie: `de ${formatoNumero(a.inicio)} al llegar` }))}
-  ${celda('mortalidad', Tarjeta({ titulo: 'Mortalidad', icono: 'cruz', cifra: r1(a.mortPct), unidad: a.mortPct === null ? '' : '%', pie: `Hoy: ${formatoNumero(a.muertesHoy)} ${a.muertesHoy === 1 ? 'ave' : 'aves'}` }))}
-  ${celda('alimento', Tarjeta({ titulo: 'Alimento de hoy', icono: 'saco', cifra: r1(a.kg), unidad: a.kg === null ? '' : 'kg', pie: 'Estándar ' + kg(a.kgStd) }), true)}
+  ${celda('aves', Tarjeta({ titulo: 'Aves vivas', ilustracion: ilustracionDe('genetica', uno ? uno.l.genetica : null), cifra: a.vivas, pie: `de ${formatoNumero(a.inicio)} al llegar` }))}
+  ${celda('mortalidad', Tarjeta({ titulo: 'Mortalidad', ilustracion: 'reg-mortalidad', cifra: r1(a.mortPct), unidad: a.mortPct === null ? '' : '%', pie: `Hoy: ${formatoNumero(a.muertesHoy)} ${a.muertesHoy === 1 ? 'ave' : 'aves'}` }))}
+  ${celda('alimento', Tarjeta({ titulo: 'Alimento de hoy', ilustracion: 'reg-alimento', cifra: r1(a.kg), unidad: a.kg === null ? '' : 'kg', pie: 'Estándar ' + kg(a.kgStd) }), true)}
   ${celda('produccion', prod, true)}
-  <div class="ini-celda ini-ancha" data-t="sanitario" data-estado="${a.estado || ''}">${Tarjeta({ titulo: 'Estado sanitario', icono: 'escudo', estado: a.estado || undefined,
+  <div class="ini-celda ini-ancha" data-t="sanitario" data-estado="${a.estado || ''}">${Tarjeta({ titulo: 'Estado sanitario', ilustracion: 'reg-sanidad', estado: a.estado || undefined,
     cifra: a.estado ? ESTADO[a.estado] : null, pie: motivo ? motivo.texto : a.estado === 'ambar' ? 'Sin registros en los últimos 3 días' : 'Todo en orden' })}</div>
   <a class="ini-celda ini-ancha ini-enlace" data-t="alertas" href="#/alertas">${Tarjeta({ titulo: 'Alertas pendientes', icono: 'campana', cifra: alertas.length,
     estado: rojas ? 'rojo' : alertas.length ? 'ambar' : undefined, pie: alertas.length ? 'Toca para verlas' : 'Nada pendiente' })}</a>
-  ${celda('rendimiento', Tarjeta({ titulo: 'Rendimiento vs estándar', icono: 'grafico', cifra: r1(a.rend), unidad: a.rend === null ? '' : '%',
+  ${celda('rendimiento', Tarjeta({ titulo: 'Rendimiento vs estándar', ilustracion: 'man-registros', cifra: r1(a.rend), unidad: a.rend === null ? '' : '%',
     pie: a.postura ? 'Postura real ÷ estándar' : 'Peso real ÷ estándar' }), true)}
   ${celda('grafica', `<article class="tarjeta"><header class="tarjeta-cab"><h3 class="tarjeta-titulo">Últimos 14 días · ${a.postura ? '% postura' : 'peso (g)'}</h3></header>${graf}</article>`, true)}
   </div>

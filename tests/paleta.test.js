@@ -30,8 +30,10 @@ assert.deepStrictEqual(media, oscuro, 'prefers-color-scheme: dark y [data-tema="
 const SUPERFICIES_TEXTO = ['fondo', 'superficie', 'superficie-2', 't-menta', 't-cielo', 't-lila', 't-coral', 't-salvia', 't-durazno', 't-marron'];
 const PARES_7 = [
   ...SUPERFICIES_TEXTO.map(s => ['texto', s]),
-  ['secundario', 'fondo'], ['secundario', 'superficie'],
-  ...['primario', 'ok', 'alerta', 'precaucion'].flatMap(c => [[c, 'fondo'], [c, 'superficie']]),
+  ['texto', 'primario-suave'], ['texto', 'huevo-suave'],
+  ...['fondo', 'superficie', 'superficie-2', 'primario-suave', 'huevo-suave'].map(f => ['secundario', f]),
+  ...['ok', 'alerta', 'precaucion'].flatMap(c => ['fondo', 'superficie', 'superficie-2', 'primario-suave', 'huevo-suave'].map(f => [c, f])),
+  ['primario', 'fondo'], ['primario', 'superficie'],
   ['sobre-primario', 'primario'], ['sobre-alerta', 'alerta'], ['sobre-huevo', 'huevo'],
 ];
 const FONDOS_IL = ['crema', 'menta', 'cielo', 'lila', 'coral', 'salvia', 'durazno'].map(f => 'il-fondo-' + f);

@@ -79,6 +79,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
     return `<section class="pantalla detalle-lote">
   ${Boton({ texto: 'Lotes', icono: 'atras', variante: 'secundario', accion: 'ir', datos: { ruta: '#/lotes' }, clase: 'dl-volver' })}
   <header class="dl-cab">
+    <div class="dl-cab-il">${Ilustracion(ilustracionDe('genetica', l.genetica), { tamano: 'media' })}</div>
     <p class="eyebrow">${activo ? 'Lote activo' : 'Lote cerrado' + (l.fechaCierre ? ' el ' + esc(fechaTxt(l.fechaCierre)) : '')}</p>
     <h1>${esc(l.nombre || 'Lote')}</h1>
     <p class="pantalla-texto">${esc(res.g ? res.g.nombre : l.genetica || 'Genética desconocida')}${l.galpon ? ' · ' + esc(l.galpon) : ''} · llegó el ${esc(fechaTxt(l.fechaLlegada))}</p>
@@ -99,7 +100,7 @@ var ACCIONES = window.ACCIONES || (window.ACCIONES = {});
   <h2 class="seccion-titulo">Historial</h2>
   ${orden.length ? `<ul class="dl-lista">${orden.slice(0, lim).map(r => {
     const t = TIPO[r.tipo] || [r.tipo, 'hoja'];
-    return `<li class="dl-reg"><span class="dl-icono">${icono(t[1])}</span><div class="dl-fila-texto"><b>${r.tipo === 'plan' ? esc(t[0] + ': ' + valorReg(r)) : esc(t[0] + ' · ' + valorReg(r))}</b><span>${esc(fechaTxt(r.fecha))}</span></div>
+    return `<li class="dl-reg">${Ilustracion(ilustracionDe('registro', r.tipo), { tamano: 'mini' })}<div class="dl-fila-texto"><b>${r.tipo === 'plan' ? esc(t[0] + ': ' + valorReg(r)) : esc(t[0] + ' · ' + valorReg(r))}</b><span>${esc(fechaTxt(r.fecha))}</span></div>
   ${r.tipo === 'plan' && !activo ? '' : Boton({ texto: 'Borrar', variante: 'secundario', accion: 'dl-borrar', datos: { id: r.id }, clase: 'dl-borrar' })}</li>`;
   }).join('')}</ul>${orden.length > lim ? Boton({ texto: `Ver más (${formatoNumero(orden.length - lim)})`, variante: 'secundario', accion: 'dl-mas', datos: { id: l.id }, clase: 'btn-ancho' }) : ''}`
     : '<p class="pantalla-texto">Aún no hay registros. Usa ＋ Registrar en la barra de abajo.</p>'}
