@@ -151,7 +151,7 @@ def main():
         check("el plan llega precargado (500 aves)", pg.input_value("#nl-aves") == "500", pg.input_value("#nl-aves"))
         pg.click("#view [data-accion=nl-siguiente]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='3']")
         pg.click("#view [data-accion=nl-plan-siguiente]"); pg.wait_for_selector("#view .nuevo-lote[data-paso='4']")
-        pg.fill("#nl-galpon", "G2"); pg.click("#view [data-accion=nl-crear]"); pg.wait_for_function("location.hash.startsWith('#/lote/') && !location.hash.endsWith('%s')" % lid, timeout=4000)
+        pg.fill("#nl-galpon", "GalponDelSectorNorteNumeroDosAltoAndino"); pg.click("#view [data-accion=nl-crear]"); pg.wait_for_function("location.hash.startsWith('#/lote/') && !location.hash.endsWith('%s')" % lid, timeout=4000)
         check("hay 2 lotes y el nuevo tiene 500 aves", sorted(pg.evaluate("DB.listar('lotes').then(l => l.map(x => x.avesInicio))")) == [100, 500])
         check("un lote nuevo no deja errores", not errores, errores[:3])
 

@@ -20,7 +20,8 @@ RECORTE = r"""() => [...document.querySelectorAll('#view *, #capas *')].filter(e
     const rango = document.createRange(); rango.selectNodeContents(e); const t = rango.getBoundingClientRect();
     for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
       const s = getComputedStyle(p);
-      if (s.overflowX === 'hidden' || s.overflow === 'hidden') { const q = p.getBoundingClientRect(); return Math.max(r.right, t.right) > q.right + 1 || Math.min(r.left, t.left) < q.left - 1; }
+      if (['auto', 'scroll'].includes(s.overflowX)) return false; // fila desplazable: el texto se ve al deslizar
+      if (['hidden', 'clip'].includes(s.overflowX) || ['hidden', 'clip'].includes(s.overflow)) { const q = p.getBoundingClientRect(); return Math.max(r.right, t.right) > q.right + 1 || Math.min(r.left, t.left) < q.left - 1; }
     }
     return false;
   }).map(e => e.textContent.trim().slice(0, 24))"""
