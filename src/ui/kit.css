@@ -26,3 +26,8 @@
 .kit-marco .hoja-capa { position: absolute; }
 .kit-detras { padding: 16px; }
 .kit-palomita:empty { display: none; }
+
+.kit-il { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; }
+.kit-il-item { margin: 0; display: grid; justify-items: center; gap: 4px; }
+.kit-il-item figcaption { font-size: 1rem; color: var(--secundario); overflow-wrap: anywhere; text-align: center; }
+.kit-il-minis { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }

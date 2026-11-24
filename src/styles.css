@@ -51,7 +51,7 @@
   /* pasteles puros (decoración) */
   --p-coral: #F28482; --p-salvia: #84A59D; --p-durazno: #F6BD60; --p-menta: #D8E2DC; --p-cielo: #D0E1F9; --p-lila: #E8DFF5; --p-crema: #F7F3E8;
   /* ilustración */
-  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE;
+  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE; --ave-hueso-2: #E6DFD0; --ave-marron-2: #B98A5E; --ave-caoba: #B4764E;
   --il-trazo: #2D3142; --il-ojo: #2D3142;
   --il-fondo-crema: #EFE6D2; --il-fondo-menta: #D8E2DC; --il-fondo-cielo: #D0E1F9; --il-fondo-lila: #E8DFF5; --il-fondo-coral: #F5C7BF; --il-fondo-salvia: #C9D4CA; --il-fondo-durazno: #FBE3B8;
   --foco: #2D3142;
@@ -76,7 +76,7 @@
   --alerta-viva: #F28482; --precaucion-viva: #F6BD60; --ok-viva: #84A59D;
   --t-menta: #3A423C; --t-cielo: #384242; --t-lila: #3D4141; --t-coral: #3F2F2A; --t-salvia: #29362F; --t-durazno: #403B23; --t-marron: #393527;
   --p-coral: #F28482; --p-salvia: #84A59D; --p-durazno: #F6BD60; --p-menta: #D8E2DC; --p-cielo: #D0E1F9; --p-lila: #E8DFF5; --p-crema: #F7F3E8;
-  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE;
+  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE; --ave-hueso-2: #E6DFD0; --ave-marron-2: #B98A5E; --ave-caoba: #B4764E;
   --il-trazo: #F3EBDD; --il-ojo: #2D3142;
   --il-fondo-crema: #54574D; --il-fondo-menta: #4D5650; --il-fondo-cielo: #4B5659; --il-fondo-lila: #525558; --il-fondo-coral: #553A35; --il-fondo-salvia: #34443D; --il-fondo-durazno: #564B2B;
   --il-sombra: rgba(0, 0, 0, .28);
@@ -95,7 +95,7 @@
   --alerta-viva: #F28482; --precaucion-viva: #F6BD60; --ok-viva: #84A59D;
   --t-menta: #3A423C; --t-cielo: #384242; --t-lila: #3D4141; --t-coral: #3F2F2A; --t-salvia: #29362F; --t-durazno: #403B23; --t-marron: #393527;
   --p-coral: #F28482; --p-salvia: #84A59D; --p-durazno: #F6BD60; --p-menta: #D8E2DC; --p-cielo: #D0E1F9; --p-lila: #E8DFF5; --p-crema: #F7F3E8;
-  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE;
+  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE; --ave-hueso-2: #E6DFD0; --ave-marron-2: #B98A5E; --ave-caoba: #B4764E;
   --il-trazo: #F3EBDD; --il-ojo: #2D3142;
   --il-fondo-crema: #54574D; --il-fondo-menta: #4D5650; --il-fondo-cielo: #4B5659; --il-fondo-lila: #525558; --il-fondo-coral: #553A35; --il-fondo-salvia: #34443D; --il-fondo-durazno: #564B2B;
   --il-sombra: rgba(0, 0, 0, .28);
@@ -229,6 +229,12 @@ button { cursor: pointer; }
 .hoja-rejilla .btn .ic { width: 30px; height: 30px; }
 .hoja-capa.cerrando .hoja { animation: bajar var(--dur) var(--curva) both; }
 .hoja-capa.cerrando .hoja-fondo { animation: aparecer var(--dur) var(--curva) reverse both; }
+
+/* ---------- Ilustraciones (ui/ilustraciones.js) ---------- */
+.il { display: block; flex: none; overflow: visible; }
+.il-media, .il-grande { animation: il-entra 260ms var(--rebote) both; }
+@keyframes il-entra { from { transform: scale(.92); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .il-media, .il-grande { animation: none; } }
 
 /* ---------- Esqueleto ---------- */
 .esqueleto { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }

@@ -51,6 +51,9 @@
     <div class="kit-caja">${Grafico({ serieReal: [91], serieEstandar: [92, 92.5], etiquetas: ['Hoy', 'Mañana'] })}</div>
     <div class="kit-caja">${Grafico({ serieReal: [], serieEstandar: [] })}</div></div>`)}
   ${sec('iconos', 'Íconos', `<ul class="kit-iconos">${iconos.map(i => `<li>${icono(i)}<span>${nombres[i] || i}</span></li>`).join('')}</ul>`)}
+  ${sec('ilustraciones', 'Ilustraciones', `<div class="kit-il">${Object.keys(ESCENAS).map(k =>
+    `<figure class="kit-il-item">${Ilustracion(k)}<figcaption>${k}</figcaption></figure>`).join('')}</div>
+    <div class="kit-il-minis">${Object.keys(ESCENAS).map(k => Ilustracion(k, { tamano: 'mini' })).join('')}</div>`)}
   ${sec('esqueleto', 'Cargando', Esqueleto(3))}
   ${sec('hoja', 'Hoja inferior', `<div class="kit-marco"><div class="kit-detras">${Tarjeta({ titulo: 'Aves vivas', cifra: 4870, unidad: 'aves', icono: 'gallina' })}</div>
     ${Hoja({ titulo: '¿Qué registras?', contenido: `<div class="hoja-rejilla">${[

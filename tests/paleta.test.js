@@ -35,7 +35,7 @@ const PARES_7 = [
   ['sobre-primario', 'primario'], ['sobre-alerta', 'alerta'], ['sobre-huevo', 'huevo'],
 ];
 const FONDOS_IL = ['crema', 'menta', 'cielo', 'lila', 'coral', 'salvia', 'durazno'].map(f => 'il-fondo-' + f);
-const AVES = ['ave-hueso', 'ave-pollito', 'ave-marron', 'ave-gris'];
+const AVES = ['ave-hueso', 'ave-pollito', 'ave-marron', 'ave-gris', 'ave-hueso-2', 'ave-marron-2', 'ave-caoba'];
 
 const fallos = [];
 for (const [nombre, t] of [['claro', claro], ['oscuro', oscuro]]) {

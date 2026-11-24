@@ -24,7 +24,7 @@ FUENTES = [
     ("Nunito", 800, "nunito-latin-800-normal.woff2"),
 ]
 SCRIPTS = ("data.js", "model.js", "calc.js", "catalogo.js", "alertas.js", "db.js", "plan.js",
-           "ui/componentes.js", "ui/grafico.js", "ui/animar.js")
+           "ui/componentes.js", "ui/ilustraciones.js", "ui/grafico.js", "ui/animar.js")
 
 
 def scripts_app():
