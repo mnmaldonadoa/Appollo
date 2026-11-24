@@ -25,7 +25,7 @@ def main():
             pg.wait_for_timeout(150)
 
         def foto(nombre, completa=False):
-            quieto()
+            quieto(); pg.wait_for_timeout(900)  # las cifras cuentan hacia arriba con JS (no aparecen en getAnimations)
             for t in TEMAS:
                 pg.evaluate(f"document.documentElement.setAttribute('data-tema', '{t}')"); pg.wait_for_timeout(60)
                 pg.screenshot(path=str(salida / f"{nombre}-{t}.png"), full_page=completa)

@@ -49,3 +49,24 @@ for (const [nombre, t] of [['claro', claro], ['oscuro', oscuro]]) {
   AVES.forEach(a => ver('il-ojo', a, 3));
 }
 assert.deepStrictEqual(fallos, [], 'contrastes de la paleta:\n' + fallos.join('\n'));
+
+/* Estilo plano: sin sombras difusas (desenfoque > 0 o inset) ni degradados en styles.css y kit.css.
+   La única sombra permitida es plana: desplazamiento sin desenfoque, p. ej. 0 3px 0 0 var(--sombra-plana). */
+const planas = [];
+for (const f of ['styles.css', 'ui/kit.css']) {
+  const texto = fs.readFileSync(path.join(__dirname, '..', 'src', f), 'utf8');
+  texto.split('\n').forEach((linea, i) => {
+    if (/(linear|radial|conic)-gradient/.test(linea)) planas.push(`${f}:${i + 1} degradado`);
+    for (const m of linea.matchAll(/(box-shadow|--sombra[a-z0-9-]*)\s*:\s*([^;]+)/g)) {
+      const v = m[2].trim();
+      if (v === 'none' || /^var\(--sombra-plana\)$/.test(v)) continue;
+      for (const capa of v.split(/,(?![^(]*\))/)) {
+        const c = capa.trim();
+        if (/^var\(/.test(c) || c === 'none') continue;
+        const nums = c.replace(/rgba?\([^)]*\)|#[0-9a-f]{3,8}|var\([^)]*\)/gi, '').match(/-?[\d.]+(px)?/g) || [];
+        if (/\binset\b/.test(c) || (nums.length >= 3 && parseFloat(nums[2]) !== 0)) planas.push(`${f}:${i + 1} sombra difusa: ${c}`);
+      }
+    }
+  });
+}
+assert.deepStrictEqual(planas, [], 'estilo plano:\n' + planas.join('\n'));
