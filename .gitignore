@@ -10,3 +10,4 @@ node_modules
 .superpowers/
 __pycache__/
 dist/_kit.html
+capturas/
