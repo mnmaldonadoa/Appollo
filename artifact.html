@@ -61,7 +61,7 @@
   /* pasteles puros (decoración) */
   --p-coral: #F28482; --p-salvia: #84A59D; --p-durazno: #F6BD60; --p-menta: #D8E2DC; --p-cielo: #D0E1F9; --p-lila: #E8DFF5; --p-crema: #F7F3E8;
   /* ilustración */
-  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE; --ave-hueso-2: #E6DFD0; --ave-marron-2: #B98A5E; --ave-caoba: #B4764E;
+  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE; --ave-hueso-2: #E6DFD0; --ave-marron-2: #B98A5E; --ave-caoba: #B4764E; --ave-cola: #2D3142;
   --il-trazo: #2D3142; --il-ojo: #2D3142;
   --il-fondo-crema: #EFE6D2; --il-fondo-menta: #D8E2DC; --il-fondo-cielo: #D0E1F9; --il-fondo-lila: #E8DFF5; --il-fondo-coral: #F5C7BF; --il-fondo-salvia: #C9D4CA; --il-fondo-durazno: #FBE3B8;
   --foco: #2D3142;
@@ -86,7 +86,7 @@
   --alerta-viva: #F28482; --precaucion-viva: #F6BD60; --ok-viva: #84A59D;
   --t-menta: #3A423C; --t-cielo: #384242; --t-lila: #3D4141; --t-coral: #3F2F2A; --t-salvia: #29362F; --t-durazno: #403B23; --t-marron: #393527;
   --p-coral: #F28482; --p-salvia: #84A59D; --p-durazno: #F6BD60; --p-menta: #D8E2DC; --p-cielo: #D0E1F9; --p-lila: #E8DFF5; --p-crema: #F7F3E8;
-  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE; --ave-hueso-2: #E6DFD0; --ave-marron-2: #B98A5E; --ave-caoba: #B4764E;
+  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE; --ave-hueso-2: #E6DFD0; --ave-marron-2: #B98A5E; --ave-caoba: #B4764E; --ave-cola: #D9A07A;
   --il-trazo: #F3EBDD; --il-ojo: #2D3142;
   --il-fondo-crema: #54574D; --il-fondo-menta: #4D5650; --il-fondo-cielo: #4B5659; --il-fondo-lila: #525558; --il-fondo-coral: #553A35; --il-fondo-salvia: #34443D; --il-fondo-durazno: #564B2B;
   --il-sombra: rgba(0, 0, 0, .28);
@@ -105,7 +105,7 @@
   --alerta-viva: #F28482; --precaucion-viva: #F6BD60; --ok-viva: #84A59D;
   --t-menta: #3A423C; --t-cielo: #384242; --t-lila: #3D4141; --t-coral: #3F2F2A; --t-salvia: #29362F; --t-durazno: #403B23; --t-marron: #393527;
   --p-coral: #F28482; --p-salvia: #84A59D; --p-durazno: #F6BD60; --p-menta: #D8E2DC; --p-cielo: #D0E1F9; --p-lila: #E8DFF5; --p-crema: #F7F3E8;
-  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE; --ave-hueso-2: #E6DFD0; --ave-marron-2: #B98A5E; --ave-caoba: #B4764E;
+  --ave-hueso: #FAF9F6; --ave-pollito: #FCE181; --ave-marron: #D4A373; --ave-gris: #CCD5AE; --ave-hueso-2: #E6DFD0; --ave-marron-2: #B98A5E; --ave-caoba: #B4764E; --ave-cola: #D9A07A;
   --il-trazo: #F3EBDD; --il-ojo: #2D3142;
   --il-fondo-crema: #54574D; --il-fondo-menta: #4D5650; --il-fondo-cielo: #4B5659; --il-fondo-lila: #525558; --il-fondo-coral: #553A35; --il-fondo-salvia: #34443D; --il-fondo-durazno: #564B2B;
   --il-sombra: rgba(0, 0, 0, .28);
@@ -435,7 +435,6 @@ button { cursor: pointer; }
 .bienvenida { padding-top: 32px; }
 .bv-ilustracion { display: grid; place-items: center; width: 168px; margin-bottom: var(--e1); }
 .bv-opcion { grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 14px; min-height: 72px; }
-.bv-opcion > .ic { width: 32px; height: 32px; color: var(--ok); }
 .bv-opcion-texto { display: grid; gap: 2px; }
 
 .pasos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -518,7 +517,8 @@ button { cursor: pointer; }
 
 .dl-volver { justify-self: start; }
 .dl-cab { display: grid; gap: 6px; justify-items: start; }
-.dl-cab h1 { overflow-wrap: anywhere; }
+.dl-cab > * { max-width: 100%; min-width: 0; }
+.dl-cab h1, .dl-cab .pantalla-texto { overflow-wrap: anywhere; }
 .dl-datos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .dl-dato { display: grid; gap: 2px; padding: 12px 14px; border-radius: var(--r); background: var(--superficie); border: 2px solid var(--linea); min-width: 0; }
 .dl-dato span { color: var(--secundario); font-size: 1rem; }
@@ -526,7 +526,6 @@ button { cursor: pointer; }
 .dl-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .dl-reg, .dl-vac { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 10px 10px 10px 14px; border-radius: var(--r);
   background: var(--superficie); border: 2px solid var(--linea); }
-.dl-icono { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--primario-suave); color: var(--ok); flex: none; }
 .dl-fila-texto { display: grid; gap: 2px; flex: 1 1 140px; min-width: 0; }
 .dl-fila-texto b { overflow-wrap: anywhere; }
 .dl-fila-texto span { color: var(--secundario); font-size: 1rem; }
@@ -551,9 +550,6 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .al-rojo { background: var(--t-coral); --secundario: var(--texto); }
 .al-ambar { background: var(--t-durazno); --secundario: var(--texto); }
 .al-rojo .chip, .al-ambar .chip { color: var(--texto); }
-.al-icono { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--primario-suave); color: var(--ok); flex: none; }
-.al-rojo .al-icono { background: color-mix(in srgb, var(--alerta-viva) 16%, var(--superficie)); color: var(--alerta); }
-.al-ambar .al-icono { background: var(--huevo-suave); color: var(--precaucion); }
 .al-texto { font-weight: 700; overflow-wrap: anywhere; }
 .al-botones { display: grid; gap: 8px; }
 .inv-grupo { display: grid; gap: 8px; }
@@ -4215,7 +4211,7 @@ const ESTILO_GENETICA = {
   'cobb500': { forma: 'robusta', cuerpo: '--ave-hueso', ala: '--ave-hueso-2', cola: '--ave-hueso-2', cresta: 'chica' },
   'ross308': { forma: 'robusta', cuerpo: '--ave-hueso', ala: '--ave-hueso-2', cola: '--ave-hueso-2', cresta: 'chica', escala: [1.08, 0.98] },
   'campero': { forma: 'esbelta', cuerpo: '--ave-marron', ala: '--ave-marron-2', cola: '--ave-marron-2' },
-  'rhode-island': { forma: 'frijol', cuerpo: '--ave-caoba', ala: '--ave-marron-2', cola: '--il-ojo' },
+  'rhode-island': { forma: 'frijol', cuerpo: '--ave-caoba', ala: '--ave-marron-2', cola: '--ave-cola' },
   'plymouth-rock': { forma: 'frijol', cuerpo: '--ave-gris', ala: '--ave-hueso', cola: '--ave-gris', barrado: true },
   'criolla': { forma: 'esbelta', cuerpo: '--ave-pollito', ala: '--ave-marron', cola: '--ave-marron', colaAlta: true },
 };
@@ -4286,12 +4282,12 @@ const ESCENAS = {
   'san-desparasitacion': _E('salvia', 'Gallina junto a un frasco cerrado', _IZQ, [['p-frasco', ..._DER]]),
   'san-remedio-casero': _E('salvia', 'Hierbas en una taza', null, [['p-taza', 94, 112, 0.78], ['p-hoja', 150, 66, 0.36]]),
   'san-quimico': _E('lila', 'Frasco con su etiqueta', null, [['p-frasco', 100, 102, 0.84]]),
-  'san-retiro': _E('coral', 'Huevos en espera junto a un reloj', null, [['p-nido', 76, 132, 0.52, { vars: { c3: '--ave-marron-2' } }], ['p-huevo', 66, 112, 0.2], ['p-huevo', 86, 110, 0.2], ['p-reloj', 146, 78, 0.42]]),
+  'san-retiro': _E('coral', 'Huevos en espera junto a un reloj', null, [['p-huevo', 66, 132, 0.2], ['p-huevo', 86, 131, 0.2], ['p-nido', 76, 132, 0.52, { vars: { c3: '--ave-marron-2' } }], ['p-reloj', 146, 78, 0.42]]),
   'san-plagas': _E('crema', 'Malla en la ventana', null, [['p-malla', 96, 90, 0.74], ['p-raton', 146, 152, 0.4]]),
   /* Registrar */
   'reg-mortalidad': _E('crema', 'Gallina en reposo', [100, 108, 0.8, 'reposo'], [], { reposo: true }),
   'reg-alimento': _E('menta', 'Saco de alimento', null, [['p-saco', 100, 104, 0.82]]),
-  'reg-huevos': _E('durazno', 'Huevos en el nido', null, [['p-nido', 100, 132, 0.76, { vars: { c3: '--ave-marron-2' } }], ['p-huevo', 76, 108, 0.28], ['p-huevo', 100, 100, 0.3], ['p-huevo', 124, 108, 0.28]]),
+  'reg-huevos': _E('durazno', 'Huevos en el nido', null, [['p-huevo', 76, 132, 0.28], ['p-huevo', 100, 128, 0.3], ['p-huevo', 124, 132, 0.28], ['p-nido', 100, 132, 0.76, { vars: { c3: '--ave-marron-2' } }]]),
   'reg-peso': _E('cielo', 'Gallina en la balanza', [100, 76, 0.5], [['p-balanza', 100, 138, 0.6]]),
   'reg-vacuna': _E('cielo', 'Vacuna aplicada', null, [['p-vacuna', 94, 104, 0.8], ['p-gota', 150, 60, 0.3]]),
   'reg-sanidad': _E('salvia', 'Gallina protegida', _IZQ, [['p-escudo', 142, 108, 0.5]]),
@@ -4306,9 +4302,9 @@ const ESCENAS = {
   /* Alertas */
   'al-mortalidad': _E('coral', 'Gallina en reposo', [100, 108, 0.8, 'reposo'], [], { reposo: true }),
   'al-sin-registro': _E('durazno', 'Gallina junto a la libreta de registros', _IZQ, [['p-libreta', 142, 108, 0.5]]),
-  'al-postura': _E('durazno', 'Gallina junto a un nido con un huevo', _IZQ, [['p-nido', 142, 140, 0.46, { vars: { c3: '--ave-marron-2' } }], ['p-huevo', 142, 122, 0.2]]),
+  'al-postura': _E('durazno', 'Gallina junto a un nido con un huevo', _IZQ, [['p-huevo', 142, 139, 0.2], ['p-nido', 142, 140, 0.46, { vars: { c3: '--ave-marron-2' } }]]),
   'al-vacuna': _E('cielo', 'Vacuna y calendario', null, [['p-vacuna', 74, 110, 0.62], ['p-calendario', 142, 94, 0.48]]),
-  'al-retiro': _E('coral', 'Huevos en espera junto a un reloj', null, [['p-nido', 76, 132, 0.52, { vars: { c3: '--ave-marron-2' } }], ['p-huevo', 66, 112, 0.2], ['p-huevo', 86, 110, 0.2], ['p-reloj', 146, 78, 0.42]]),
+  'al-retiro': _E('coral', 'Huevos en espera junto a un reloj', null, [['p-huevo', 66, 132, 0.2], ['p-huevo', 86, 131, 0.2], ['p-nido', 76, 132, 0.52, { vars: { c3: '--ave-marron-2' } }], ['p-reloj', 146, 78, 0.42]]),
   'al-etiqueta': _E('durazno', 'Frasco y lupa para leer la etiqueta', null, [['p-frasco', 84, 106, 0.72], ['p-lupa', 142, 132, 0.44]]),
   'al-fase': _E('menta', 'Cambio de alimento según la fase', null, [['p-saco', 58, 120, 0.46], ['p-flecha', 102, 116, 0.3], ['p-saco', 148, 106, 0.66]]),
   'al-inventario': _E('durazno', 'Saco de alimento casi vacío', null, [['p-saco', 100, 124, 0.76, { sy: 0.7 }]]),

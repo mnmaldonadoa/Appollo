@@ -9,7 +9,7 @@ Aplicación móvil (PWA) que funciona **sin internet**. Sirve para llevar el dí
 ## Flujo de uso
 
 1. **Bienvenida** (primera vez): nombre de la granja y qué aves crías.
-2. **Nuevo lote** en 3 pasos: genética, aves y edad (o fecha de llegada), altitud y galpón. Se genera el calendario de vacunas del lote.
+2. **Nuevo lote** en 4 pasos: genética, aves y edad (o fecha de llegada), tareas del ciclo, y altitud y galpón. Se genera el calendario de vacunas del lote.
 3. **Inicio:** tarjetas con aves vivas, mortalidad, producción, alimento y estado sanitario; botón central **Registrar** disponible en toda la app.
 4. **Registrar** (hoja inferior): mortalidad, alimento, huevos, peso, vacuna o sanidad en 3 toques o menos, con **Deshacer**.
 5. **Lotes** y **detalle del lote:** historial, gráfica frente al estándar, vacunas pendientes, cerrar o reabrir el lote.
@@ -80,14 +80,14 @@ node tests/run.js             # pruebas unitarias: cálculos, alertas, validaci�
 python3 tests/e2e/todo.py     # recorrido completo, sin conexión, claro y oscuro, objetivos táctiles, contraste 7:1 y texto recortado
 ```
 
-Las demás pruebas de extremo a extremo (`tests/e2e/lotes.py`, `registro.py`, `alertas.py`, `reportes.py`, `planificar.py`, `planificar_golden.py`, `plan.py`, `db.py`, `migracion.py`, `visual.py`) se ejecutan igual: `python3 tests/e2e/<nombre>.py`. Cada una levanta su propio servidor `http.server` sobre `dist/` (el service worker y IndexedDB necesitan `http`, no `file://`) y usa un teléfono de 360×740. `visual.py` necesita antes `python3 build.py --kit`.
+Las demás pruebas de extremo a extremo (`tests/e2e/lotes.py`, `registro.py`, `alertas.py`, `reportes.py`, `planificar.py`, `plan.py`, `db.py`, `migracion.py`, `visual.py`) se ejecutan igual: `python3 tests/e2e/<nombre>.py`. `planificar_golden.py` no es una prueba: captura los valores de referencia de Appollo 1 (`python3 tests/e2e/planificar_golden.py /ruta/a/appollo-1/dist`) para `planificar.golden.json`. Cada una levanta su propio servidor `http.server` sobre `dist/` (el service worker y IndexedDB necesitan `http`, no `file://`) y usa un teléfono de 360×740. `visual.py` necesita antes `python3 build.py --kit`.
 
 Reglas que las pruebas vigilan: ningún botón o campo de menos de 56 px de alto, sin desborde horizontal ni en claro ni en oscuro, contraste de texto de al menos 7:1, cero errores de consola y la app completa sin conexión. Para esperar un resultado asíncrono (una escritura en la base) usa `esperar()` de `tests/e2e/util.py`; no uses `wait_for_function` con un predicado que devuelva una Promesa.
 
 ## PWA y uso sin conexión
 
-- La primera vez la app debe abrirse desde una dirección `https` (o `http://localhost`). El service worker guarda `index.html`, el manifest, los íconos y las cuatro tipografías en el caché `appollo-v6`; desde entonces abre sin internet y los datos se escriben en el teléfono.
-- **Sube el número de `CACHE` en `src/sw.js` en cada versión que publiques** (`appollo-v6` → `appollo-v7`…): sin eso los teléfonos que ya instalaron la app siguen con los archivos viejos. La instalación del service worker descarga los archivos con `cache: 'reload'`, así que nunca guarda copias viejas del caché HTTP.
+- La primera vez la app debe abrirse desde una dirección `https` (o `http://localhost`). El service worker guarda `index.html`, el manifest, los íconos y las cuatro tipografías en el caché `appollo-v7`; desde entonces abre sin internet y los datos se escriben en el teléfono.
+- **Sube el número de `CACHE` en `src/sw.js` en cada versión que publiques** (`appollo-v7` → `appollo-v8`…): sin eso los teléfonos que ya instalaron la app siguen con los archivos viejos. La instalación del service worker descarga los archivos con `cache: 'reload'`, así que nunca guarda copias viejas del caché HTTP.
 - La barra de estado y la pantalla de arranque usan el color crema de la app (`#F7F3E8`; `#121A14` en modo oscuro).
 - Si el navegador no deja guardar datos (modo privado), aparece un aviso y conviene exportar un respaldo desde **Ajustes**.
 

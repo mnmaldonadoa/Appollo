@@ -49,6 +49,7 @@ for (const [nombre, t] of [['claro', claro], ['oscuro', oscuro]]) {
   PARES_7.forEach(([a, b]) => ver(a, b, 7));
   FONDOS_IL.forEach(f => ver('il-trazo', f, 3));
   AVES.forEach(a => ver('il-ojo', a, 3));
+  ver('ave-cola', 'il-fondo-lila', 3); // cola oscura de Rhode Island sobre su fondo (lila) en ambos temas
 }
 assert.deepStrictEqual(fallos, [], 'contrastes de la paleta:\n' + fallos.join('\n'));
 

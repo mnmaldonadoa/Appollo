@@ -192,3 +192,18 @@ for (const k of ['man-seleccion', 'reg-peso']) {
   const pies = e.ave[1] + (183 - 100) * e.ave[2], techo = b[2] + (66 - 100) * b[3];
   assert.ok(pies <= techo + 1, `${k}: patas (y=${pies}) sobre el techo de la balanza (y=${techo})`);
 }
+
+// Los huevos quedan dentro del nido: se dibujan antes que él (el borde los tapa) y su base cae bajo el borde.
+for (const [k, e] of Object.entries(ESCENAS)) {
+  const iNido = e.piezas.findIndex(p => p[0] === 'p-nido');
+  if (iNido < 0) continue;
+  const [, nx, ny, ns] = e.piezas[iNido];
+  const borde = ny + (104 - 100) * ns, fondoNido = ny + (158 - 100) * ns;
+  e.piezas.forEach((p, i) => {
+    if (p[0] !== 'p-huevo') return;
+    const base = p[2] + (154 - 100) * p[3];
+    assert.ok(i < iNido, `${k}: el huevo se dibuja antes que el nido`);
+    assert.ok(base >= borde + 6 && base <= fondoNido, `${k}: base del huevo (${base}) dentro del nido (${borde}–${fondoNido})`);
+    assert.ok(Math.abs(p[1] - nx) <= 60 * ns, `${k}: huevo dentro del ancho del nido`);
+  });
+}
