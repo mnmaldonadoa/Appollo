@@ -179,3 +179,16 @@ assert.ok(src('vistas/inventario.js').includes("ilustracionDe('inventario', id)"
 assert.ok(src('vistas/planManejo.js').includes("ilustracionDe('recomendacion', c.id)") && src('vistas/planManejo.js').includes("tieneIlustracion('itemRecomendacion'"), 'Planificar: recomendaciones ilustradas');
 assert.ok(src('vistas/bienvenida.js').includes("ilustracionDe('bienvenida', t.id)"), 'Bienvenida: ave por tipo de granja');
 assert.ok(/\.grafico-real \{ stroke: var\(--ok\)/.test(fs.readFileSync(path.join(__dirname, '..', 'src', 'styles.css'), 'utf8')), 'gráfica: serie real en --ok');
+
+// Revisión final: una etiqueta nunca repite un atributo (el navegador ignora el segundo, p. ej. un style con opacidad)
+for (const m of body.matchAll(/<[a-z]+\b[^>]*>/gi)) {
+  const nombres = [...m[0].matchAll(/\s([a-z-]+)="/gi)].map(x => x[1]);
+  assert.strictEqual(new Set(nombres).size, nombres.length, 'atributo repetido en ' + m[0].slice(0, 80));
+}
+// Revisión final: en las escenas de balanza el ave se para sobre la pantalla de la balanza, con las patas sobre el
+// fondo de la escena (no encima de la pieza clara, donde el trazo crema del tema oscuro desaparece).
+for (const k of ['man-seleccion', 'reg-peso']) {
+  const e = ESCENAS[k], b = e.piezas.find(p => p[0] === 'p-balanza');
+  const pies = e.ave[1] + (183 - 100) * e.ave[2], techo = b[2] + (66 - 100) * b[3];
+  assert.ok(pies <= techo + 1, `${k}: patas (y=${pies}) sobre el techo de la balanza (y=${techo})`);
+}

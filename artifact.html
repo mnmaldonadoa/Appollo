@@ -872,7 +872,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
     <symbol id="p-raton" viewBox="0 0 200 200"><path style="fill:none;stroke:var(--il-trazo);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke" d="M146 128Q170 132 166 112"/><ellipse style="fill:var(--ave-gris)" cx="108" cy="124" rx="40" ry="26"/><circle style="fill:var(--ave-gris)" cx="76" cy="100" r="14"/><circle style="fill:var(--il-ojo)" cx="78" cy="118" r="3"/><circle style="fill:var(--p-coral)" cx="68" cy="126" r="4"/></symbol>
     <symbol id="p-malla" viewBox="0 0 200 200"><rect style="fill:var(--ave-hueso)" x="44" y="44" width="112" height="112" rx="14"/><rect style="fill:var(--p-cielo)" x="56" y="56" width="88" height="88" rx="8"/><path style="fill:none;stroke:var(--il-ojo);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke" d="M78 56V144M100 56V144M122 56V144M56 78H144M56 100H144M56 122H144"/></symbol>
     <symbol id="p-estante" viewBox="0 0 200 200"><g style="fill:var(--ave-marron)"><rect x="40" y="72" width="120" height="10" rx="5"/><rect x="40" y="130" width="120" height="10" rx="5"/><rect x="46" y="72" width="10" height="92" rx="5"/><rect x="144" y="72" width="10" height="92" rx="5"/></g></symbol>
-    <symbol id="p-criadora" viewBox="0 0 200 200"><rect style="fill:var(--ave-gris)" x="96" y="14" width="8" height="34" rx="4"/><path style="fill:var(--p-coral)" d="M100 44Q132 44 146 82H54Q68 44 100 44Z"/><path style="fill:var(--ave-pollito)" style="opacity:.55" d="M58 84H142L170 160H30Z"/></symbol>
+    <symbol id="p-criadora" viewBox="0 0 200 200"><rect style="fill:var(--ave-gris)" x="96" y="14" width="8" height="34" rx="4"/><path style="fill:var(--p-coral)" d="M100 44Q132 44 146 82H54Q68 44 100 44Z"/><path style="fill:var(--ave-pollito);opacity:.55" d="M58 84H142L170 160H30Z"/></symbol>
     <symbol id="p-cama" viewBox="0 0 200 200"><rect style="fill:var(--ave-marron)" x="30" y="146" width="140" height="14" rx="7"/><g style="fill:var(--ave-pollito)"><rect x="44" y="134" width="22" height="8" rx="4"/><rect x="80" y="130" width="26" height="8" rx="4" transform="rotate(-12 93 134)"/><rect x="124" y="134" width="24" height="8" rx="4" transform="rotate(10 136 138)"/></g></symbol>
     <!-- /piezas -->
   </defs>
@@ -4278,7 +4278,7 @@ const ESCENAS = {
   'man-densidad': _E('menta', 'Aves con espacio dentro del galpón', null, [['p-galpon', 100, 96, 0.96]], { grupo: [[64, 150, 0.3], [100, 150, 0.3], [136, 150, 0.3]] }),
   'man-bioseguridad': _E('salvia', 'Botas que solo se usan en el galpón', null, [['p-botas', 100, 104, 0.84]]),
   'man-llegada': _E('durazno', 'Pollitos bajo la criadora', null, [['p-criadora', 100, 84, 0.86], ['p-pollito', 74, 144, 0.4], ['p-pollito', 126, 144, 0.4]]),
-  'man-seleccion': _E('cielo', 'Gallina sobre la balanza', [100, 88, 0.5], [['p-balanza', 100, 138, 0.6]]),
+  'man-seleccion': _E('cielo', 'Gallina sobre la balanza', [100, 76, 0.5], [['p-balanza', 100, 138, 0.6]]),
   'man-registros': _E('crema', 'Libreta de registros', null, [['p-libreta', 100, 100, 0.84]]),
   'man-vitaminas': _E('menta', 'Vitaminas en el agua de bebida', null, [['p-bebedero', 96, 110, 0.8], ['p-gota', 150, 58, 0.32]]),
   /* Sanidad (sin dosis ni cantidades) */
@@ -4292,7 +4292,7 @@ const ESCENAS = {
   'reg-mortalidad': _E('crema', 'Gallina en reposo', [100, 108, 0.8, 'reposo'], [], { reposo: true }),
   'reg-alimento': _E('menta', 'Saco de alimento', null, [['p-saco', 100, 104, 0.82]]),
   'reg-huevos': _E('durazno', 'Huevos en el nido', null, [['p-nido', 100, 132, 0.76, { vars: { c3: '--ave-marron-2' } }], ['p-huevo', 76, 108, 0.28], ['p-huevo', 100, 100, 0.3], ['p-huevo', 124, 108, 0.28]]),
-  'reg-peso': _E('cielo', 'Gallina en la balanza', [100, 88, 0.5], [['p-balanza', 100, 138, 0.6]]),
+  'reg-peso': _E('cielo', 'Gallina en la balanza', [100, 76, 0.5], [['p-balanza', 100, 138, 0.6]]),
   'reg-vacuna': _E('cielo', 'Vacuna aplicada', null, [['p-vacuna', 94, 104, 0.8], ['p-gota', 150, 60, 0.3]]),
   'reg-sanidad': _E('salvia', 'Gallina protegida', _IZQ, [['p-escudo', 142, 108, 0.5]]),
   /* Estados */

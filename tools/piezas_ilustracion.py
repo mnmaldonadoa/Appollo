@@ -71,7 +71,7 @@ P["p-malla"] = (f'<rect {f("--ave-hueso")} x="44" y="44" width="112" height="112
 P["p-estante"] = (f'<g {f("--ave-marron")}><rect x="40" y="72" width="120" height="10" rx="5"/><rect x="40" y="130" width="120" height="10" rx="5"/>'
                   f'<rect x="46" y="72" width="10" height="92" rx="5"/><rect x="144" y="72" width="10" height="92" rx="5"/></g>')
 P["p-criadora"] = (f'<rect {f("--ave-gris")} x="96" y="14" width="8" height="34" rx="4"/><path {f("--p-coral")} d="M100 44Q132 44 146 82H54Q68 44 100 44Z"/>'
-                   f'<path {f("--ave-pollito")} style="opacity:.55" d="M58 84H142L170 160H30Z"/>')
+                   f'<path style="fill:var(--ave-pollito);opacity:.55" d="M58 84H142L170 160H30Z"/>')
 P["p-cama"] = (f'<rect {f("--ave-marron")} x="30" y="146" width="140" height="14" rx="7"/><g {f("--ave-pollito")}><rect x="44" y="134" width="22" height="8" rx="4"/>'
                f'<rect x="80" y="130" width="26" height="8" rx="4" transform="rotate(-12 93 134)"/><rect x="124" y="134" width="24" height="8" rx="4" transform="rotate(10 136 138)"/></g>')
 

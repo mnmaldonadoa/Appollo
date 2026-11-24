@@ -82,7 +82,7 @@ const ESCENAS = {
   'man-densidad': _E('menta', 'Aves con espacio dentro del galpón', null, [['p-galpon', 100, 96, 0.96]], { grupo: [[64, 150, 0.3], [100, 150, 0.3], [136, 150, 0.3]] }),
   'man-bioseguridad': _E('salvia', 'Botas que solo se usan en el galpón', null, [['p-botas', 100, 104, 0.84]]),
   'man-llegada': _E('durazno', 'Pollitos bajo la criadora', null, [['p-criadora', 100, 84, 0.86], ['p-pollito', 74, 144, 0.4], ['p-pollito', 126, 144, 0.4]]),
-  'man-seleccion': _E('cielo', 'Gallina sobre la balanza', [100, 88, 0.5], [['p-balanza', 100, 138, 0.6]]),
+  'man-seleccion': _E('cielo', 'Gallina sobre la balanza', [100, 76, 0.5], [['p-balanza', 100, 138, 0.6]]),
   'man-registros': _E('crema', 'Libreta de registros', null, [['p-libreta', 100, 100, 0.84]]),
   'man-vitaminas': _E('menta', 'Vitaminas en el agua de bebida', null, [['p-bebedero', 96, 110, 0.8], ['p-gota', 150, 58, 0.32]]),
   /* Sanidad (sin dosis ni cantidades) */
@@ -96,7 +96,7 @@ const ESCENAS = {
   'reg-mortalidad': _E('crema', 'Gallina en reposo', [100, 108, 0.8, 'reposo'], [], { reposo: true }),
   'reg-alimento': _E('menta', 'Saco de alimento', null, [['p-saco', 100, 104, 0.82]]),
   'reg-huevos': _E('durazno', 'Huevos en el nido', null, [['p-nido', 100, 132, 0.76, { vars: { c3: '--ave-marron-2' } }], ['p-huevo', 76, 108, 0.28], ['p-huevo', 100, 100, 0.3], ['p-huevo', 124, 108, 0.28]]),
-  'reg-peso': _E('cielo', 'Gallina en la balanza', [100, 88, 0.5], [['p-balanza', 100, 138, 0.6]]),
+  'reg-peso': _E('cielo', 'Gallina en la balanza', [100, 76, 0.5], [['p-balanza', 100, 138, 0.6]]),
   'reg-vacuna': _E('cielo', 'Vacuna aplicada', null, [['p-vacuna', 94, 104, 0.8], ['p-gota', 150, 60, 0.3]]),
   'reg-sanidad': _E('salvia', 'Gallina protegida', _IZQ, [['p-escudo', 142, 108, 0.5]]),
   /* Estados */
