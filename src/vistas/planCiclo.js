@@ -122,7 +122,7 @@ const PlanCiclo = (function () {
       }
     }
     return `<li class="pc-item pc-${esc(it.estado)}${t.quimico ? ' pc-quimico' : ''}" data-item="${esc(id)}" tabindex="-1">
-  <div class="pc-item-cab"><span class="dl-icono">${icono(c.icono)}</span>
+  <div class="pc-item-cab">${Ilustracion(ilustracionDe('categoriaPlan', t.categoria), { tamano: 'mini' })}
     <div class="dl-fila-texto"><b>${esc(t.titulo)}</b><span>${t.origen === 'propia' ? 'Propia · ' : ''}${esc(c.nombre)} · ${esc(cuandoTarea(it))}</span>${chip(it.estado)}</div></div>
   ${t.detalle ? `<p class="pc-detalle">${esc(t.detalle)}</p>` : ''}
   ${t.quimico ? quimicoHtml(t.quimico) : ''}
@@ -138,7 +138,7 @@ const PlanCiclo = (function () {
     const cuando = v.fechaAplicada ? 'aplicada el ' + ddmm(v.fechaAplicada) : est === 'atrasada' ? 'prevista el ' + ddmm(v.fechaPrevista) : est === 'hoy' ? 'hoy' : diaTxt(v.fechaPrevista);
     const ch = v.fechaAplicada ? chip('hecha').replace('Hecha', 'Aplicada') : est === 'atrasada' ? chip('atrasada').replace('Atrasada', 'Vencida') : chip(est);
     return `<li class="pc-item pc-vacuna pc-${esc(est)}" data-item="${esc(v.id)}" tabindex="-1">
-  <div class="pc-item-cab"><span class="dl-icono">${icono('jeringa')}</span>
+  <div class="pc-item-cab">${Ilustracion(ilustracionDe('categoriaPlan', 'vacuna'), { tamano: 'mini' })}
     <div class="dl-fila-texto"><b>Vacuna: ${esc(v.nombre)}</b><span>${v.via ? esc(v.via) + ' · ' : ''}${esc(cuando)}</span>${ch}</div></div>
   ${!v.fechaAplicada && activo ? `<div class="pc-acciones pc-acciones-una">${Boton({ texto: 'Marcar aplicada', icono: 'jeringa', variante: 'secundario', accion: 'dl-aplicar', datos: { id: v.id } })}</div>` : ''}
 </li>`;
@@ -162,8 +162,8 @@ const PlanCiclo = (function () {
     const ret = textoRetiro(retiroVigente(tareas, [], hoy)), etq = avisosEtiqueta(tareas, hoy, modo);
     const vacio = !s.atrasadas.length && !s.semana.length && !s.proximas.length && !s.hechas.length;
     return `<div class="pc-plan">
-  ${ret.length ? `<div class="pc-retiro" role="note">${icono('aviso')}<div>${ret.map(x => `<p><b>${esc(x)}</b></p>`).join('')}<p>Por productos aplicados en este lote, contado desde el último día de tratamiento registrado (el día indicado incluido).</p></div></div>` : ''}
-  ${etq.length ? `<div class="pc-etiqueta" role="note">${icono('aviso')}<div>${etq.map(a => `<p><b>${esc(a.texto)}</b></p>`).join('')}<p>Este producto no trae retiro en la lista. Si la etiqueta trae días de retiro, anótalos con «Hecho» en esa labor.</p></div></div>` : ''}
+  ${ret.length ? `<div class="pc-retiro" role="note">${Ilustracion('san-retiro', { tamano: 'mini' })}<div>${ret.map(x => `<p><b>${esc(x)}</b></p>`).join('')}<p>Por productos aplicados en este lote, contado desde el último día de tratamiento registrado (el día indicado incluido).</p></div></div>` : ''}
+  ${etq.length ? `<div class="pc-etiqueta" role="note">${Ilustracion('al-etiqueta', { tamano: 'mini' })}<div>${etq.map(a => `<p><b>${esc(a.texto)}</b></p>`).join('')}<p>Este producto no trae retiro en la lista. Si la etiqueta trae días de retiro, anótalos con «Hecho» en esa labor.</p></div></div>` : ''}
   ${activo ? Boton({ texto: 'Agregar labor', icono: 'mas', variante: 'primario', accion: 'pc-agregar', datos: { id: lid }, clase: 'btn-ancho' })
     : '<p class="pc-solo-lectura">Lote cerrado: el plan es de solo lectura.</p>'}
   ${vacio ? `<p class="pantalla-texto">Aún no hay labores en el plan${activo ? '. Usa «Agregar labor» para elegir del catálogo o escribir una propia.' : '.'}</p>` : ''}

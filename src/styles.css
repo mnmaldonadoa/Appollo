@@ -536,6 +536,9 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .al-rojo::before { background: var(--alerta-viva); }
 .al-ambar::before { background: var(--precaucion-viva); }
 .al-cab { display: flex; align-items: center; gap: 10px; }
+.al-rojo { background: var(--t-coral); --secundario: var(--texto); }
+.al-ambar { background: var(--t-durazno); --secundario: var(--texto); }
+.al-rojo .chip, .al-ambar .chip { color: var(--texto); }
 .al-icono { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--primario-suave); color: var(--ok); flex: none; }
 .al-rojo .al-icono { background: color-mix(in srgb, var(--alerta-viva) 16%, var(--superficie)); color: var(--alerta); }
 .al-ambar .al-icono { background: var(--huevo-suave); color: var(--precaucion); }
@@ -710,7 +713,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .segmento-btn[aria-selected="true"] { background: var(--primario); color: var(--sobre-primario); border-color: var(--primario); }
 .dl-panel { display: grid; gap: var(--e4); min-width: 0; }
 .pc-plan { display: grid; gap: var(--e4); min-width: 0; }
-.pc-retiro { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r); background: var(--superficie);
+.pc-retiro { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r); background: var(--t-coral); --secundario: var(--texto);
   border: 2px solid var(--alerta-viva); color: var(--texto); }
 .pc-retiro > .ic { flex: none; width: 28px; height: 28px; color: var(--alerta); }
 .pc-retiro div { display: grid; gap: 2px; min-width: 0; }
@@ -771,7 +774,7 @@ h2.tarjeta-titulo { font-family: var(--f-texto); font-size: 1rem; font-weight: 7
 .pc-cat-dia { color: var(--secundario); font-size: 1rem; }
 
 /* Plan del ciclo: aviso «revisa en la etiqueta» (ámbar) y días de retiro de la etiqueta en la hoja Hecho */
-.pc-etiqueta { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r); background: var(--huevo-suave);
+.pc-etiqueta { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r); background: var(--t-durazno); --secundario: var(--texto);
   border: 2px solid var(--precaucion-viva); color: var(--texto); }
 .pc-etiqueta > .ic { flex: none; width: 28px; height: 28px; color: var(--precaucion); }
 .pc-etiqueta div { display: grid; gap: 4px; min-width: 0; }

@@ -166,3 +166,7 @@ assert.ok(src('vistas/detalleLote.js').includes("ilustracionDe('genetica'") && s
 // Hoja Registrar y avisos
 assert.ok(src('vistas/registrar.js').includes("ilustracionDe('registro', t.id)"), 'Registrar: mini por tipo');
 assert.ok(src('app.js').includes("'est-exito'") && src('app.js').includes("'est-deshacer'"), 'aviso: éxito y deshacer ilustrados');
+
+// Alertas y Plan del ciclo
+assert.ok(src('vistas/alertas.js').includes("ilustracionDe('alerta', a.tipo)"), 'Alertas: mini por tipo');
+assert.ok(src('vistas/planCiclo.js').includes("ilustracionDe('categoriaPlan'") && src('vistas/planCiclo.js').includes("'san-retiro'") && src('vistas/planCiclo.js').includes("'al-etiqueta'"), 'Plan del ciclo ilustrado');
