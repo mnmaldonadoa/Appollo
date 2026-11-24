@@ -46,7 +46,7 @@ src/
   vistas/        Una pantalla por archivo (inicio, lotes, nuevoLote, detalleLote, registrar, alertas, inventario, reportes, ajustes, planificar*)
   styles.css     Sistema visual: tokens de color, espacio y radios, tema claro y oscuro
   body.html      Íconos (sprite SVG) y contenedores de la app
-  fonts/         Tipografías incluidas (Atkinson Hyperlegible, Zilla Slab): no se pide nada a internet
+  fonts/         Tipografías incluidas (Atkinson Hyperlegible, Nunito): no se pide nada a internet
   sw.js          Service worker: guarda la app para usarla sin conexión
 build.py         Une todo en dist/ y artifact.html
 tests/           Pruebas unitarias (Node) y de extremo a extremo (Python + Playwright)

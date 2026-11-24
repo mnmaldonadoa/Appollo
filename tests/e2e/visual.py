@@ -110,14 +110,14 @@ def main():
             check("body usa Atkinson Hyperlegible", fam.strip('"\' ').startswith("Atkinson"), fam)
             check("texto base 18 px", pg.evaluate("getComputedStyle(document.body).fontSize") == "18px")
             hfam = pg.evaluate("getComputedStyle(document.querySelector('h1, h2')).fontFamily")
-            check("títulos usan Zilla Slab", hfam.strip('"\' ').startswith("Zilla Slab"), hfam)
+            check("títulos usan Nunito", hfam.strip('"\' ').startswith("Nunito"), hfam)
             cifra = pg.evaluate("getComputedStyle(document.querySelector('.tarjeta-cifra')).fontFamily")
-            check("cifras usan Zilla Slab", cifra.strip('"\' ').startswith("Zilla Slab"), cifra)
+            check("cifras usan Nunito", cifra.strip('"\' ').startswith("Nunito"), cifra)
             cargadas = pg.evaluate("""() => [...document.fonts].filter(f => f.status === 'loaded').map(f => f.family.replace(/["']/g, '') + ' ' + f.weight)""")
-            check("fuentes cargadas: Atkinson 400/700, Zilla 600/700",
-                  all(x in cargadas for x in ("Atkinson Hyperlegible 400", "Atkinson Hyperlegible 700", "Zilla Slab 600", "Zilla Slab 700")), cargadas)
-            check("document.fonts.check Atkinson y Zilla", pg.evaluate(
-                "document.fonts.check('18px \"Atkinson Hyperlegible\"') && document.fonts.check('700 32px \"Zilla Slab\"')"))
+            check("fuentes cargadas: Atkinson 400/700, Nunito 700/800",
+                  all(x in cargadas for x in ("Atkinson Hyperlegible 400", "Atkinson Hyperlegible 700", "Nunito 700", "Nunito 800")), cargadas)
+            check("document.fonts.check Atkinson y Nunito", pg.evaluate(
+                "document.fonts.check('18px \"Atkinson Hyperlegible\"') && document.fonts.check('800 32px \"Nunito\"')"))
             minimo = pg.evaluate("""() => [...document.querySelectorAll('body *')].filter(e => __c.visible(e) &&
                 [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
               .map(e => [e.textContent.trim().slice(0, 20), parseFloat(getComputedStyle(e).fontSize)]).filter(x => x[1] < 16)""")
